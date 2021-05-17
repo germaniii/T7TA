@@ -1,0 +1,6 @@
+<?xml version ="1.0" encoding ="utf-8"?><!--  Learn More about how to use App Actions: https://developer.android.com/guide/actions/index.html -->
+<resources>
+    <usb-device vendor-id="6790" />
+    <usb-device vendor-id="7523" />
+    <!-- Vendor ID of Arduino -->
+</resources>

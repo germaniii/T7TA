@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.example.emav1">
+
+    <meta-data
+        android:name="android.hardware.usb.action.USB_DEVICE_ATTACHED"
+        android:resource="@xml/device_filter" />
+
+    <uses-feature android:name="android.hardware.usb.host" />
+
+    <application
+        android:allowBackup="true"
+        android:icon="@drawable/icon_ema"
+        android:label="@string/app_name"
+        android:roundIcon="@drawable/icon_ema"
+        android:supportsRtl="true"
+        android:theme="@style/Theme.EMAv1">
+        <meta-data
+            android:name="com.google.android.actions"
+            android:resource="@xml/device_filter" />
+
+        <activity android:name=".MainActivity"
+            android:noHistory="true"
+            android:configChanges="orientation"
+            android:screenOrientation="portrait">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
+    </application>
+
+</manifest>
