@@ -19,13 +19,13 @@
             android:name="com.google.android.actions"
             android:resource="@xml/device_filter" />
 
+        <activity android:name=".TextMessageActivity"/>
         <activity android:name=".MainActivity"
-            android:noHistory="true"
+            android:noHistory="false"
             android:configChanges="orientation"
             android:screenOrientation="portrait">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>

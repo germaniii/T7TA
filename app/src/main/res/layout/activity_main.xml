@@ -3,7 +3,7 @@
     xmlns:tools="http://schemas.android.com/tools"
 
 
-    android:id="@+id/mainScreen"
+    android:id="@+id/activity_main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:onClick="onClickBeaconMode"
@@ -32,7 +32,7 @@
         android:id="@+id/main_beaconButton"
         android:layout_width="150dp"
         android:layout_height="150dp"
-        android:layout_marginTop="30dp"
+        android:layout_marginTop="15dp"
         android:layout_marginBottom="15dp"
         android:adjustViewBounds="false"
         android:background="#00FFFFFF"
@@ -46,6 +46,7 @@
         app:layout_constraintHorizontal_bias="0.497"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/main_serialMonitor"
+        app:layout_constraintVertical_bias="0.0"
         app:srcCompat="@drawable/icon_beacon_off" />
 
     <ImageButton
@@ -63,11 +64,11 @@
 
     <Button
         android:id="@+id/main_buttonSend"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_width="111dp"
+        android:layout_height="72dp"
         android:layout_marginBottom="15dp"
         android:onClick="onClickSendTest"
-        android:text="@string/send"
+        android:text="Simulate Receive"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toStartOf="@+id/main_beaconButton"
         app:layout_constraintStart_toStartOf="parent" />

@@ -2,11 +2,9 @@ package com.example.emav1;
 
 import androidx.appcompat.app.AppCompatActivity;
 
-import android.app.AlertDialog;
 import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.hardware.usb.UsbDevice;
@@ -15,10 +13,7 @@ import android.hardware.usb.UsbManager;
 import android.os.Bundle;
 import android.text.method.ScrollingMovementMethod;
 import android.util.Log;
-import android.view.LayoutInflater;
-import android.view.MotionEvent;
 import android.view.View;
-import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageButton;
@@ -37,7 +32,7 @@ public class MainActivity extends AppCompatActivity {
     public final String ACTION_USB_PERMISSION = "com.example.emav1.USB_PERMISSION";
     Button sendButton;
     TextView textView;
-    EditText editText, sendMessage, send_username, send_userid;
+    EditText editText;
     UsbManager usbManager;
     UsbDevice device;
     UsbSerialDevice serialPort;
@@ -48,7 +43,7 @@ public class MainActivity extends AppCompatActivity {
     UsbSerialInterface.UsbReadCallback mCallback = new UsbSerialInterface.UsbReadCallback() { //Defining a Callback which triggers whenever data is read.
         @Override
         public void onReceivedData(byte[] arg0) {
-            String data = null;
+            String data;
             try {
                 data = new String(arg0, "UTF-8");
                 data.concat("/n");
@@ -56,8 +51,6 @@ public class MainActivity extends AppCompatActivity {
             } catch (UnsupportedEncodingException e) {
                 e.printStackTrace();
             }
-
-
         }
     };
     private final BroadcastReceiver broadcastReceiver = new BroadcastReceiver() { //Broadcast Receiver to automatically start and stop the Serial connection.
@@ -77,7 +70,8 @@ public class MainActivity extends AppCompatActivity {
                             serialPort.setParity(UsbSerialInterface.PARITY_NONE);
                             serialPort.setFlowControl(UsbSerialInterface.FLOW_CONTROL_OFF);
                             serialPort.read(mCallback);
-                            tvAppend(textView,"Serial Connection Opened!\n");
+                                toast_send = Toast.makeText(MainActivity.this, "Serial Connection Opened!", Toast.LENGTH_SHORT);
+                                toast_send.show();
 
                         }else{
                             Log.d("SERIAL", "PORT NOT OPEN");
@@ -109,10 +103,10 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         usbManager = (UsbManager) getSystemService(this.USB_SERVICE);
-        sendButton = (Button) findViewById(R.id.main_buttonSend);
-        textView = (TextView) findViewById(R.id.main_serialMonitor);
-        beacon = (ImageButton) findViewById(R.id.main_beaconButton);
-        toTextMode = (ImageButton) findViewById(R.id.toTextModeButton);
+        sendButton = findViewById(R.id.main_buttonSend);
+        textView = findViewById(R.id.main_serialMonitor);
+        beacon = findViewById(R.id.main_beaconButton);
+        toTextMode = findViewById(R.id.toTextModeButton);
         textView.setMovementMethod(new ScrollingMovementMethod());
         setUiEnabled(false);
         IntentFilter filter = new IntentFilter();
@@ -120,7 +114,7 @@ public class MainActivity extends AppCompatActivity {
         filter.addAction(UsbManager.ACTION_USB_DEVICE_ATTACHED);
         filter.addAction(UsbManager.ACTION_USB_DEVICE_DETACHED);
         registerReceiver(broadcastReceiver, filter);
-        if(arduinoConnected() == false){
+        if(!arduinoConnected()){
             beacon.setImageResource(R.drawable.icon_beacon_on);
         }
 
@@ -159,10 +153,12 @@ public class MainActivity extends AppCompatActivity {
     public void arduinoDisconnected() {
         setUiEnabled(false);
         serialPort.close();
-        tvAppend(textView,"\nSerial Connection Closed! \n");
+        toast_send = Toast.makeText(MainActivity.this, "Serial Connection Closed!", Toast.LENGTH_SHORT);
+        toast_send.show();
     }
 
     public void onClickSendTest(View view) {
+        // THIS CAN BE USED FOR SIMULATION OF RECEIVING PACKETS
         String string = editText.getText().toString();
         serialPort.write(string.getBytes());
         tvAppend(textView, "\nData Sent : " + string + "\n");
@@ -175,50 +171,15 @@ public class MainActivity extends AppCompatActivity {
             serialPort.write(string.getBytes());
             tvAppend(textView, "\nINFO:\n" + string + "\n");
         }else{
-            // do nothing
+            toast_send = Toast.makeText(MainActivity.this, "Please Connect the Transmission Device!", Toast.LENGTH_SHORT);
+            toast_send.show();
         }
     }
 
     public void onClicktoTextMode(View view) {
-        if(toTextMode.isEnabled()) {
-            AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
-            // I'm using fragment here so I'm using getView() to provide ViewGroup
-            // but you can provide here any other instance of ViewGroup from your Fragment / Activity
-            View viewInflated = LayoutInflater.from(this).inflate(R.layout.dialog_signin, (ViewGroup) findViewById(android.R.id.content), false);
-            // Set up the input
-            //final EditText input = (EditText) viewInflated.findViewById(R.id.input);
-            send_username = (EditText) viewInflated.findViewById(R.id.send_username);
-            send_userid = (EditText) viewInflated.findViewById(R.id.send_userid);
-            sendMessage = (EditText) viewInflated.findViewById(R.id.send_message);
-            // Specify the type of input expected; this, for example, sets the input as a password, and will mask the text
-            builder.setView(viewInflated);
-
-            // Set up the buttons
-            builder.setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
-                @Override
-                public void onClick(DialogInterface dialog, int which) {
-                        if((sendMessage.getText().length() == 0) || (send_username.getText().length() == 0) || (send_userid.getText().length() == 0)){
-                                toast_send = Toast.makeText(MainActivity.this, "Please fill up all fields!", Toast.LENGTH_SHORT);
-                                toast_send.show();
-                        }else{
-                            String string = sendMessage.getText().toString() + " from " + send_username.getText().toString() + " id#" + send_userid.getText().toString();
-                            serialPort.write(string.getBytes());
-                            tvAppend(textView, "\nINFO:\n" + string + "\n");
-                            dialog.dismiss();
-                        }
-                }
-            });
-            builder.setNegativeButton(android.R.string.cancel, new DialogInterface.OnClickListener() {
-                @Override
-                public void onClick(DialogInterface dialog, int which) {
-                    dialog.cancel();
-                }
-            });
-
-            builder.show();
-        }else {
-            //do nothing
-        }
+            // Go to Text Message Mode
+            Intent intent = new Intent(this, TextMessageActivity.class);
+            MainActivity.this.startActivity(intent);
     }
 
     private void tvAppend(TextView tv, CharSequence text) {
@@ -235,6 +196,5 @@ public class MainActivity extends AppCompatActivity {
 
     public void onBackPressed() {
         //doing nothing on pressing Back key
-        return;
     }
 }
