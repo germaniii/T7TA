@@ -1,4 +1,4 @@
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
 
@@ -10,146 +10,91 @@
     android:orientation="vertical"
     android:weightSum="10">
 
-    <RelativeLayout
-        android:id="@+id/main_topGroup"
+    <TextView
+        android:id="@+id/main_titleName"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerHorizontal="true"
+        android:layout_centerVertical="true"
+        android:layout_marginTop="50dp"
+        android:fontFamily="sans-serif-black"
+        android:foregroundGravity="center_vertical|center|center_horizontal"
+        android:gravity="center|center_horizontal|center_vertical"
+        android:text="EMA"
+        android:textColor="#000000"
+        android:textSize="36sp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.498"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
 
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1.5"
-        android:background="#1b1826">
+    <ImageButton
+        android:id="@+id/main_beaconButton"
+        android:layout_width="150dp"
+        android:layout_height="150dp"
+        android:layout_marginTop="30dp"
+        android:layout_marginBottom="15dp"
+        android:adjustViewBounds="false"
+        android:background="#00FFFFFF"
+        android:baselineAlignBottom="false"
+        android:layerType="none"
+        android:longClickable="true"
+        android:onClick="onClickBeaconMode"
+        android:scaleType="fitCenter"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.497"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/main_serialMonitor"
+        app:srcCompat="@drawable/icon_beacon_off" />
 
-        <TextView
-            android:id="@+id/main_titleName"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_centerInParent="true"
-            android:fontFamily="sans-serif-black"
-            android:foregroundGravity="center_vertical|center|center_horizontal"
-            android:gravity="center|center_horizontal|center_vertical"
-            android:text="EMA"
-            android:textColor="#FFFFFF"
-            android:textSize="36sp" />
-    </RelativeLayout>
+    <ImageButton
+        android:id="@+id/toTextModeButton"
+        android:layout_width="75dp"
+        android:layout_height="75dp"
+        android:layout_marginBottom="15dp"
+        android:background="#00C8E6C9"
+        android:onClick="onClicktoTextMode"
+        android:scaleType="fitCenter"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@+id/main_beaconButton"
+        app:srcCompat="@drawable/icon_textmode_off" />
 
-    <RelativeLayout
-        android:id="@+id/main_centerGroup"
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_marginTop="0dp"
-        android:layout_weight="6.5"
-        android:background="#221d36">
+    <Button
+        android:id="@+id/main_buttonSend"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="15dp"
+        android:onClick="onClickSendTest"
+        android:text="@string/send"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toStartOf="@+id/main_beaconButton"
+        app:layout_constraintStart_toStartOf="parent" />
 
-        <LinearLayout
-            android:id="@+id/main_textGroup"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:layout_marginStart="30dp"
-            android:layout_marginLeft="30dp"
-            android:layout_marginTop="30dp"
-            android:layout_marginEnd="30dp"
-            android:layout_marginRight="30dp"
-            android:layout_marginBottom="30dp"
-            android:background="#1b1826"
-            android:orientation="vertical">
+    <ImageView
+        android:id="@+id/main_MessageSign"
+        android:layout_width="50dp"
+        android:layout_height="50dp"
+        android:layout_gravity="center_horizontal"
+        android:layout_marginTop="30dp"
+        android:contentDescription="image only"
+        android:cropToPadding="false"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/main_titleName"
+        app:srcCompat="@drawable/icon_history" />
 
-            <ImageView
-                android:id="@+id/main_MessageSign"
-                android:layout_width="50dp"
-                android:layout_height="50dp"
-                android:layout_gravity="center_horizontal"
-                android:layout_marginTop="5dp"
-                android:contentDescription="image only"
-                android:cropToPadding="false"
-                app:srcCompat="@drawable/icon_history" />
-
-            <EditText
-                android:id="@+id/main_toSenderName"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center_horizontal"
-                android:layout_marginStart="15dp"
-                android:layout_marginLeft="15dp"
-                android:layout_marginTop="10dp"
-                android:layout_marginEnd="15dp"
-                android:layout_marginRight="15dp"
-                android:layout_marginBottom="0dp"
-                android:autofillHints="enter string"
-                android:hint="enter text"
-                android:inputType="none"
-                android:textColorHint="#6DFFFFFF" />
-
-            <TextView
-                android:id="@+id/main_serialMonitor"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="15dp"
-                android:layout_marginLeft="15dp"
-                android:layout_marginTop="15dp"
-                android:layout_marginEnd="18dp"
-                android:layout_marginRight="15dp"
-                android:layout_marginBottom="15dp"
-                android:hint="Please enter your message here. You can only input up to 255 characters.\n\n\n\n\n\n"
-                android:textColorHint="#6C6C6C" />
-
-        </LinearLayout>
-
-    </RelativeLayout>
-
-    <RelativeLayout
-        android:id="@+id/main_buttonGroup"
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_marginTop="0dp"
-        android:layout_marginBottom="0dp"
-        android:layout_weight="2"
-        android:background="#1b1826">
-
-        <ImageButton
-            android:id="@+id/main_beaconButton"
-            android:layout_width="150dp"
-            android:layout_height="150dp"
-            android:layout_alignParentBottom="true"
-            android:layout_centerHorizontal="true"
-            android:layout_marginTop="0dp"
-            android:layout_marginBottom="0dp"
-            android:adjustViewBounds="false"
-            android:background="#00FFFFFF"
-            android:baselineAlignBottom="false"
-            android:layerType="none"
-            android:longClickable="true"
-            android:onClick="onClickBeaconMode"
-            android:scaleType="fitCenter"
-            app:srcCompat="@drawable/icon_beacon_off" />
-
-        <ImageButton
-            android:id="@+id/toTextModeButton"
-            android:layout_width="75dp"
-            android:layout_height="75dp"
-            android:layout_alignParentBottom="true"
-            android:layout_marginStart="15dp"
-            android:layout_marginLeft="15dp"
-            android:layout_marginBottom="15dp"
-            android:layout_toEndOf="@+id/main_beaconButton"
-            android:layout_toRightOf="@+id/main_beaconButton"
-            android:background="#00C8E6C9"
-            android:onClick="onClicktoTextMode"
-            android:scaleType="fitCenter"
-            app:srcCompat="@drawable/icon_textmode_off" />
-
-        <Button
-            android:id="@+id/main_buttonSend"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_alignParentStart="true"
-            android:layout_alignParentLeft="true"
-            android:layout_alignParentBottom="true"
-            android:layout_marginStart="15dp"
-            android:layout_marginLeft="15dp"
-            android:layout_marginBottom="15dp"
-            android:onClick="onClickSendTest"
-            android:text="@string/send" />
-
-    </RelativeLayout>
+    <TextView
+        android:id="@+id/main_serialMonitor"
+        android:layout_width="316dp"
+        android:layout_height="258dp"
+        android:hint="Please enter your message here. You can only input up to 255 characters.\n\n\n\n\n\n"
+        android:textColorHint="#6C6C6C"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.494"
+        app:layout_constraintStart_toStartOf="parent"
+        tools:layout_editor_absoluteY="263dp" />
 
 
-</LinearLayout>
+</androidx.constraintlayout.widget.ConstraintLayout>
