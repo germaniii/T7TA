@@ -12,14 +12,16 @@ import java.util.List;
 
 public class InboxListAdapter extends RecyclerView.Adapter<InboxListAdapter.ViewHolder> {
 
-    private List<String> mData;
+    private List<String> mName, mNumber, mMessage;
     private LayoutInflater mInflater;
     private ItemClickListener mClickListener;
 
     // data is passed into the constructor
-    InboxListAdapter(Context context, List<String> data) {
+    InboxListAdapter(Context context, List<String> name, List<String> number, List<String> message) {
         this.mInflater = LayoutInflater.from(context);
-        this.mData = data;
+        this.mName = name;
+        this.mNumber = number;
+        this.mMessage = message;
     }
 
     // inflates the row layout from xml when needed
@@ -32,24 +34,30 @@ public class InboxListAdapter extends RecyclerView.Adapter<InboxListAdapter.View
     // binds the data to the TextView in each row
     @Override
     public void onBindViewHolder(ViewHolder holder, int position) {
-        String animal = mData.get(position);
-        holder.myTextView.setText(animal);
+        String name = mName.get(position);
+        String number = mNumber.get(position);
+        String message = mMessage.get(position);
+        holder.TextViewName.setText(name);
+        holder.TextViewNumber.setText(number);
+        holder.TextViewMessage.setText(message);
     }
 
     // total number of rows
     @Override
     public int getItemCount() {
-        return mData.size();
+        return mName.size();
     }
 
 
     // stores and recycles views as they are scrolled off screen
     public class ViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
-        TextView myTextView;
+        TextView TextViewName, TextViewNumber, TextViewMessage;
 
         ViewHolder(View itemView) {
             super(itemView);
-            myTextView = itemView.findViewById(R.id.inboxMessage);
+            TextViewName = itemView.findViewById(R.id.inboxName);
+            TextViewNumber = itemView.findViewById(R.id.inboxNumber);
+            TextViewMessage = itemView.findViewById(R.id.inboxMessage);
             itemView.setOnClickListener(this);
         }
 
@@ -60,8 +68,8 @@ public class InboxListAdapter extends RecyclerView.Adapter<InboxListAdapter.View
     }
 
     // convenience method for getting data at click position
-    String getItem(int id) {
-        return mData.get(id);
+    String getName(int id) {
+        return mName.get(id);
     }
 
     // allows clicks events to be caught

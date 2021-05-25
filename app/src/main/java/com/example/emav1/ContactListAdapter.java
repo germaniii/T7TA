@@ -12,14 +12,15 @@ import java.util.List;
 
 public class ContactListAdapter extends RecyclerView.Adapter<ContactListAdapter.ViewHolder> {
 
-    private List<String> mData;
+    private List<String> mName, mNumber;
     private LayoutInflater mInflater;
     private ItemClickListener mClickListener;
 
     // data is passed into the constructor
-    ContactListAdapter(Context context, List<String> data) {
+    ContactListAdapter(Context context, List<String> name, List<String> number) {
         this.mInflater = LayoutInflater.from(context);
-        this.mData = data;
+        this.mName = name;
+        this.mNumber = number;
     }
 
     // inflates the row layout from xml when needed
@@ -32,24 +33,27 @@ public class ContactListAdapter extends RecyclerView.Adapter<ContactListAdapter.
     // binds the data to the TextView in each row
     @Override
     public void onBindViewHolder(ViewHolder holder, int position) {
-        String animal = mData.get(position);
-        holder.myTextView.setText(animal);
+        String name = mName.get(position);
+        String numbers = mNumber.get(position);
+        holder.TextViewNames.setText(name);
+        holder.TextViewNumbers.setText(numbers);
     }
 
     // total number of rows
     @Override
     public int getItemCount() {
-        return mData.size();
+        return mName.size();
     }
 
 
     // stores and recycles views as they are scrolled off screen
     public class ViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
-        TextView myTextView;
+        TextView TextViewNames, TextViewNumbers;
 
         ViewHolder(View itemView) {
             super(itemView);
-            myTextView = itemView.findViewById(R.id.contactName);
+            TextViewNames = itemView.findViewById(R.id.contactName);
+            TextViewNumbers = itemView.findViewById(R.id.contactNumber);
             itemView.setOnClickListener(this);
         }
 
@@ -60,8 +64,11 @@ public class ContactListAdapter extends RecyclerView.Adapter<ContactListAdapter.
     }
 
     // convenience method for getting data at click position
-    String getItem(int id) {
-        return mData.get(id);
+    String getName(int id) {
+        return mName.get(id);
+    }
+    String getNumber(int id) {
+        return mNumber.get(id);
     }
 
     // allows clicks events to be caught

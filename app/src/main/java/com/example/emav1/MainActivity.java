@@ -58,22 +58,46 @@ public class MainActivity extends AppCompatActivity implements InboxListAdapter.
         textView.setMovementMethod(new ScrollingMovementMethod());
 
         // data to populate the RecyclerView with
-        ArrayList<String> animalNames = new ArrayList<>();
-        animalNames.add("Horse");
-        animalNames.add("Cow");
-        animalNames.add("Camel");
-        animalNames.add("Sheep");
-        animalNames.add("Goat");
-        animalNames.add("Horse");
-        animalNames.add("Cow");
-        animalNames.add("Camel");
-        animalNames.add("Sheep");
-        animalNames.add("Goat");
+        ArrayList<String> contactNames = new ArrayList<>();
+        contactNames.add("German");
+        contactNames.add("Carlo");
+        contactNames.add("Adrian");
+        contactNames.add("Francis");
+        contactNames.add("Sir Obette");
+        contactNames.add("Jabo");
+        contactNames.add("Jess");
+        contactNames.add("Eli");
+        contactNames.add("Ellaine");
+        contactNames.add("Kier");
+
+        ArrayList<String> contactNum = new ArrayList<>();
+        contactNum.add("09159301068");
+        contactNum.add("09919301677");
+        contactNum.add("09123901128");
+        contactNum.add("09159301129");
+        contactNum.add("09559301005");
+        contactNum.add("09669301583");
+        contactNum.add("09167930181");
+        contactNum.add("09189830167");
+        contactNum.add("09158630123");
+        contactNum.add("09134930102");
+
+        ArrayList<String> contactMessage = new ArrayList<>();
+        contactMessage.add("Lorem Ipsum Dolor Sit Amet Lorem Ipsum Dolor Sit AmetLorem Ipsum Dolor Sit Amet");
+        contactMessage.add("Amet Ipsum Ipsum Ipsum IpsumLorem Ipsum Dolor Sit AmetLorem Ipsum Dolor Sit AmetLorem Ipsum Dolor Sit AmetLorem Ipsum Dolor Sit Amet ");
+        contactMessage.add("Amet Amet Amet Amet Amet AmetLorem Ipsum Dolor Sit AmetLorem Ipsum Dolor Sit AmetLorem Ipsum Dolor Sit Amet");
+        contactMessage.add("Dolor DolorDolor Dolor DolorLorem Ipsum Dolor Sit AmetLorem Ipsum Dolor Sit AmetLorem Ipsum Dolor Sit AmetLorem Ipsum Dolor Sit Amet");
+        contactMessage.add("Lorem Lorem Lorem Lorem LoremLorem Ipsum Dolor Sit AmetLorem Ipsum Dolor Sit AmetLorem Ipsum Dolor Sit Amet");
+        contactMessage.add("Ipsum Ipsum Ipsum IpsumIpsumLorem Ipsum Dolor Sit AmetLorem Ipsum Dolor Sit AmetLorem Ipsum Dolor Sit Amet");
+        contactMessage.add("Sit Sit   Sit Sit Sit SitLorem Ipsum Dolor Sit AmetLorem Ipsum Dolor Sit AmetLorem Ipsum Dolor Sit Amet");
+        contactMessage.add("Ipsum Ipsum Sit SitLorem Ipsum Dolor Sit AmetLorem Ipsum Dolor Sit AmetLorem Ipsum Dolor Sit Amet");
+        contactMessage.add("Sit Sit  IpsumIpsumIpsumIpsumIpsumIpsumLorem Ipsum Dolor Sit AmetLorem Ipsum Dolor Sit AmetLorem Ipsum Dolor Sit Amet");
+        contactMessage.add("DolorDolor DolorDolor DolorDolorDolorDolorLorem Ipsum Dolor Sit AmetLorem Ipsum Dolor Sit AmetLorem Ipsum Dolor Sit AmetLorem Ipsum Dolor Sit Amet");
 
         // set up the RecyclerView
         RecyclerView recyclerView = findViewById(R.id.main_inboxList);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
-        inboxListAdapter = new InboxListAdapter(this, animalNames);
+        inboxListAdapter = new InboxListAdapter(this, contactNames, contactNum, contactMessage);
         inboxListAdapter.setClickListener(this);
         recyclerView.setAdapter(inboxListAdapter);
 
@@ -230,7 +254,7 @@ public class MainActivity extends AppCompatActivity implements InboxListAdapter.
 
     @Override
     public void onItemClick(View view, int position) {
-        Toast.makeText(this, "You clicked " + inboxListAdapter.getItem(position) + " on row number " + position, Toast.LENGTH_SHORT).show();
+        Toast.makeText(this, "You clicked " + inboxListAdapter.getName(position) + " on row number " + position, Toast.LENGTH_SHORT).show();
     }
 
     public void onBackPressed() {

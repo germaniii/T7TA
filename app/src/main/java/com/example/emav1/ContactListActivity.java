@@ -52,22 +52,34 @@ public class ContactListActivity extends AppCompatActivity implements ContactLis
         beacon = findViewById(R.id.contactList_beaconButton);
 
         // data to populate the RecyclerView with
-        ArrayList<String> animalNames = new ArrayList<>();
-        animalNames.add("Horse");
-        animalNames.add("Cow");
-        animalNames.add("Camel");
-        animalNames.add("Sheep");
-        animalNames.add("Goat");
-        animalNames.add("Horse");
-        animalNames.add("Cow");
-        animalNames.add("Camel");
-        animalNames.add("Sheep");
-        animalNames.add("Goat");
+        ArrayList<String> contactNames = new ArrayList<>();
+        contactNames.add("German");
+        contactNames.add("Carlo");
+        contactNames.add("Adrian");
+        contactNames.add("Francis");
+        contactNames.add("Sir Obette");
+        contactNames.add("Jabo");
+        contactNames.add("Jess");
+        contactNames.add("Eli");
+        contactNames.add("Ellaine");
+        contactNames.add("Kier");
+
+        ArrayList<String> contactNum = new ArrayList<>();
+        contactNum.add("09159301068");
+        contactNum.add("09919301677");
+        contactNum.add("09123901128");
+        contactNum.add("09159301129");
+        contactNum.add("09559301005");
+        contactNum.add("09669301583");
+        contactNum.add("09167930181");
+        contactNum.add("09189830167");
+        contactNum.add("09158630123");
+        contactNum.add("09134930102");
 
         // set up the RecyclerView
         RecyclerView recyclerView = findViewById(R.id.contactList_list);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
-        contactListAdapter = new ContactListAdapter(this, animalNames);
+        contactListAdapter = new ContactListAdapter(this, contactNames, contactNum);
         contactListAdapter.setClickListener(this);
         recyclerView.setAdapter(contactListAdapter);
 
@@ -181,6 +193,18 @@ public class ContactListActivity extends AppCompatActivity implements ContactLis
 
     }
 
+    public void onClickAddContact(View view){
+        try{
+
+            toast_send = Toast.makeText(ContactListActivity.this, "Missing Add Contact Function!", Toast.LENGTH_SHORT);
+            toast_send.show();
+        }catch(Exception e){
+            toast_send = Toast.makeText(ContactListActivity.this, "There was an error!", Toast.LENGTH_SHORT);
+            toast_send.show();
+        }
+
+    }
+
     private void tvAppend(TextView tv, CharSequence text) {
         final TextView ftv = tv;
         final CharSequence ftext = text;
@@ -195,7 +219,7 @@ public class ContactListActivity extends AppCompatActivity implements ContactLis
 
     @Override
     public void onItemClick(View view, int position) {
-        Toast.makeText(this, "You clicked " + contactListAdapter.getItem(position) + " on row number " + position, Toast.LENGTH_SHORT).show();
+        Toast.makeText(this, "You clicked " + contactListAdapter.getName(position) + " with number " + contactListAdapter.getNumber(position) + " on row number " + position, Toast.LENGTH_SHORT).show();
     }
 
     public void onBackPressed() {
