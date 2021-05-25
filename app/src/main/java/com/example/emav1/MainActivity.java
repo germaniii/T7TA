@@ -108,7 +108,7 @@ public class MainActivity extends AppCompatActivity {
         beacon = findViewById(R.id.main_beaconButton);
         toTextMode = findViewById(R.id.toTextModeButton);
         textView.setMovementMethod(new ScrollingMovementMethod());
-        setUiEnabled(false);
+        setUiEnabled(true);
         IntentFilter filter = new IntentFilter();
         filter.addAction(ACTION_USB_PERMISSION);
         filter.addAction(UsbManager.ACTION_USB_DEVICE_ATTACHED);
@@ -158,22 +158,33 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void onClickSendTest(View view) {
-        // THIS CAN BE USED FOR SIMULATION OF RECEIVING PACKETS
-        String string = editText.getText().toString();
-        serialPort.write(string.getBytes());
-        tvAppend(textView, "\nData Sent : " + string + "\n");
+        try {
+            // THIS CAN BE USED FOR SIMULATION OF RECEIVING PACKETS
+            String string = editText.getText().toString();
+            serialPort.write(string.getBytes());
+            tvAppend(textView, "\nData Sent : " + string + "\n");
+        }catch (Exception e){
+            toast_send = Toast.makeText(MainActivity.this, "Send and Receive Test Error", Toast.LENGTH_SHORT);
+            toast_send.show();
+        }
     }
 
     public void onClickBeaconMode(View view){
-        if(beacon.isEnabled())
-        for(int i=5; i>0; i--) {
-            String string = "help";
-            serialPort.write(string.getBytes());
-            tvAppend(textView, "\nINFO:\n" + string + "\n");
-        }else{
-            toast_send = Toast.makeText(MainActivity.this, "Please Connect the Transmission Device!", Toast.LENGTH_SHORT);
+        try{
+            if(beacon.isEnabled())
+            for(int i=5; i>0; i--) {
+                String string = "help";
+                serialPort.write(string.getBytes());
+                tvAppend(textView, "\nINFO:\n" + string + "\n");
+            }else{
+                toast_send = Toast.makeText(MainActivity.this, "Please Connect the Transmission Device!", Toast.LENGTH_SHORT);
+                toast_send.show();
+            }
+        }catch(Exception e){
+            toast_send = Toast.makeText(MainActivity.this, "Beacon Mode Error!", Toast.LENGTH_SHORT);
             toast_send.show();
         }
+
     }
 
     public void onClicktoTextMode(View view) {
