@@ -44,6 +44,7 @@ public class MainActivity extends AppCompatActivity implements InboxListAdapter.
     Toast toast_send;
 
     InboxListAdapter inboxListAdapter;
+    ArrayList<String> contactNames, contactNum, contactMessage;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -58,7 +59,7 @@ public class MainActivity extends AppCompatActivity implements InboxListAdapter.
         textView.setMovementMethod(new ScrollingMovementMethod());
 
         // data to populate the RecyclerView with
-        ArrayList<String> contactNames = new ArrayList<>();
+        contactNames = new ArrayList<>();
         contactNames.add("German");
         contactNames.add("Carlo");
         contactNames.add("Adrian");
@@ -70,7 +71,7 @@ public class MainActivity extends AppCompatActivity implements InboxListAdapter.
         contactNames.add("Ellaine");
         contactNames.add("Kier");
 
-        ArrayList<String> contactNum = new ArrayList<>();
+        contactNum = new ArrayList<>();
         contactNum.add("09159301068");
         contactNum.add("09919301677");
         contactNum.add("09123901128");
@@ -82,7 +83,7 @@ public class MainActivity extends AppCompatActivity implements InboxListAdapter.
         contactNum.add("09158630123");
         contactNum.add("09134930102");
 
-        ArrayList<String> contactMessage = new ArrayList<>();
+        contactMessage = new ArrayList<>();
         contactMessage.add("Lorem Ipsum Dolor Sit Amet Lorem Ipsum Dolor Sit AmetLorem Ipsum Dolor Sit Amet");
         contactMessage.add("Amet Ipsum Ipsum Ipsum IpsumLorem Ipsum Dolor Sit AmetLorem Ipsum Dolor Sit AmetLorem Ipsum Dolor Sit AmetLorem Ipsum Dolor Sit Amet ");
         contactMessage.add("Amet Amet Amet Amet Amet AmetLorem Ipsum Dolor Sit AmetLorem Ipsum Dolor Sit AmetLorem Ipsum Dolor Sit Amet");

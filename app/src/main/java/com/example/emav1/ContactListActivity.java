@@ -1,21 +1,22 @@
 package com.example.emav1;
 
+import android.app.AlertDialog;
 import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.hardware.usb.UsbDevice;
 import android.hardware.usb.UsbDeviceConnection;
 import android.hardware.usb.UsbManager;
 import android.os.Bundle;
-import android.text.method.ScrollingMovementMethod;
 import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.View;
-import android.widget.ArrayAdapter;
+import android.view.ViewGroup;
 import android.widget.EditText;
 import android.widget.ImageButton;
-import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -26,7 +27,6 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.felhr.usbserial.UsbSerialDevice;
 import com.felhr.usbserial.UsbSerialInterface;
 
-import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
@@ -41,6 +41,11 @@ public class ContactListActivity extends AppCompatActivity implements ContactLis
     ImageButton beacon;
     Toast toast_send;
 
+    private ArrayList<String> contactNames, contactNum;
+
+    private EditText editName, editNumber;
+    private RecyclerView recyclerView;
+
     ContactListAdapter contactListAdapter;
 
     @Override
@@ -52,7 +57,7 @@ public class ContactListActivity extends AppCompatActivity implements ContactLis
         beacon = findViewById(R.id.contactList_beaconButton);
 
         // data to populate the RecyclerView with
-        ArrayList<String> contactNames = new ArrayList<>();
+        contactNames = new ArrayList<>();
         contactNames.add("German");
         contactNames.add("Carlo");
         contactNames.add("Adrian");
@@ -64,7 +69,7 @@ public class ContactListActivity extends AppCompatActivity implements ContactLis
         contactNames.add("Ellaine");
         contactNames.add("Kier");
 
-        ArrayList<String> contactNum = new ArrayList<>();
+        contactNum = new ArrayList<>();
         contactNum.add("09159301068");
         contactNum.add("09919301677");
         contactNum.add("09123901128");
@@ -77,7 +82,7 @@ public class ContactListActivity extends AppCompatActivity implements ContactLis
         contactNum.add("09134930102");
 
         // set up the RecyclerView
-        RecyclerView recyclerView = findViewById(R.id.contactList_list);
+        recyclerView = findViewById(R.id.contactList_list);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
         contactListAdapter = new ContactListAdapter(this, contactNames, contactNum);
         contactListAdapter.setClickListener(this);
@@ -194,16 +199,92 @@ public class ContactListActivity extends AppCompatActivity implements ContactLis
     }
 
     public void onClickAddContact(View view){
-        try{
+        AlertDialog.Builder builder = new AlertDialog.Builder(ContactListActivity.this);
+        // I'm using fragment here so I'm using getView() to provide ViewGroup
+        // but you can provide here any other instance of ViewGroup from your Fragment / Activity
+        View viewInflated = LayoutInflater.from(this).inflate(R.layout.dialog_contactmanagement, (ViewGroup) findViewById(android.R.id.content), false);
+        // Set up the input
+        //final EditText input = (EditText) viewInflated.findViewById(R.id.input);
+        editName = (EditText) viewInflated.findViewById(R.id.dialog_name);
+        editNumber = (EditText) viewInflated.findViewById(R.id.dialog_number);
+        builder.setView(viewInflated);
 
-            toast_send = Toast.makeText(ContactListActivity.this, "Missing Add Contact Function!", Toast.LENGTH_SHORT);
-            toast_send.show();
-        }catch(Exception e){
-            toast_send = Toast.makeText(ContactListActivity.this, "There was an error!", Toast.LENGTH_SHORT);
-            toast_send.show();
-        }
+        // Set up the buttons
+        builder.setPositiveButton("Add", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                if(editName.getText().toString() == "" || editNumber.getText().toString() == ""){
+                    toast_send = Toast.makeText(ContactListActivity.this, "Please fill up all fields!", Toast.LENGTH_SHORT);
+                    toast_send.show();
+                }else{
+                    contactNames.add(editName.getText().toString());
+                    contactNum.add(editNumber.getText().toString());
+                    contactListAdapter.notifyDataSetChanged();
+                }
+            }
+        });
+        builder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                dialog.cancel();
+            }
+        });
 
+        builder.show();
     }
+
+    @Override
+    public void onItemClick(View view, int position) {
+        Toast.makeText(this, "You clicked " + contactListAdapter.getName(position) + " on row number " + position + ". Add Edit and Delete Functions Here", Toast.LENGTH_SHORT).show();
+
+        AlertDialog.Builder builder = new AlertDialog.Builder(ContactListActivity.this);
+        // I'm using fragment here so I'm using getView() to provide ViewGroup
+        // but you can provide here any other instance of ViewGroup from your Fragment / Activity
+        View viewInflated = LayoutInflater.from(this).inflate(R.layout.dialog_contactmanagement, (ViewGroup) findViewById(android.R.id.content), false);
+        // Set up the input
+        //final EditText input = (EditText) viewInflated.findViewById(R.id.input);
+        editName = (EditText) viewInflated.findViewById(R.id.dialog_name);
+        editNumber = (EditText) viewInflated.findViewById(R.id.dialog_number);
+
+        editName.setText(contactNames.get(position));
+        editNumber.setText(contactNum.get(position));
+        // Specify the type of input expected; this, for example, sets the input as a password, and will mask the text
+        builder.setView(viewInflated);
+
+        // Set up the buttons
+        builder.setPositiveButton("Edit", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                try{
+                    contactNames.set(position, editName.getText().toString());
+                    contactNum.set(position, editNumber.getText().toString());
+                    contactListAdapter.notifyDataSetChanged();
+                }catch(Exception e){
+                    toast_send = Toast.makeText(ContactListActivity.this, "Please fill up all fields!", Toast.LENGTH_SHORT);
+                    toast_send.show();
+                }
+            }
+        });
+        builder.setNeutralButton("Delete", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                contactNames.remove(position);
+                contactNum.remove(position);
+                recyclerView.removeViewAt(position);
+                contactListAdapter.notifyItemRemoved(position);
+                contactListAdapter.notifyItemRangeChanged(position, contactNames.size());
+            }
+        });
+        builder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                dialog.cancel();
+            }
+        });
+
+        builder.show();
+    }
+
 
     private void tvAppend(TextView tv, CharSequence text) {
         final TextView ftv = tv;
@@ -215,11 +296,6 @@ public class ContactListActivity extends AppCompatActivity implements ContactLis
                 ftv.append(ftext);
             }
         });
-    }
-
-    @Override
-    public void onItemClick(View view, int position) {
-        Toast.makeText(this, "You clicked " + contactListAdapter.getName(position) + " with number " + contactListAdapter.getNumber(position) + " on row number " + position, Toast.LENGTH_SHORT).show();
     }
 
     public void onBackPressed() {
