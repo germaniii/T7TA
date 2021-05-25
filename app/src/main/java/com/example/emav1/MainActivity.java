@@ -1,6 +1,8 @@
 package com.example.emav1;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
@@ -24,10 +26,11 @@ import com.felhr.usbserial.UsbSerialDevice;
 import com.felhr.usbserial.UsbSerialInterface;
 
 import java.io.UnsupportedEncodingException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements InboxListAdapter.ItemClickListener{
 
     public final String ACTION_USB_PERMISSION = "com.example.emav1.USB_PERMISSION";
     Button sendButton;
@@ -39,6 +42,52 @@ public class MainActivity extends AppCompatActivity {
     UsbDeviceConnection connection;
     ImageButton  beacon, toTextMode;
     Toast toast_send;
+
+    InboxListAdapter inboxListAdapter;
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+        usbManager = (UsbManager) getSystemService(this.USB_SERVICE);
+        sendButton = findViewById(R.id.main_buttonSend);
+        textView = findViewById(R.id.main_serialMonitor);
+        beacon = findViewById(R.id.main_beaconButton);
+        toTextMode = findViewById(R.id.toTextModeButton);
+        textView.setMovementMethod(new ScrollingMovementMethod());
+
+        // data to populate the RecyclerView with
+        ArrayList<String> animalNames = new ArrayList<>();
+        animalNames.add("Horse");
+        animalNames.add("Cow");
+        animalNames.add("Camel");
+        animalNames.add("Sheep");
+        animalNames.add("Goat");
+        animalNames.add("Horse");
+        animalNames.add("Cow");
+        animalNames.add("Camel");
+        animalNames.add("Sheep");
+        animalNames.add("Goat");
+
+        // set up the RecyclerView
+        RecyclerView recyclerView = findViewById(R.id.main_inboxList);
+        recyclerView.setLayoutManager(new LinearLayoutManager(this));
+        inboxListAdapter = new InboxListAdapter(this, animalNames);
+        inboxListAdapter.setClickListener(this);
+        recyclerView.setAdapter(inboxListAdapter);
+
+        IntentFilter filter = new IntentFilter();
+        filter.addAction(ACTION_USB_PERMISSION);
+        filter.addAction(UsbManager.ACTION_USB_DEVICE_ATTACHED);
+        filter.addAction(UsbManager.ACTION_USB_DEVICE_DETACHED);
+        registerReceiver(broadcastReceiver, filter);
+
+        // Set Beacon Image Whenever Transmission Device is Connected
+        if(!arduinoConnected()){
+            beacon.setImageResource(R.drawable.icon_beacon_on);
+        }
+
+    }
 
     UsbSerialInterface.UsbReadCallback mCallback = new UsbSerialInterface.UsbReadCallback() { //Defining a Callback which triggers whenever data is read.
         @Override
@@ -63,7 +112,6 @@ public class MainActivity extends AppCompatActivity {
                     serialPort = UsbSerialDevice.createUsbSerialDevice(device, connection);
                     if (serialPort != null) {
                         if (serialPort.open()) { //Set Serial Connection Parameters.
-                            setUiEnabled(true);
                             serialPort.setBaudRate(9600);
                             serialPort.setDataBits(UsbSerialInterface.DATA_BITS_8);
                             serialPort.setStopBits(UsbSerialInterface.STOP_BITS_1);
@@ -98,34 +146,6 @@ public class MainActivity extends AppCompatActivity {
         }
     };
 
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
-        usbManager = (UsbManager) getSystemService(this.USB_SERVICE);
-        sendButton = findViewById(R.id.main_buttonSend);
-        textView = findViewById(R.id.main_serialMonitor);
-        beacon = findViewById(R.id.main_beaconButton);
-        toTextMode = findViewById(R.id.toTextModeButton);
-        textView.setMovementMethod(new ScrollingMovementMethod());
-        setUiEnabled(true);
-        IntentFilter filter = new IntentFilter();
-        filter.addAction(ACTION_USB_PERMISSION);
-        filter.addAction(UsbManager.ACTION_USB_DEVICE_ATTACHED);
-        filter.addAction(UsbManager.ACTION_USB_DEVICE_DETACHED);
-        registerReceiver(broadcastReceiver, filter);
-        if(!arduinoConnected()){
-            beacon.setImageResource(R.drawable.icon_beacon_on);
-        }
-
-    }
-
-    public void setUiEnabled(boolean bool) {
-        sendButton.setEnabled(bool);
-        toTextMode.setEnabled(bool);
-        beacon.setEnabled(bool);
-    }
-
     public boolean arduinoConnected() {
         HashMap<String, UsbDevice> usbDevices = usbManager.getDeviceList();
         boolean keep = true;
@@ -151,7 +171,6 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void arduinoDisconnected() {
-        setUiEnabled(false);
         serialPort.close();
         toast_send = Toast.makeText(MainActivity.this, "Serial Connection Closed!", Toast.LENGTH_SHORT);
         toast_send.show();
@@ -176,12 +195,9 @@ public class MainActivity extends AppCompatActivity {
                 String string = "help";
                 serialPort.write(string.getBytes());
                 tvAppend(textView, "\nINFO:\n" + string + "\n");
-            }else{
-                toast_send = Toast.makeText(MainActivity.this, "Please Connect the Transmission Device!", Toast.LENGTH_SHORT);
-                toast_send.show();
             }
         }catch(Exception e){
-            toast_send = Toast.makeText(MainActivity.this, "Beacon Mode Error!", Toast.LENGTH_SHORT);
+            toast_send = Toast.makeText(MainActivity.this, "Please Connect the EMA Device!", Toast.LENGTH_SHORT);
             toast_send.show();
         }
 
@@ -203,6 +219,11 @@ public class MainActivity extends AppCompatActivity {
                 ftv.append(ftext);
             }
         });
+    }
+
+    @Override
+    public void onItemClick(View view, int position) {
+        Toast.makeText(this, "You clicked " + inboxListAdapter.getItem(position) + " on row number " + position, Toast.LENGTH_SHORT).show();
     }
 
     public void onBackPressed() {

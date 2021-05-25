@@ -69,33 +69,28 @@ public class TextMessageActivity extends AppCompatActivity {
         filter.addAction(UsbManager.ACTION_USB_DEVICE_ATTACHED);
         filter.addAction(UsbManager.ACTION_USB_DEVICE_DETACHED);
         registerReceiver(broadcastReceiver, filter);
-
-        setUiEnabled(false);
         if(!arduinoConnected()){
             beacon.setImageResource(R.drawable.icon_beacon_on);
         }
     }
 
     public void onClickSendButton(View view) {
-        if(sendButton.isEnabled()) {
-            if((message.getText().length() == 0) || number.getSelectedItem() == "Select Contact"){
+        try {
+            if (sendButton.isEnabled()) {
+                if ((message.getText().length() == 0) || number.getSelectedItem() == "Select Contact") {
                     toast_send = Toast.makeText(TextMessageActivity.this, "Please fill up all fields!", Toast.LENGTH_SHORT);
                     toast_send.show();
-            }else{
-                String string = message.getText().toString() + " from " + number.getSelectedItem();
-                serialPort.write(string.getBytes());
-                tvAppend(textView, "\nTransmit: " + string + "\n");
-            }
+                } else {
+                    String string = message.getText().toString() + " from " + number.getSelectedItem();
+                    serialPort.write(string.getBytes());
+                    tvAppend(textView, "\nTransmit: " + string + "\n");
+                }
 
-        }else{
-            toast_send = Toast.makeText(TextMessageActivity.this, "Please Connect the Transmission Device!", Toast.LENGTH_SHORT);
+            }
+        }catch (Exception e){
+            toast_send = Toast.makeText(TextMessageActivity.this, "Please Connect the EMA Device!", Toast.LENGTH_SHORT);
             toast_send.show();
         }
-    }
-
-    public void setUiEnabled(boolean bool) {
-        sendButton.setEnabled(bool);
-        beacon.setEnabled(bool);
     }
 
     public boolean arduinoConnected() {
@@ -123,7 +118,6 @@ public class TextMessageActivity extends AppCompatActivity {
     }
 
     public void arduinoDisconnected() {
-        setUiEnabled(false);
         serialPort.close();
         toast_send = Toast.makeText(TextMessageActivity.this, "Serial Connection Closed!", Toast.LENGTH_SHORT);
         toast_send.show();
@@ -153,7 +147,6 @@ public class TextMessageActivity extends AppCompatActivity {
                     serialPort = UsbSerialDevice.createUsbSerialDevice(device, connection);
                     if (serialPort != null) {
                         if (serialPort.open()) { //Set Serial Connection Parameters.
-                            setUiEnabled(true);
                             serialPort.setBaudRate(9600);
                             serialPort.setDataBits(UsbSerialInterface.DATA_BITS_8);
                             serialPort.setStopBits(UsbSerialInterface.STOP_BITS_1);
@@ -198,6 +191,22 @@ public class TextMessageActivity extends AppCompatActivity {
                 ftv.append(ftext);
             }
         });
+    }
+
+    public void onClickBeaconMode(View view){
+        try{
+            if(beacon.isEnabled()){
+                for(int i=5; i>0; i--) {
+                    String string = "help";
+                    serialPort.write(string.getBytes());
+                    tvAppend(textView, "\nINFO:\n" + string + "\n");
+                }
+            }
+        }catch(Exception e){
+            toast_send = Toast.makeText(TextMessageActivity.this, "Please Connect the EMA Device!", Toast.LENGTH_SHORT);
+            toast_send.show();
+        }
+
     }
 
     public void onBackPressed() {

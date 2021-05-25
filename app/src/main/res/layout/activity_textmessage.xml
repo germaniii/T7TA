@@ -74,7 +74,7 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/divider"
-        app:srcCompat="@drawable/icon_send" />
+        app:srcCompat="@drawable/icon_textmode_on" />
 
     <TextView
         android:id="@+id/textMessage_serialMonitor"
