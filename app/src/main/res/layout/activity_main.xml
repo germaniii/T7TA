@@ -15,7 +15,7 @@
         android:layout_height="wrap_content"
         android:layout_centerHorizontal="true"
         android:layout_centerVertical="true"
-        android:layout_marginTop="25dp"
+        android:layout_marginTop="15dp"
         android:fontFamily="sans-serif-black"
         android:foregroundGravity="center_vertical|center|center_horizontal"
         android:gravity="center|center_horizontal|center_vertical"
@@ -32,7 +32,7 @@
         android:layout_width="150dp"
         android:layout_height="150dp"
         android:layout_marginTop="15dp"
-        android:layout_marginBottom="15dp"
+        android:layout_marginBottom="30dp"
         android:adjustViewBounds="false"
         android:background="#00FFFFFF"
         android:baselineAlignBottom="false"
@@ -46,7 +46,7 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/main_serialMonitor"
         app:layout_constraintVertical_bias="0.0"
-        app:srcCompat="@drawable/icon_beacon_off" />
+        app:srcCompat="@drawable/ico_beaconbutton" />
 
     <ImageButton
         android:id="@+id/toTextModeButton"
@@ -58,18 +58,33 @@
         android:scaleType="fitCenter"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.479"
         app:layout_constraintStart_toEndOf="@+id/main_beaconButton"
-        app:srcCompat="@drawable/icon_textmode_off" />
+        app:srcCompat="@drawable/ico_totextmessagemode" />
+
+    <ImageButton
+        android:id="@+id/toContactList"
+        android:layout_width="75dp"
+        android:layout_height="75dp"
+        android:layout_marginBottom="15dp"
+        android:background="#00C8E6C9"
+        android:onClick="onClicktoContactList"
+        android:scaleType="fitCenter"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toStartOf="@+id/main_beaconButton"
+        app:layout_constraintStart_toStartOf="parent"
+        app:srcCompat="@drawable/ico_tocontactlist" />
 
     <Button
         android:id="@+id/main_buttonSend"
-        android:layout_width="111dp"
-        android:layout_height="72dp"
-        android:layout_marginBottom="15dp"
+        android:layout_width="115dp"
+        android:layout_height="59dp"
+        android:layout_marginBottom="8dp"
         android:onClick="onClickSendTest"
         android:text="Simulate Receive"
-        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintBottom_toTopOf="@+id/toContactList"
         app:layout_constraintEnd_toStartOf="@+id/main_beaconButton"
+        app:layout_constraintHorizontal_bias="1.0"
         app:layout_constraintStart_toStartOf="parent" />
 
     <ImageView
@@ -77,23 +92,24 @@
         android:layout_width="50dp"
         android:layout_height="50dp"
         android:layout_gravity="center_horizontal"
-        android:layout_marginTop="25dp"
+        android:layout_marginTop="20dp"
         android:contentDescription="image only"
         android:cropToPadding="false"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/divider"
-        app:srcCompat="@drawable/icon_history" />
+        app:srcCompat="@drawable/ico_inbox" />
 
     <TextView
         android:id="@+id/main_serialMonitor"
         android:layout_width="306dp"
         android:layout_height="104dp"
-        android:layout_marginTop="20dp"
+        android:layout_marginTop="12dp"
         android:hint="This is where messages from Arduino will output"
         android:scrollbars="vertical"
         android:textColorHint="#6C6C6C"
         app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.494"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/main_inboxList" />
 
@@ -101,7 +117,7 @@
         android:id="@+id/divider"
         android:layout_width="447dp"
         android:layout_height="1dp"
-        android:layout_marginTop="25dp"
+        android:layout_marginTop="15dp"
         android:background="?android:attr/listDivider"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"

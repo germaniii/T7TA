@@ -40,7 +40,7 @@ public class MainActivity extends AppCompatActivity implements InboxListAdapter.
     UsbDevice device;
     UsbSerialDevice serialPort;
     UsbDeviceConnection connection;
-    ImageButton  beacon, toTextMode;
+    ImageButton  beacon, toTextMode, toContactList;
     Toast toast_send;
 
     InboxListAdapter inboxListAdapter;
@@ -54,6 +54,7 @@ public class MainActivity extends AppCompatActivity implements InboxListAdapter.
         textView = findViewById(R.id.main_serialMonitor);
         beacon = findViewById(R.id.main_beaconButton);
         toTextMode = findViewById(R.id.toTextModeButton);
+        toContactList = findViewById(R.id.toContactList);
         textView.setMovementMethod(new ScrollingMovementMethod());
 
         // data to populate the RecyclerView with
@@ -84,7 +85,7 @@ public class MainActivity extends AppCompatActivity implements InboxListAdapter.
 
         // Set Beacon Image Whenever Transmission Device is Connected
         if(!arduinoConnected()){
-            beacon.setImageResource(R.drawable.icon_beacon_on);
+            //beacon.setImageResource(R.drawable.icon_beacon_on);
         }
 
     }
@@ -132,14 +133,14 @@ public class MainActivity extends AppCompatActivity implements InboxListAdapter.
                 }
             } else if (intent.getAction().equals(UsbManager.ACTION_USB_DEVICE_ATTACHED)) {
                 arduinoConnected();
-                beacon.setImageResource(R.drawable.icon_beacon_on);
-                toTextMode.setImageResource(R.drawable.icon_textmode_on);
+                //beacon.setImageResource(R.drawable.icon_beacon_on);
+                //toTextMode.setImageResource(R.drawable.icon_textmode_on);
                 toast_send = Toast.makeText(MainActivity.this, "EMA device connected!", Toast.LENGTH_SHORT);
                 toast_send.show();
             } else if (intent.getAction().equals(UsbManager.ACTION_USB_DEVICE_DETACHED)) {
                 arduinoDisconnected();
-                beacon.setImageResource(R.drawable.icon_beacon_off);
-                toTextMode.setImageResource(R.drawable.icon_textmode_off);
+                //beacon.setImageResource(R.drawable.icon_beacon_off);
+                //toTextMode.setImageResource(R.drawable.icon_textmode_off);
                 toast_send = Toast.makeText(MainActivity.this, "EMA device disconnected!", Toast.LENGTH_SHORT);
                 toast_send.show();
             }
@@ -207,6 +208,12 @@ public class MainActivity extends AppCompatActivity implements InboxListAdapter.
             // Go to Text Message Mode
             Intent intent = new Intent(this, TextMessageActivity.class);
             MainActivity.this.startActivity(intent);
+    }
+
+    public void onClicktoContactList(View view) {
+        // Go to Contact List
+        //Intent intent = new Intent(this, TextMessageActivity.class);
+        //MainActivity.this.startActivity(intent);
     }
 
     private void tvAppend(TextView tv, CharSequence text) {

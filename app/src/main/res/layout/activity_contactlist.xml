@@ -46,7 +46,7 @@
         android:id="@+id/textMessage_beaconButton"
         android:layout_width="150dp"
         android:layout_height="150dp"
-        android:layout_marginTop="30dp"
+        android:layout_marginTop="15dp"
         android:layout_marginBottom="15dp"
         android:adjustViewBounds="false"
         android:background="#00FFFFFF"
@@ -59,11 +59,11 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.497"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/textMessage_serialMonitor"
+        app:layout_constraintTop_toBottomOf="@+id/main_inboxList"
         app:srcCompat="@drawable/ico_beaconbutton" />
 
     <ImageView
-        android:id="@+id/textMessage_MessageSign"
+        android:id="@+id/contactList_Contact Sign"
         android:layout_width="50dp"
         android:layout_height="50dp"
         android:layout_gravity="center_horizontal"
@@ -72,22 +72,10 @@
         android:cropToPadding="false"
         android:tint="#959191"
         app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.498"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/divider"
         app:srcCompat="@drawable/ico_messagemode" />
-
-    <TextView
-        android:id="@+id/textMessage_serialMonitor"
-        android:layout_width="200dp"
-        android:layout_height="100dp"
-        android:layout_marginStart="50dp"
-        android:layout_marginLeft="50dp"
-        android:layout_marginTop="15dp"
-        android:hint="This is where messages from Arduino will output"
-        android:scrollbars="vertical"
-        android:textColorHint="#6C6C6C"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/textMessage_message" />
 
     <View
         android:id="@+id/divider"
@@ -99,47 +87,13 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/main_titleName" />
 
-    <Spinner
-        android:id="@+id/textMessage_Spinner"
-        android:layout_width="254dp"
-        android:layout_height="30dp"
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/main_inboxList"
+        android:layout_width="305dp"
+        android:layout_height="363dp"
         android:layout_marginTop="20dp"
-        android:layout_marginEnd="50dp"
-        android:layout_marginRight="50dp"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="1.0"
-        app:layout_constraintStart_toEndOf="@+id/textView2"
-        app:layout_constraintTop_toBottomOf="@+id/textMessage_MessageSign" />
-
-    <TextView
-        android:id="@+id/textView2"
-        android:layout_width="30dp"
-        android:layout_height="30dp"
-        android:layout_marginStart="50dp"
-        android:layout_marginLeft="50dp"
-        android:layout_marginTop="20dp"
-        android:text="To:"
-        android:textSize="16sp"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/textMessage_MessageSign" />
-
-    <EditText
-        android:id="@+id/textMessage_message"
-        android:layout_width="294dp"
-        android:layout_height="200dp"
-        android:layout_marginStart="50dp"
-        android:layout_marginLeft="50dp"
-        android:layout_marginTop="20dp"
-        android:layout_marginEnd="50dp"
-        android:layout_marginRight="50dp"
-        android:ems="10"
-        android:hint="Enter message..."
-        android:inputType="textPersonName"
-        android:textColorHint="#979797"
-        android:textSize="14sp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/textMessage_Spinner" />
-
+        app:layout_constraintTop_toBottomOf="@+id/contactList_Contact Sign" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

@@ -24,13 +24,11 @@ import androidx.appcompat.app.AppCompatActivity;
 import com.felhr.usbserial.UsbSerialDevice;
 import com.felhr.usbserial.UsbSerialInterface;
 
-import org.w3c.dom.Text;
-
 import java.io.UnsupportedEncodingException;
 import java.util.HashMap;
 import java.util.Map;
 
-public class TextMessageActivity extends AppCompatActivity {
+public class ContactList extends AppCompatActivity implements InboxListAdapter.ItemClickListener{
 
     public final String ACTION_USB_PERMISSION = "com.example.emav1.USB_PERMISSION";
     TextView textView;
@@ -38,7 +36,7 @@ public class TextMessageActivity extends AppCompatActivity {
     UsbDevice device;
     UsbSerialDevice serialPort;
     UsbDeviceConnection connection;
-    ImageButton  beacon, sendButton;
+    ImageButton beacon, sendButton;
     Toast toast_send;
     EditText message;
     Spinner number;
