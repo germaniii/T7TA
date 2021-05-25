@@ -4,9 +4,11 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import android.app.AlertDialog;
 import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.hardware.usb.UsbDevice;
@@ -15,7 +17,9 @@ import android.hardware.usb.UsbManager;
 import android.os.Bundle;
 import android.text.method.ScrollingMovementMethod;
 import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageButton;
@@ -24,6 +28,8 @@ import android.widget.Toast;
 
 import com.felhr.usbserial.UsbSerialDevice;
 import com.felhr.usbserial.UsbSerialInterface;
+
+import org.w3c.dom.Text;
 
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
@@ -45,6 +51,8 @@ public class MainActivity extends AppCompatActivity implements InboxListAdapter.
 
     InboxListAdapter inboxListAdapter;
     ArrayList<String> contactNames, contactNum, contactMessage;
+    RecyclerView recyclerView;
+    TextView dialog_name, dialog_num, dialog_mess;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -96,7 +104,7 @@ public class MainActivity extends AppCompatActivity implements InboxListAdapter.
         contactMessage.add("DolorDolor DolorDolor DolorDolorDolorDolorLorem Ipsum Dolor Sit AmetLorem Ipsum Dolor Sit AmetLorem Ipsum Dolor Sit AmetLorem Ipsum Dolor Sit Amet");
 
         // set up the RecyclerView
-        RecyclerView recyclerView = findViewById(R.id.main_inboxList);
+        recyclerView = findViewById(R.id.main_inboxList);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
         inboxListAdapter = new InboxListAdapter(this, contactNames, contactNum, contactMessage);
         inboxListAdapter.setClickListener(this);
@@ -241,6 +249,42 @@ public class MainActivity extends AppCompatActivity implements InboxListAdapter.
         MainActivity.this.startActivity(intent);
     }
 
+    @Override
+    public void onItemClick(View view, int position) {
+        Toast.makeText(this, "You clicked " + inboxListAdapter.getName(position) + " on row number " + position + ". Add Edit and Delete Functions Here", Toast.LENGTH_SHORT).show();
+        AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
+        View viewInflated = LayoutInflater.from(this).inflate(R.layout.dialog_inboxmessage, (ViewGroup) findViewById(android.R.id.content), false);
+        dialog_name = (TextView) viewInflated.findViewById(R.id.dialog_mname);
+        dialog_num = (TextView) viewInflated.findViewById(R.id.dialog_mnumber);
+        dialog_mess = (TextView) viewInflated.findViewById(R.id.dialog_message);
+        // Set up the text
+        dialog_name.setText(contactNames.get(position));
+        dialog_num.setText(contactNum.get(position));
+        dialog_mess.setText(contactMessage.get(position));
+        // Specify the type of input expected; this, for example, sets the input as a password, and will mask the text
+        builder.setView(viewInflated);
+
+        builder.setNeutralButton("Delete", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                contactNames.remove(position);
+                contactNum.remove(position);
+                recyclerView.removeViewAt(position);
+                inboxListAdapter.notifyItemRemoved(position);
+                inboxListAdapter.notifyItemRangeChanged(position, contactNames.size());
+            }
+        });
+        builder.setPositiveButton("Back", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                dialog.cancel();
+            }
+        });
+
+        builder.show();
+    }
+
+
     private void tvAppend(TextView tv, CharSequence text) {
         final TextView ftv = tv;
         final CharSequence ftext = text;
@@ -251,11 +295,6 @@ public class MainActivity extends AppCompatActivity implements InboxListAdapter.
                 ftv.append(ftext);
             }
         });
-    }
-
-    @Override
-    public void onItemClick(View view, int position) {
-        Toast.makeText(this, "You clicked " + inboxListAdapter.getName(position) + " on row number " + position, Toast.LENGTH_SHORT).show();
     }
 
     public void onBackPressed() {
