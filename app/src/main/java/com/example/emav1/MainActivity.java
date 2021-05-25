@@ -212,8 +212,8 @@ public class MainActivity extends AppCompatActivity implements InboxListAdapter.
 
     public void onClicktoContactList(View view) {
         // Go to Contact List
-        //Intent intent = new Intent(this, TextMessageActivity.class);
-        //MainActivity.this.startActivity(intent);
+        Intent intent = new Intent(this, ContactListActivity.class);
+        MainActivity.this.startActivity(intent);
     }
 
     private void tvAppend(TextView tv, CharSequence text) {

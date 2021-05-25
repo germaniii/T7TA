@@ -20,48 +20,57 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 import com.felhr.usbserial.UsbSerialDevice;
 import com.felhr.usbserial.UsbSerialInterface;
 
 import java.io.UnsupportedEncodingException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
-public class ContactList extends AppCompatActivity implements InboxListAdapter.ItemClickListener{
+public class ContactListActivity extends AppCompatActivity implements ContactListAdapter.ItemClickListener{
 
     public final String ACTION_USB_PERMISSION = "com.example.emav1.USB_PERMISSION";
-    TextView textView;
     UsbManager usbManager;
     UsbDevice device;
     UsbSerialDevice serialPort;
     UsbDeviceConnection connection;
-    ImageButton beacon, sendButton;
+    ImageButton beacon;
     Toast toast_send;
-    EditText message;
-    Spinner number;
 
-    //This array will be replaced with the SQL database
-    String[] spinnerTest = new String[]{"Select Contact", "09159301068", "0923424241", "0999232451"};
+    ContactListAdapter contactListAdapter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_textmessage);
+        setContentView(R.layout.activity_contactlist);
 
         usbManager = (UsbManager) getSystemService(MainActivity.USB_SERVICE);
-        beacon = findViewById(R.id.textMessage_beaconButton);
-        textView = findViewById(R.id.textMessage_serialMonitor);
-        sendButton = findViewById(R.id.textMessage_sendButton);
-        message = findViewById(R.id.textMessage_message);
+        beacon = findViewById(R.id.contactList_beaconButton);
 
-        number = findViewById(R.id.textMessage_Spinner);
-        ArrayAdapter<String> adapter = new ArrayAdapter<>(this,
-                android.R.layout.simple_spinner_item, spinnerTest);
-        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        number.setAdapter(adapter);
+        // data to populate the RecyclerView with
+        ArrayList<String> animalNames = new ArrayList<>();
+        animalNames.add("Horse");
+        animalNames.add("Cow");
+        animalNames.add("Camel");
+        animalNames.add("Sheep");
+        animalNames.add("Goat");
+        animalNames.add("Horse");
+        animalNames.add("Cow");
+        animalNames.add("Camel");
+        animalNames.add("Sheep");
+        animalNames.add("Goat");
 
-        textView.setMovementMethod(new ScrollingMovementMethod());
+        // set up the RecyclerView
+        RecyclerView recyclerView = findViewById(R.id.contactList_list);
+        recyclerView.setLayoutManager(new LinearLayoutManager(this));
+        contactListAdapter = new ContactListAdapter(this, animalNames);
+        contactListAdapter.setClickListener(this);
+        recyclerView.setAdapter(contactListAdapter);
+
         IntentFilter filter = new IntentFilter();
         filter.addAction(ACTION_USB_PERMISSION);
         filter.addAction(UsbManager.ACTION_USB_DEVICE_ATTACHED);
@@ -98,7 +107,7 @@ public class ContactList extends AppCompatActivity implements InboxListAdapter.I
 
     public void arduinoDisconnected() {
         serialPort.close();
-        toast_send = Toast.makeText(TextMessageActivity.this, "Serial Connection Closed!", Toast.LENGTH_SHORT);
+        toast_send = Toast.makeText(ContactListActivity.this, "Serial Connection Closed!", Toast.LENGTH_SHORT);
         toast_send.show();
     }
 
@@ -106,13 +115,11 @@ public class ContactList extends AppCompatActivity implements InboxListAdapter.I
         @Override
         public void onReceivedData(byte[] arg0) {
             String data;
-            try {
-                data = new String(arg0, "UTF-8");
-                data.concat("/n");
-                tvAppend(textView, data);
+           /* try {
+                //This will be using a background method for processing received packets
             } catch (UnsupportedEncodingException e) {
                 e.printStackTrace();
-            }
+            }*/
         }
     };
 
@@ -132,7 +139,7 @@ public class ContactList extends AppCompatActivity implements InboxListAdapter.I
                             serialPort.setParity(UsbSerialInterface.PARITY_NONE);
                             serialPort.setFlowControl(UsbSerialInterface.FLOW_CONTROL_OFF);
                             serialPort.read(mCallback);
-                            toast_send = Toast.makeText(TextMessageActivity.this, "Serial Connection Opened!", Toast.LENGTH_SHORT);
+                            toast_send = Toast.makeText(ContactListActivity.this, "Serial Connection Opened!", Toast.LENGTH_SHORT);
                             toast_send.show();
 
                         }else{
@@ -148,17 +155,31 @@ public class ContactList extends AppCompatActivity implements InboxListAdapter.I
                 arduinoConnected();
                 //beacon.setImageResource(R.drawable.icon_beacon_on);
                 //sendButton.setImageResource(R.drawable.icon_textmode_on);
-                toast_send = Toast.makeText(TextMessageActivity.this, "EMA device connected!", Toast.LENGTH_SHORT);
+                toast_send = Toast.makeText(ContactListActivity.this, "EMA device connected!", Toast.LENGTH_SHORT);
                 toast_send.show();
             } else if (intent.getAction().equals(UsbManager.ACTION_USB_DEVICE_DETACHED)) {
                 arduinoDisconnected();
                 //beacon.setImageResource(R.drawable.icon_beacon_off);
                 //sendButton.setImageResource(R.drawable.icon_textmode_off);
-                toast_send = Toast.makeText(TextMessageActivity.this, "EMA device disconnected!", Toast.LENGTH_SHORT);
+                toast_send = Toast.makeText(ContactListActivity.this, "EMA device disconnected!", Toast.LENGTH_SHORT);
                 toast_send.show();
             }
         }
     };
+
+    public void onClickBeaconMode(View view){
+        try{
+            if(beacon.isEnabled()){
+                for(int i=5; i>0; i--) {
+                   // Transmit Beacon Mode Function
+                }
+            }
+        }catch(Exception e){
+            toast_send = Toast.makeText(ContactListActivity.this, "Please Connect the EMA Device!", Toast.LENGTH_SHORT);
+            toast_send.show();
+        }
+
+    }
 
     private void tvAppend(TextView tv, CharSequence text) {
         final TextView ftv = tv;
@@ -172,39 +193,9 @@ public class ContactList extends AppCompatActivity implements InboxListAdapter.I
         });
     }
 
-    public void onClickSendButton(View view) {
-        try {
-            if (sendButton.isEnabled()) {
-                if ((message.getText().length() == 0) || number.getSelectedItem() == "Select Contact") {
-                    toast_send = Toast.makeText(TextMessageActivity.this, "Please fill up all fields!", Toast.LENGTH_SHORT);
-                    toast_send.show();
-                } else {
-                    String string = message.getText().toString() + " from " + number.getSelectedItem();
-                    serialPort.write(string.getBytes());
-                    tvAppend(textView, "\nTransmit: " + string + "\n");
-                }
-
-            }
-        }catch (Exception e){
-            toast_send = Toast.makeText(TextMessageActivity.this, "Please Connect the EMA Device!", Toast.LENGTH_SHORT);
-            toast_send.show();
-        }
-    }
-
-    public void onClickBeaconMode(View view){
-        try{
-            if(beacon.isEnabled()){
-                for(int i=5; i>0; i--) {
-                    String string = "help";
-                    serialPort.write(string.getBytes());
-                    tvAppend(textView, "\nINFO:\n" + string + "\n");
-                }
-            }
-        }catch(Exception e){
-            toast_send = Toast.makeText(TextMessageActivity.this, "Please Connect the EMA Device!", Toast.LENGTH_SHORT);
-            toast_send.show();
-        }
-
+    @Override
+    public void onItemClick(View view, int position) {
+        Toast.makeText(this, "You clicked " + contactListAdapter.getItem(position) + " on row number " + position, Toast.LENGTH_SHORT).show();
     }
 
     public void onBackPressed() {

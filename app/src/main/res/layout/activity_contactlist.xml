@@ -9,21 +9,6 @@
     android:orientation="vertical"
     android:weightSum="10">
 
-    <ImageButton
-        android:id="@+id/textMessage_sendButton"
-        android:layout_width="47dp"
-        android:layout_height="48dp"
-        android:layout_marginTop="40dp"
-        android:layout_marginEnd="48dp"
-        android:layout_marginRight="48dp"
-        android:background="#00C8E6C9"
-        android:onClick="onClickSendButton"
-        android:scaleType="fitCenter"
-        android:tint="#737373"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/textMessage_message"
-        app:srcCompat="@drawable/ico_sendbutton" />
-
     <TextView
         android:id="@+id/main_titleName"
         android:layout_width="wrap_content"
@@ -43,7 +28,7 @@
         app:layout_constraintTop_toTopOf="parent" />
 
     <ImageButton
-        android:id="@+id/textMessage_beaconButton"
+        android:id="@+id/contactList_beaconButton"
         android:layout_width="150dp"
         android:layout_height="150dp"
         android:layout_marginTop="15dp"
@@ -63,7 +48,7 @@
         app:srcCompat="@drawable/ico_beaconbutton" />
 
     <ImageView
-        android:id="@+id/contactList_Contact Sign"
+        android:id="@+id/contactList_ContactSign"
         android:layout_width="50dp"
         android:layout_height="50dp"
         android:layout_gravity="center_horizontal"
@@ -75,7 +60,7 @@
         app:layout_constraintHorizontal_bias="0.498"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/divider"
-        app:srcCompat="@drawable/ico_messagemode" />
+        app:srcCompat="@drawable/ico_contactslist" />
 
     <View
         android:id="@+id/divider"
@@ -88,12 +73,12 @@
         app:layout_constraintTop_toBottomOf="@+id/main_titleName" />
 
     <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/main_inboxList"
+        android:id="@+id/contactList_list"
         android:layout_width="305dp"
         android:layout_height="363dp"
         android:layout_marginTop="20dp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/contactList_Contact Sign" />
+        app:layout_constraintTop_toBottomOf="@+id/contactList_ContactSign" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
