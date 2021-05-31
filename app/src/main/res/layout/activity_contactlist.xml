@@ -75,7 +75,7 @@
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/contactList_list"
         android:layout_width="305dp"
-        android:layout_height="363dp"
+        android:layout_height="400dp"
         android:layout_marginTop="20dp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"

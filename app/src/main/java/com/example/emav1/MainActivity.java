@@ -11,6 +11,7 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.database.Cursor;
 import android.hardware.usb.UsbDevice;
 import android.hardware.usb.UsbDeviceConnection;
 import android.hardware.usb.UsbManager;
@@ -54,6 +55,8 @@ public class MainActivity extends AppCompatActivity implements InboxListAdapter.
     RecyclerView recyclerView;
     TextView dialog_name, dialog_num, dialog_mess;
 
+    DataBaseHelper dataBaseHelper;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -65,6 +68,8 @@ public class MainActivity extends AppCompatActivity implements InboxListAdapter.
         toTextMode = findViewById(R.id.toTextModeButton);
         toContactList = findViewById(R.id.toContactList);
         textView.setMovementMethod(new ScrollingMovementMethod());
+
+        dataBaseHelper = new DataBaseHelper(MainActivity.this);
 
         // data to populate the RecyclerView with
         contactNames = new ArrayList<>();
@@ -249,6 +254,7 @@ public class MainActivity extends AppCompatActivity implements InboxListAdapter.
         MainActivity.this.startActivity(intent);
     }
 
+    //ON ITEM CLICK FROM RECYCLER VIEW
     @Override
     public void onItemClick(View view, int position) {
         Toast.makeText(this, "You clicked " + inboxListAdapter.getName(position) + " on row number " + position + ". Add Edit and Delete Functions Here", Toast.LENGTH_SHORT).show();
@@ -295,6 +301,19 @@ public class MainActivity extends AppCompatActivity implements InboxListAdapter.
                 ftv.append(ftext);
             }
         });
+    }
+
+    void storeDBtoArrays(){
+        Cursor cursor = dataBaseHelper.readAllData();
+        if(cursor.getCount() == 0){
+            Toast.makeText(this, "No Data", Toast.LENGTH_SHORT).show();
+        }else{
+            while (cursor.moveToNext()){
+                contactNames.add(cursor.getString(0));
+                contactNum.add(cursor.getString(1));
+                contactMessage.add(cursor.getString(2));
+            }
+        }
     }
 
     public void onBackPressed() {

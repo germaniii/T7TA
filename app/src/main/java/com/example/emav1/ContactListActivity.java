@@ -7,6 +7,7 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.database.Cursor;
 import android.hardware.usb.UsbDevice;
 import android.hardware.usb.UsbDeviceConnection;
 import android.hardware.usb.UsbManager;
@@ -27,6 +28,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.felhr.usbserial.UsbSerialDevice;
 import com.felhr.usbserial.UsbSerialInterface;
 
+import java.sql.DatabaseMetaData;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
@@ -41,12 +43,13 @@ public class ContactListActivity extends AppCompatActivity implements ContactLis
     ImageButton beacon;
     Toast toast_send;
 
-    private ArrayList<String> contactNames, contactNum;
+    private ArrayList<String> contactNames, contactNum, contactKey;
 
-    private EditText editName, editNumber;
+    private EditText editName, editNumber, editKey;
     private RecyclerView recyclerView;
 
     ContactListAdapter contactListAdapter;
+    DataBaseHelper dataBaseHelper;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -58,29 +61,11 @@ public class ContactListActivity extends AppCompatActivity implements ContactLis
 
         // data to populate the RecyclerView with
         contactNames = new ArrayList<>();
-        contactNames.add("German");
-        contactNames.add("Carlo");
-        contactNames.add("Adrian");
-        contactNames.add("Francis");
-        contactNames.add("Sir Obette");
-        contactNames.add("Jabo");
-        contactNames.add("Jess");
-        contactNames.add("Eli");
-        contactNames.add("Ellaine");
-        contactNames.add("Kier");
-
         contactNum = new ArrayList<>();
-        contactNum.add("09159301068");
-        contactNum.add("09919301677");
-        contactNum.add("09123901128");
-        contactNum.add("09159301129");
-        contactNum.add("09559301005");
-        contactNum.add("09669301583");
-        contactNum.add("09167930181");
-        contactNum.add("09189830167");
-        contactNum.add("09158630123");
-        contactNum.add("09134930102");
+        contactKey = new ArrayList<>();
 
+        dataBaseHelper = new DataBaseHelper(ContactListActivity.this);
+        storeDBtoArrays();
         // set up the RecyclerView
         recyclerView = findViewById(R.id.contactList_list);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
@@ -207,6 +192,7 @@ public class ContactListActivity extends AppCompatActivity implements ContactLis
         //final EditText input = (EditText) viewInflated.findViewById(R.id.input);
         editName = (EditText) viewInflated.findViewById(R.id.dialog_name);
         editNumber = (EditText) viewInflated.findViewById(R.id.dialog_number);
+        editKey = (EditText) viewInflated.findViewById(R.id.dialog_key);
         builder.setView(viewInflated);
 
         // Set up the buttons
@@ -219,6 +205,9 @@ public class ContactListActivity extends AppCompatActivity implements ContactLis
                 }else{
                     contactNames.add(editName.getText().toString());
                     contactNum.add(editNumber.getText().toString());
+                    contactKey.add(editKey.getText().toString());
+                    dataBaseHelper.addOneContact(editName.getText().toString().trim(), editNumber.getText().toString(),
+                                            editKey.getText().toString().trim());
                     contactListAdapter.notifyDataSetChanged();
                 }
             }
@@ -245,9 +234,11 @@ public class ContactListActivity extends AppCompatActivity implements ContactLis
         //final EditText input = (EditText) viewInflated.findViewById(R.id.input);
         editName = (EditText) viewInflated.findViewById(R.id.dialog_name);
         editNumber = (EditText) viewInflated.findViewById(R.id.dialog_number);
+        editKey = (EditText) viewInflated.findViewById(R.id.dialog_key);
 
         editName.setText(contactNames.get(position));
         editNumber.setText(contactNum.get(position));
+        editKey.setText(contactKey.get(position));
         // Specify the type of input expected; this, for example, sets the input as a password, and will mask the text
         builder.setView(viewInflated);
 
@@ -256,11 +247,19 @@ public class ContactListActivity extends AppCompatActivity implements ContactLis
             @Override
             public void onClick(DialogInterface dialog, int which) {
                 try{
-                    contactNames.set(position, editName.getText().toString());
-                    contactNum.set(position, editNumber.getText().toString());
-                    contactListAdapter.notifyDataSetChanged();
+                    if(editName.getText().toString() == "" || editNumber.getText().toString() == ""){
+                        toast_send = Toast.makeText(ContactListActivity.this, "Please fill up all fields!", Toast.LENGTH_SHORT);
+                        toast_send.show();
+                    }else{
+                        dataBaseHelper.updateContact(Integer.toString(position+1), editName.getText().toString(), editNumber.getText().toString(),
+                                editKey.getText().toString());
+                        contactNames.set(position, editName.getText().toString());
+                        contactNum.set(position, editNumber.getText().toString());
+                        contactKey.set(position, editKey.getText().toString());
+                        contactListAdapter.notifyDataSetChanged();
+                    }
                 }catch(Exception e){
-                    toast_send = Toast.makeText(ContactListActivity.this, "Please fill up all fields!", Toast.LENGTH_SHORT);
+                    toast_send = Toast.makeText(ContactListActivity.this, "Unknown Error", Toast.LENGTH_SHORT);
                     toast_send.show();
                 }
             }
@@ -268,11 +267,35 @@ public class ContactListActivity extends AppCompatActivity implements ContactLis
         builder.setNeutralButton("Delete", new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
-                contactNames.remove(position);
-                contactNum.remove(position);
-                recyclerView.removeViewAt(position);
-                contactListAdapter.notifyItemRemoved(position);
-                contactListAdapter.notifyItemRangeChanged(position, contactNames.size());
+                try{
+                    AlertDialog.Builder builder_son = new AlertDialog.Builder(ContactListActivity.this);
+                    builder_son.setTitle("Delete");
+                    builder_son.setMessage("Are you sure you want to delete " + contactListAdapter.getName(position) + "?");
+                    builder_son.setPositiveButton("Yes", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            dataBaseHelper.deleteOneContact(Integer.toString(position+1));
+                            contactNames.remove(position);
+                            contactNum.remove(position);
+                            recyclerView.removeViewAt(position);
+                            contactListAdapter.notifyItemRemoved(position);
+                            contactListAdapter.notifyItemRangeChanged(position, contactNames.size());
+                        }
+                    });
+                    builder_son.setNegativeButton("No", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            Toast.makeText(ContactListActivity.this, "Cancelled Delete Function", Toast.LENGTH_SHORT).show();
+
+                        }
+                    });
+
+                    builder_son.create().show();
+
+                }catch(Exception e){
+                    Toast.makeText(ContactListActivity.this, "Unknown Error", Toast.LENGTH_SHORT).show();
+                }
+
             }
         });
         builder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
@@ -296,6 +319,19 @@ public class ContactListActivity extends AppCompatActivity implements ContactLis
                 ftv.append(ftext);
             }
         });
+    }
+
+    void storeDBtoArrays(){
+        Cursor cursor = dataBaseHelper.readAllData();
+        if(cursor.getCount() == 0){
+            Toast.makeText(this, "No Contacts Found!", Toast.LENGTH_SHORT).show();
+        }else{
+            while (cursor.moveToNext()){
+                contactNames.add(cursor.getString(1));
+                contactNum.add(cursor.getString(2));
+                contactKey.add(cursor.getString(3));
+            }
+        }
     }
 
     public void onBackPressed() {
