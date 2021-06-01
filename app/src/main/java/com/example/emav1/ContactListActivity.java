@@ -199,7 +199,7 @@ public class ContactListActivity extends AppCompatActivity implements ContactLis
         builder.setPositiveButton("Add", new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
-                if(editName.getText().toString() == "" || editNumber.getText().toString() == ""){
+                if(editName.getText().toString() == "" || editNumber.getText().toString() == "" || editKey.getText().toString() == ""){
                     toast_send = Toast.makeText(ContactListActivity.this, "Please fill up all fields!", Toast.LENGTH_SHORT);
                     toast_send.show();
                 }else{
@@ -224,7 +224,7 @@ public class ContactListActivity extends AppCompatActivity implements ContactLis
 
     @Override
     public void onItemClick(View view, int position) {
-        Toast.makeText(this, "You clicked " + contactListAdapter.getName(position) + " on row number " + position + ". Add Edit and Delete Functions Here", Toast.LENGTH_SHORT).show();
+        //Toast.makeText(this, "You clicked " + contactListAdapter.getName(position) + " on row number " + position + ". Add Edit and Delete Functions Here", Toast.LENGTH_SHORT).show();
 
         AlertDialog.Builder builder = new AlertDialog.Builder(ContactListActivity.this);
         // I'm using fragment here so I'm using getView() to provide ViewGroup
@@ -247,7 +247,7 @@ public class ContactListActivity extends AppCompatActivity implements ContactLis
             @Override
             public void onClick(DialogInterface dialog, int which) {
                 try{
-                    if(editName.getText().toString() == "" || editNumber.getText().toString() == ""){
+                    if(editName.getText().toString() == "" || editNumber.getText().toString() == "" || editKey.getText().toString() == ""){
                         toast_send = Toast.makeText(ContactListActivity.this, "Please fill up all fields!", Toast.LENGTH_SHORT);
                         toast_send.show();
                     }else{
@@ -286,7 +286,6 @@ public class ContactListActivity extends AppCompatActivity implements ContactLis
                         @Override
                         public void onClick(DialogInterface dialog, int which) {
                             Toast.makeText(ContactListActivity.this, "Cancelled Delete Function", Toast.LENGTH_SHORT).show();
-
                         }
                     });
 
@@ -306,19 +305,6 @@ public class ContactListActivity extends AppCompatActivity implements ContactLis
         });
 
         builder.show();
-    }
-
-
-    private void tvAppend(TextView tv, CharSequence text) {
-        final TextView ftv = tv;
-        final CharSequence ftext = text;
-
-        runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                ftv.append(ftext);
-            }
-        });
     }
 
     void storeDBtoArrays(){

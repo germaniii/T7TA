@@ -85,6 +85,9 @@ public class DataBaseHelper extends SQLiteOpenHelper {
     void deleteOneContact(String row_id){
         SQLiteDatabase db = this.getWritableDatabase();
         long result = db.delete(MAIN_CONTACTS_TABLE, "ID=?", new String[]{row_id});
+        //apparently android sqlite doesnt auto decrement ID, so we have to manually decrement using the function below
+        db.execSQL("UPDATE " + MAIN_CONTACTS_TABLE + " SET ID = ID - 1 WHERE ID > " + row_id + ";");
+
         if(result == -1){
             Toast.makeText(context, "Failed to Delete", Toast.LENGTH_SHORT).show();
         }else{
