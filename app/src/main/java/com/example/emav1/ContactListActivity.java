@@ -43,7 +43,7 @@ public class ContactListActivity extends AppCompatActivity implements ContactLis
     ImageButton beacon;
     Toast toast_send;
 
-    private ArrayList<String> contactNames, contactNum, contactKey;
+    private ArrayList<String> contactNames, contactNum, contactKey, contactID;
 
     private EditText editName, editNumber, editKey;
     private RecyclerView recyclerView;
@@ -59,7 +59,8 @@ public class ContactListActivity extends AppCompatActivity implements ContactLis
         usbManager = (UsbManager) getSystemService(MainActivity.USB_SERVICE);
         beacon = findViewById(R.id.contactList_beaconButton);
 
-        // data to populate the RecyclerView with
+        // to be populated with db Data
+        contactID = new ArrayList<>();
         contactNames = new ArrayList<>();
         contactNum = new ArrayList<>();
         contactKey = new ArrayList<>();
@@ -251,7 +252,7 @@ public class ContactListActivity extends AppCompatActivity implements ContactLis
                         toast_send = Toast.makeText(ContactListActivity.this, "Please fill up all fields!", Toast.LENGTH_SHORT);
                         toast_send.show();
                     }else{
-                        dataBaseHelper.updateContact(Integer.toString(position+1), editName.getText().toString(), editNumber.getText().toString(),
+                        dataBaseHelper.updateContact(contactID.get(position), editName.getText().toString(), editNumber.getText().toString(),
                                 editKey.getText().toString());
                         contactNames.set(position, editName.getText().toString());
                         contactNum.set(position, editNumber.getText().toString());
@@ -274,7 +275,7 @@ public class ContactListActivity extends AppCompatActivity implements ContactLis
                     builder_son.setPositiveButton("Yes", new DialogInterface.OnClickListener() {
                         @Override
                         public void onClick(DialogInterface dialog, int which) {
-                            dataBaseHelper.deleteOneContact(Integer.toString(position+1));
+                            dataBaseHelper.deleteOneContact(contactID.get(position));
                             contactNames.remove(position);
                             contactNum.remove(position);
                             recyclerView.removeViewAt(position);
@@ -313,6 +314,7 @@ public class ContactListActivity extends AppCompatActivity implements ContactLis
             Toast.makeText(this, "No Contacts Found!", Toast.LENGTH_SHORT).show();
         }else{
             while (cursor.moveToNext()){
+                contactID.add(cursor.getString(0));
                 contactNames.add(cursor.getString(1));
                 contactNum.add(cursor.getString(2));
                 contactKey.add(cursor.getString(3));
