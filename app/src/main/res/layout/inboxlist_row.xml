@@ -4,6 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
+    android:background="@color/white"
     android:orientation="vertical"
     android:padding="10dp">
 
@@ -14,7 +15,7 @@
         android:layout_marginStart="10dp"
         android:layout_marginLeft="10dp"
         android:layout_marginTop="10dp"
-        android:textColor="#777777"
+        android:textColor="#40514e"
         android:textSize="16dp"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
@@ -28,7 +29,7 @@
         android:layout_marginTop="10dp"
         android:layout_marginEnd="10dp"
         android:layout_marginRight="10dp"
-        android:textColor="#808080"
+        android:textColor="#40514e"
         android:textSize="14dp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.0"
@@ -37,7 +38,7 @@
 
     <TextView
         android:id="@+id/inboxMessage"
-        style ="@style/autoscroll"
+        style="@style/autoscroll"
         android:layout_width="314dp"
         android:layout_height="19dp"
         android:layout_marginStart="10dp"
@@ -47,7 +48,7 @@
         android:layout_marginRight="10dp"
         android:ellipsize="end"
         android:maxLines="1"
-        android:textColor="#A5A5A5"
+        android:textColor="#11999e"
         android:textSize="14dp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.0"
@@ -59,7 +60,7 @@
         android:layout_width="447dp"
         android:layout_height="1dp"
         android:layout_marginTop="15dp"
-        android:background="?android:attr/listDivider"
+        android:background="@color/bluegreen"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/inboxMessage" />

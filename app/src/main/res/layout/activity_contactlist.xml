@@ -9,19 +9,22 @@
     android:orientation="vertical"
     android:weightSum="10">
 
+
     <TextView
         android:id="@+id/main_titleName"
-        android:layout_width="wrap_content"
+        android:layout_width="fill_parent"
         android:layout_height="wrap_content"
         android:layout_centerHorizontal="true"
         android:layout_centerVertical="true"
-        android:layout_marginTop="15dp"
+        android:background="@color/brown"
         android:fontFamily="sans-serif-black"
         android:foregroundGravity="center_vertical|center|center_horizontal"
         android:gravity="center|center_horizontal|center_vertical"
+        android:padding="15dp"
         android:text="EMA"
-        android:textColor="#808080"
+        android:textColor="@color/white"
         android:textSize="36sp"
+        android:textStyle="bold"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.498"
         app:layout_constraintStart_toStartOf="parent"
@@ -55,7 +58,7 @@
         android:layout_marginTop="20dp"
         android:contentDescription="image only"
         android:cropToPadding="false"
-        android:tint="#959191"
+        android:tint="@color/brown"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.498"
         app:layout_constraintStart_toStartOf="parent"
@@ -66,7 +69,6 @@
         android:id="@+id/divider"
         android:layout_width="447dp"
         android:layout_height="1dp"
-        android:layout_marginTop="15dp"
         android:background="?android:attr/listDivider"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
@@ -74,9 +76,10 @@
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/contactList_list"
-        android:layout_width="305dp"
+        android:layout_width="350dp"
         android:layout_height="400dp"
-        android:layout_marginTop="20dp"
+        android:layout_marginTop="15dp"
+        android:background="@color/white"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/contactList_ContactSign" />

@@ -4,6 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
+    android:background="@color/white"
     android:orientation="vertical"
     android:padding="10dp">
 
@@ -40,7 +41,7 @@
         android:layout_width="447dp"
         android:layout_height="1dp"
         android:layout_marginTop="15dp"
-        android:background="?android:attr/listDivider"
+        android:background="@color/bluegreen"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/contactNumber" />
