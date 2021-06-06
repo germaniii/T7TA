@@ -210,6 +210,15 @@ public class ContactListActivity extends AppCompatActivity implements ContactLis
                     contactKey.add(editKey.getText().toString());
                     dataBaseHelper.addOneContact(editName.getText().toString().trim(), editNumber.getText().toString(),
                                             editKey.getText().toString().trim());
+
+                    //refill the contact Array lists so that the Contact ID will be filled with the new information
+                    contactID.clear();
+                    contactNames.clear();
+                    contactNum.clear();
+                    contactKey.clear();
+                    storeDBtoArrays();
+
+                    //Redisplay the list
                     contactListAdapter.notifyDataSetChanged();
                 }
             }

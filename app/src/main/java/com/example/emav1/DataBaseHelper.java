@@ -35,7 +35,7 @@ public class DataBaseHelper extends SQLiteOpenHelper {
                 CONTACT_NUMBER + " VARCHAR(255) UNIQUE, " + CONTACT_KEY + " VARCHAR(255));";
         String createMessageTableStatement = "CREATE TABLE " + MESSAGES_TABLE + "(MESSAGE_ID INTEGER PRIMARY KEY AUTOINCREMENT, " + SENDER_ID + " VARCHAR(255), " +
                 MESSAGE + " TEXT, " + RECEIVED + " VARCHAR(255), " + SENT + " VARCHAR(255), " +
-                "FOREIGN KEY(" + SENDER_ID + ") REFERENCES " + CONTACTS_TABLE + "(CONTACT_ID));";
+                "FOREIGN KEY(" + SENDER_ID + ") REFERENCES " + CONTACTS_TABLE + "(CONTACT_ID) ON UPDATE CASCADE ON DELETE CASCADE);";
         String enableForeignKey = "PRAGMA foreign_keys = ON;";
 
         db.execSQL(enableForeignKey);
