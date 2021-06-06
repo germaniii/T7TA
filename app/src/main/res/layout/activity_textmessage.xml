@@ -19,8 +19,8 @@
         android:background="#00C8E6C9"
         android:onClick="onClickSendButton"
         android:scaleType="fitCenter"
-        android:tint="@color/night_blue"
         android:textStyle="bold"
+        android:tint="@color/night_blue"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/textMessage_message"
         app:srcCompat="@drawable/ico_sendbutton" />
@@ -50,8 +50,6 @@
         android:id="@+id/textMessage_beaconButton"
         android:layout_width="150dp"
         android:layout_height="150dp"
-        android:layout_marginTop="30dp"
-        android:layout_marginBottom="15dp"
         android:adjustViewBounds="false"
         android:background="#00FFFFFF"
         android:baselineAlignBottom="false"
@@ -62,9 +60,7 @@
         android:tint="@color/night_blue"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.497"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/textMessage_serialMonitor"
         app:srcCompat="@drawable/ico_beaconbutton" />
 
     <ImageView
@@ -87,7 +83,6 @@
         android:layout_height="100dp"
         android:layout_marginStart="50dp"
         android:layout_marginLeft="50dp"
-        android:layout_marginTop="15dp"
         android:hint="This is where messages from Arduino will output"
         android:scrollbars="vertical"
         android:textColorHint="#6C6C6C"

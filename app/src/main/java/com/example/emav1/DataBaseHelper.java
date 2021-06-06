@@ -28,31 +28,17 @@ public class DataBaseHelper extends SQLiteOpenHelper {
         this.context = context;
     }
 
-    //to enable Foreign Key SUpport everytime the app is opened.
-    @Override
-    public void onConfigure(SQLiteDatabase db){
-        db.setForeignKeyConstraintsEnabled(true);
-    }
-
     //called the first time a database is accessed. (CREATE DATABASE)
     @Override
     public void onCreate(SQLiteDatabase db) {
-        String createContactsTableStatement = "CREATE TABLE " + CONTACTS_TABLE + "(ID INTEGER PRIMARY KEY AUTOINCREMENT, " + CONTACT_NAME + " VARCHAR(255), " +
-                CONTACT_NUMBER + " VARCHAR(255), " + CONTACT_KEY + " VARCHAR(255));";
-        String createMessageTableStatement = "CREATE TABLE " + MESSAGES_TABLE + "(ID INTEGER PRIMARY KEY AUTOINCREMENT, " + SENDER_ID + " VARCHAR(255), " +
+        String createContactsTableStatement = "CREATE TABLE " + CONTACTS_TABLE + "(CONTACT_ID INTEGER PRIMARY KEY AUTOINCREMENT, " + CONTACT_NAME + " VARCHAR(255), " +
+                CONTACT_NUMBER + " VARCHAR(255) UNIQUE, " + CONTACT_KEY + " VARCHAR(255));";
+        String createMessageTableStatement = "CREATE TABLE " + MESSAGES_TABLE + "(MESSAGE_ID INTEGER PRIMARY KEY AUTOINCREMENT, " + SENDER_ID + " VARCHAR(255), " +
                 MESSAGE + " TEXT, " + RECEIVED + " VARCHAR(255), " + SENT + " VARCHAR(255), " +
-                "FOREIGN KEY(" + SENDER_ID + ") REFERENCES " + CONTACTS_TABLE + "(" + CONTACT_NUMBER + "));";
+                "FOREIGN KEY(" + SENDER_ID + ") REFERENCES " + CONTACTS_TABLE + "(CONTACT_ID));";
+        String enableForeignKey = "PRAGMA foreign_keys = ON;";
 
-        //CREATE TABLE "MESSAGES" (
-        //	"MESSAGE_ID"	INTEGER,
-        //	"SENDER_ID"	VARCHAR(128) NOT NULL,
-        //	"MESSAGE"	TEXT NOT NULL,
-        //	"RECEIVED"	VARCHAR(128) NOT NULL,
-        //	"SENT"	VARCHAR(128) NOT NULL,
-        //	PRIMARY KEY("MESSAGE_ID" AUTOINCREMENT),
-        //	FOREIGN KEY("SENDER_ID") REFERENCES "CONTACTS"("NUMBER")
-        //)
-
+        db.execSQL(enableForeignKey);
         db.execSQL(createContactsTableStatement);
         db.execSQL(createMessageTableStatement);
     }
@@ -100,7 +86,7 @@ public class DataBaseHelper extends SQLiteOpenHelper {
         cv.put(CONTACT_NUMBER, number);
         cv.put(CONTACT_KEY, key);
 
-        long result = db.update(CONTACTS_TABLE, cv, "ID=?", new String[]{row_id});
+        long result = db.update(CONTACTS_TABLE, cv, "CONTACT_ID=?", new String[]{row_id});
         if(result == -1){
             Toast.makeText(context, "Failed to Update", Toast.LENGTH_SHORT).show();
         }else{
@@ -110,7 +96,8 @@ public class DataBaseHelper extends SQLiteOpenHelper {
 
     void deleteOneContact(String row_id){
         SQLiteDatabase db = this.getWritableDatabase();
-        long result = db.delete(CONTACTS_TABLE, "ID=?", new String[]{row_id});
+        long result = db.delete(CONTACTS_TABLE, "CONTACT_ID=?", new String[]{row_id});
+
 
         if(result == -1){
             Toast.makeText(context, "Failed to Delete", Toast.LENGTH_SHORT).show();

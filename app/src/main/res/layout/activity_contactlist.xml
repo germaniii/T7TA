@@ -34,8 +34,6 @@
         android:id="@+id/contactList_beaconButton"
         android:layout_width="150dp"
         android:layout_height="150dp"
-        android:layout_marginTop="15dp"
-        android:layout_marginBottom="15dp"
         android:adjustViewBounds="false"
         android:background="#00FFFFFF"
         android:baselineAlignBottom="false"
@@ -45,9 +43,7 @@
         android:scaleType="fitCenter"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.497"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/contactList_list"
         app:srcCompat="@drawable/ico_beaconbutton" />
 
     <ImageView
@@ -77,7 +73,7 @@
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/contactList_list"
         android:layout_width="350dp"
-        android:layout_height="400dp"
+        android:layout_height="350dp"
         android:layout_marginTop="15dp"
         android:background="@color/white"
         app:layout_constraintEnd_toEndOf="parent"

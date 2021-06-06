@@ -67,6 +67,7 @@ public class ContactListActivity extends AppCompatActivity implements ContactLis
 
         dataBaseHelper = new DataBaseHelper(ContactListActivity.this);
         storeDBtoArrays();
+
         // set up the RecyclerView
         recyclerView = findViewById(R.id.contactList_list);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
@@ -236,13 +237,11 @@ public class ContactListActivity extends AppCompatActivity implements ContactLis
         editName = (EditText) viewInflated.findViewById(R.id.dialog_name);
         editNumber = (EditText) viewInflated.findViewById(R.id.dialog_number);
         editKey = (EditText) viewInflated.findViewById(R.id.dialog_key);
-
         editName.setText(contactNames.get(position));
         editNumber.setText(contactNum.get(position));
         editKey.setText(contactKey.get(position));
         // Specify the type of input expected; this, for example, sets the input as a password, and will mask the text
         builder.setView(viewInflated);
-
         // Set up the buttons
         builder.setPositiveButton("Edit", new DialogInterface.OnClickListener() {
             @Override
@@ -260,7 +259,7 @@ public class ContactListActivity extends AppCompatActivity implements ContactLis
                         contactListAdapter.notifyDataSetChanged();
                     }
                 }catch(Exception e){
-                    toast_send = Toast.makeText(ContactListActivity.this, "Unknown Error", Toast.LENGTH_SHORT);
+                    toast_send = Toast.makeText(ContactListActivity.this, "Edit Error", Toast.LENGTH_SHORT);
                     toast_send.show();
                 }
             }
@@ -268,20 +267,25 @@ public class ContactListActivity extends AppCompatActivity implements ContactLis
         builder.setNeutralButton("Delete", new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
-                try{
                     AlertDialog.Builder builder_son = new AlertDialog.Builder(ContactListActivity.this);
                     builder_son.setTitle("Delete");
                     builder_son.setMessage("Are you sure you want to delete " + contactListAdapter.getName(position) + "?");
                     builder_son.setPositiveButton("Yes", new DialogInterface.OnClickListener() {
                         @Override
                         public void onClick(DialogInterface dialog, int which) {
-                            dataBaseHelper.deleteOneContact(contactID.get(position));
-                            contactNames.remove(position);
-                            contactNum.remove(position);
-                            recyclerView.removeViewAt(position);
-                            contactListAdapter.notifyItemRemoved(position);
-                            contactListAdapter.notifyItemRangeChanged(position, contactNames.size());
+                            try{
+                                dataBaseHelper.deleteOneContact(contactID.get(position));
+                                contactNames.remove(position);
+                                contactNum.remove(position);
+                                recyclerView.removeViewAt(position);
+                                contactListAdapter.notifyItemRemoved(position);
+                                contactListAdapter.notifyItemRangeChanged(position, contactNames.size());
+                            }catch(Exception e){
+                                Toast.makeText(ContactListActivity.this, "Delete Error", Toast.LENGTH_SHORT).show();
+                            }
+
                         }
+
                     });
                     builder_son.setNegativeButton("No", new DialogInterface.OnClickListener() {
                         @Override
@@ -292,9 +296,6 @@ public class ContactListActivity extends AppCompatActivity implements ContactLis
 
                     builder_son.create().show();
 
-                }catch(Exception e){
-                    Toast.makeText(ContactListActivity.this, "Unknown Error", Toast.LENGTH_SHORT).show();
-                }
 
             }
         });
@@ -314,10 +315,10 @@ public class ContactListActivity extends AppCompatActivity implements ContactLis
             Toast.makeText(this, "No Contacts Found!", Toast.LENGTH_SHORT).show();
         }else{
             while (cursor.moveToNext()){
-                contactID.add(cursor.getString(0));
-                contactNames.add(cursor.getString(1));
-                contactNum.add(cursor.getString(2));
-                contactKey.add(cursor.getString(3));
+                contactID.add(cursor.getString(0));     //ID
+                contactNames.add(cursor.getString(1));  //Names
+                contactNum.add(cursor.getString(2));    //Number
+                contactKey.add(cursor.getString(3));    //Cipher Key
             }
         }
     }
