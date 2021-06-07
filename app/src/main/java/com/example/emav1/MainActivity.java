@@ -55,6 +55,7 @@ public class MainActivity extends AppCompatActivity implements InboxListAdapter.
     ArrayList<String> contactNames, contactNum, contactMessage;
     RecyclerView recyclerView;
     TextView dialog_name, dialog_num, dialog_mess;
+    EditText uName, uNumber;
 
     DataBaseHelper dataBaseHelper;
 
@@ -72,7 +73,6 @@ public class MainActivity extends AppCompatActivity implements InboxListAdapter.
         textView.setMovementMethod(new ScrollingMovementMethod());
 
         dataBaseHelper = new DataBaseHelper(MainActivity.this);
-
         // data to populate the RecyclerView with
         contactNames = new ArrayList<>();
         contactNames.add("German");
@@ -128,6 +128,49 @@ public class MainActivity extends AppCompatActivity implements InboxListAdapter.
             //beacon.setImageResource(R.drawable.icon_beacon_on);
         }
 
+        //Checks if Contacts is Empty, if yes, will ask for user's contact number(last 4 digits)
+        if(!dataBaseHelper.readAllDataContactsTable().moveToFirst()){
+            AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
+            builder.setTitle("User Set-up");
+            builder.setMessage("\nPlease input your name and the last 4 digits of your phone number.");
+            // I'm using fragment here so I'm using getView() to provide ViewGroup
+            // but you can provide here any other instance of ViewGroup from your Fragment / Activity
+            View viewInflated = LayoutInflater.from(this).inflate(R.layout.dialog_usercontact, (ViewGroup) findViewById(android.R.id.content), false);
+            // Set up the input
+            //final EditText input = (EditText) viewInflated.findViewById(R.id.input);
+            uName = (EditText) viewInflated.findViewById(R.id.dialog_uName);
+            uNumber = (EditText) viewInflated.findViewById(R.id.dialog_uNumber);
+            builder.setView(viewInflated);
+
+            // Set up the buttons
+            builder.setPositiveButton("Confirm", new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialog, int which) {
+                    if(uName.getText().toString() == "" || uNumber.getText().toString() == ""){
+                        toast_send = Toast.makeText(MainActivity.this, "Please fill up all fields!", Toast.LENGTH_SHORT);
+                        toast_send.show();
+                    }else{
+                        String uNameString = uName.getText().toString().trim();
+                        uNameString += " (My Number)";
+                        dataBaseHelper.addOneContact(uNameString, uNumber.getText().toString(), "");
+                    }
+                }
+            });
+
+            builder.show();
+        }
+        //if(contacts database is empty){
+        //alertDialog
+        // Ask for last 4 digits of the user's phone number
+        // if (contactsDatabase.readAllData() == null)
+        // Store to Contacts Database
+        // contactNames.add(editName.getText().toString());
+        //                    contactNum.add(editNumber.getText().toString());
+        //                    contactKey.add(editKey.getText().toString());
+        //                    dataBaseHelper.addOneContact(editName.getText().toString().trim(), editNumber.getText().toString(),
+        //                                            editKey.getText().toString().trim());
+        // }
+
     }
 
     UsbSerialInterface.UsbReadCallback mCallback = new UsbSerialInterface.UsbReadCallback() { //Defining a Callback which triggers whenever data is read.
@@ -136,6 +179,11 @@ public class MainActivity extends AppCompatActivity implements InboxListAdapter.
             String data;
             try {
                 data = new String(arg0, "UTF-8");
+                //if(data == 'noSID'){  <--- if arduino sends a no senderID message, ask for it
+                // serialPort.write(last 4 numbers of the phone number);
+                //
+                //
+                // }
                 data.concat("/n");
                 tvAppend(textView, data);
             } catch (UnsupportedEncodingException e) {
@@ -143,6 +191,7 @@ public class MainActivity extends AppCompatActivity implements InboxListAdapter.
             }
         }
     };
+
     private final BroadcastReceiver broadcastReceiver = new BroadcastReceiver() { //Broadcast Receiver to automatically start and stop the Serial connection.
         @Override
         public void onReceive(Context context, Intent intent) {
@@ -159,8 +208,10 @@ public class MainActivity extends AppCompatActivity implements InboxListAdapter.
                             serialPort.setParity(UsbSerialInterface.PARITY_NONE);
                             serialPort.setFlowControl(UsbSerialInterface.FLOW_CONTROL_OFF);
                             serialPort.read(mCallback);
-                                toast_send = Toast.makeText(MainActivity.this, "Serial Connection Opened!", Toast.LENGTH_SHORT);
-                                toast_send.show();
+                            //
+
+                            toast_send = Toast.makeText(MainActivity.this, "Serial Connection Opened!", Toast.LENGTH_SHORT);
+                            toast_send.show();
 
                         }else{
                             Log.d("SERIAL", "PORT NOT OPEN");
@@ -306,7 +357,7 @@ public class MainActivity extends AppCompatActivity implements InboxListAdapter.
     }
 
     void storeDBtoArrays(){
-        Cursor cursor = dataBaseHelper.readAllData();
+        Cursor cursor = dataBaseHelper.readAllDataContactsTable();
         if(cursor.getCount() == 0){
             Toast.makeText(this, "No Data", Toast.LENGTH_SHORT).show();
         }else{

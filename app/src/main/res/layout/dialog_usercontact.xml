@@ -7,7 +7,7 @@
     android:padding="20dp">
 
     <EditText
-        android:id="@+id/dialog_name"
+        android:id="@+id/dialog_uName"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginLeft="4dp"
@@ -18,7 +18,7 @@
         android:inputType="text" />
 
     <EditText
-        android:id="@+id/dialog_number"
+        android:id="@+id/dialog_uNumber"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginLeft="4dp"
@@ -28,19 +28,6 @@
         android:hint="Number"
         android:inputType="number"
         android:maxLength="4" />
-
-    <EditText
-        android:id="@+id/dialog_key"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginLeft="4dp"
-        android:layout_marginTop="16dp"
-        android:layout_marginRight="4dp"
-        android:layout_marginBottom="4dp"
-        android:hint="Key"
-        android:inputType="text"
-        android:maxLength="255" />
-
 
     <LinearLayout
         android:layout_width="wrap_content"

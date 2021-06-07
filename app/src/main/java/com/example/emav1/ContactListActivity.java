@@ -319,7 +319,7 @@ public class ContactListActivity extends AppCompatActivity implements ContactLis
     }
 
     void storeDBtoArrays(){
-        Cursor cursor = dataBaseHelper.readAllData();
+        Cursor cursor = dataBaseHelper.readAllDataContactsTable();
         if(cursor.getCount() == 0){
             Toast.makeText(this, "No Contacts Found!", Toast.LENGTH_SHORT).show();
         }else{

@@ -67,11 +67,12 @@ public class DataBaseHelper extends SQLiteOpenHelper {
 
     }
 
-    Cursor readAllData(){
+    Cursor readAllDataContactsTable(){
         String query = "SELECT * FROM " + CONTACTS_TABLE;
         SQLiteDatabase db = this.getWritableDatabase();
 
         Cursor cursor = null;
+
         if(db != null){
             cursor = db.rawQuery(query, null);
         }
@@ -106,6 +107,8 @@ public class DataBaseHelper extends SQLiteOpenHelper {
         }
 
     }
+
+
 
 
 
