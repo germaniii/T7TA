@@ -221,8 +221,10 @@ public class TextMessageActivity extends AppCompatActivity {
         if(cursor.getCount() <= 1){
             Toast.makeText(this, "No Contacts Found!", Toast.LENGTH_SHORT).show();
         }else{
-            while (cursor.moveToNext()){
-                spinnerContacts.add(cursor.getString(1));  //Names
+            if(cursor.moveToFirst()){
+                while (cursor.moveToNext()){
+                    spinnerContacts.add(cursor.getString(1));  //Names
+                }
             }
         }
     }
