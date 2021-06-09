@@ -1,5 +1,6 @@
 package com.example.emav1;
 
+import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.app.AppCompatDelegate;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -16,7 +17,11 @@ import android.database.Cursor;
 import android.hardware.usb.UsbDevice;
 import android.hardware.usb.UsbDeviceConnection;
 import android.hardware.usb.UsbManager;
+import android.icu.text.SimpleDateFormat;
+import android.icu.util.Calendar;
+import android.os.Build;
 import android.os.Bundle;
+import android.text.format.DateFormat;
 import android.text.method.ScrollingMovementMethod;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -35,6 +40,7 @@ import org.w3c.dom.Text;
 
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -50,15 +56,19 @@ public class MainActivity extends AppCompatActivity implements InboxListAdapter.
     UsbDeviceConnection connection;
     ImageButton  beacon, toTextMode, toContactList;
     Toast toast_send;
+    Date date;
+    SimpleDateFormat dateFormat;
 
     InboxListAdapter inboxListAdapter;
     ArrayList<String> contactNames, contactNum, contactMessage;
+    ArrayList<String> messageID, messageNames, messageNum, messageText, messageReceived, messageSent;
     RecyclerView recyclerView;
-    TextView dialog_name, dialog_num, dialog_mess;
+    TextView dialog_name, dialog_num, dialog_mess, dialog_date;
     EditText uName, uNumber;
 
     DataBaseHelper dataBaseHelper;
 
+    @RequiresApi(api = Build.VERSION_CODES.N)
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO);     // Only use light mode
@@ -71,49 +81,25 @@ public class MainActivity extends AppCompatActivity implements InboxListAdapter.
         toTextMode = findViewById(R.id.toTextModeButton);
         toContactList = findViewById(R.id.toContactList);
         textView.setMovementMethod(new ScrollingMovementMethod());
+        date = Calendar.getInstance().getTime();
+        dateFormat = new SimpleDateFormat("hh:mm mm-dd-yyyy");
+
+
+        // data to populate the RecyclerView with
+        messageID = new ArrayList<>();
+        messageNames = new ArrayList<>();
+        messageNum = new ArrayList<>();
+        messageText = new ArrayList<>();
+        messageSent = new ArrayList<>();
+        messageReceived = new ArrayList<>();
 
         dataBaseHelper = new DataBaseHelper(MainActivity.this);
-        // data to populate the RecyclerView with
-        contactNames = new ArrayList<>();
-        contactNames.add("German");
-        contactNames.add("Carlo");
-        contactNames.add("Adrian");
-        contactNames.add("Francis");
-        contactNames.add("Sir Obette");
-        contactNames.add("Jabo");
-        contactNames.add("Jess");
-        contactNames.add("Eli");
-        contactNames.add("Ellaine");
-        contactNames.add("Kier");
-
-        contactNum = new ArrayList<>();
-        contactNum.add("09159301068");
-        contactNum.add("09919301677");
-        contactNum.add("09123901128");
-        contactNum.add("09159301129");
-        contactNum.add("09559301005");
-        contactNum.add("09669301583");
-        contactNum.add("09167930181");
-        contactNum.add("09189830167");
-        contactNum.add("09158630123");
-        contactNum.add("09134930102");
-
-        contactMessage = new ArrayList<>();
-        contactMessage.add("Lorem Ipsum Dolor Sit Amet Lorem Ipsum Dolor Sit AmetLorem Ipsum Dolor Sit Amet");
-        contactMessage.add("Amet Ipsum Ipsum Ipsum IpsumLorem Ipsum Dolor Sit AmetLorem Ipsum Dolor Sit AmetLorem Ipsum Dolor Sit AmetLorem Ipsum Dolor Sit Amet ");
-        contactMessage.add("Amet Amet Amet Amet Amet AmetLorem Ipsum Dolor Sit AmetLorem Ipsum Dolor Sit AmetLorem Ipsum Dolor Sit Amet");
-        contactMessage.add("Dolor DolorDolor Dolor DolorLorem Ipsum Dolor Sit AmetLorem Ipsum Dolor Sit AmetLorem Ipsum Dolor Sit AmetLorem Ipsum Dolor Sit Amet");
-        contactMessage.add("Lorem Lorem Lorem Lorem LoremLorem Ipsum Dolor Sit AmetLorem Ipsum Dolor Sit AmetLorem Ipsum Dolor Sit Amet");
-        contactMessage.add("Ipsum Ipsum Ipsum IpsumIpsumLorem Ipsum Dolor Sit AmetLorem Ipsum Dolor Sit AmetLorem Ipsum Dolor Sit Amet");
-        contactMessage.add("Sit Sit   Sit Sit Sit SitLorem Ipsum Dolor Sit AmetLorem Ipsum Dolor Sit AmetLorem Ipsum Dolor Sit Amet");
-        contactMessage.add("Ipsum Ipsum Sit SitLorem Ipsum Dolor Sit AmetLorem Ipsum Dolor Sit AmetLorem Ipsum Dolor Sit Amet");
-        contactMessage.add("Sit Sit  IpsumIpsumIpsumIpsumIpsumIpsumLorem Ipsum Dolor Sit AmetLorem Ipsum Dolor Sit AmetLorem Ipsum Dolor Sit Amet");
-        contactMessage.add("DolorDolor DolorDolor DolorDolorDolorDolorLorem Ipsum Dolor Sit AmetLorem Ipsum Dolor Sit AmetLorem Ipsum Dolor Sit AmetLorem Ipsum Dolor Sit Amet");
+        storeDBtoArrays();
 
         // set up the RecyclerView
         recyclerView = findViewById(R.id.main_inboxList);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
-        inboxListAdapter = new InboxListAdapter(this, contactNames, contactNum, contactMessage);
+        inboxListAdapter = new InboxListAdapter(this, messageNames, messageNum, messageText, messageReceived, messageSent);
         inboxListAdapter.setClickListener(this);
         recyclerView.setAdapter(inboxListAdapter);
 
@@ -150,27 +136,22 @@ public class MainActivity extends AppCompatActivity implements InboxListAdapter.
                         toast_send = Toast.makeText(MainActivity.this, "Please fill up all fields!", Toast.LENGTH_SHORT);
                         toast_send.show();
                     }else{
+                        String strDate = dateFormat.format(date);
                         String uNameString = uName.getText().toString().trim();
                         uNameString += " (My Number)";
                         dataBaseHelper.addOneContact(uNameString, uNumber.getText().toString(), "");
+                        dataBaseHelper.addOneMessage(uNumber.getText().toString(), "This is a test Message!", strDate, null);
+
+                        //refill the contact Array lists so that the Contact ID will be filled with the new information
+                        storeDBtoArrays();
+                        //Redisplay the list
+                        inboxListAdapter.notifyDataSetChanged();
                     }
                 }
             });
 
             builder.show();
         }
-        //if(contacts database is empty){
-        //alertDialog
-        // Ask for last 4 digits of the user's phone number
-        // if (contactsDatabase.readAllData() == null)
-        // Store to Contacts Database
-        // contactNames.add(editName.getText().toString());
-        //                    contactNum.add(editNumber.getText().toString());
-        //                    contactKey.add(editKey.getText().toString());
-        //                    dataBaseHelper.addOneContact(editName.getText().toString().trim(), editNumber.getText().toString(),
-        //                                            editKey.getText().toString().trim());
-        // }
-
     }
 
     UsbSerialInterface.UsbReadCallback mCallback = new UsbSerialInterface.UsbReadCallback() { //Defining a Callback which triggers whenever data is read.
@@ -224,14 +205,10 @@ public class MainActivity extends AppCompatActivity implements InboxListAdapter.
                 }
             } else if (intent.getAction().equals(UsbManager.ACTION_USB_DEVICE_ATTACHED)) {
                 arduinoConnected();
-                //beacon.setImageResource(R.drawable.icon_beacon_on);
-                //toTextMode.setImageResource(R.drawable.icon_textmode_on);
                 toast_send = Toast.makeText(MainActivity.this, "EMA device connected!", Toast.LENGTH_SHORT);
                 toast_send.show();
             } else if (intent.getAction().equals(UsbManager.ACTION_USB_DEVICE_DETACHED)) {
                 arduinoDisconnected();
-                //beacon.setImageResource(R.drawable.icon_beacon_off);
-                //toTextMode.setImageResource(R.drawable.icon_textmode_off);
                 toast_send = Toast.makeText(MainActivity.this, "EMA device disconnected!", Toast.LENGTH_SHORT);
                 toast_send.show();
             }
@@ -296,9 +273,9 @@ public class MainActivity extends AppCompatActivity implements InboxListAdapter.
     }
 
     public void onClicktoTextMode(View view) {
-            // Go to Text Message Mode
-            Intent intent = new Intent(this, TextMessageActivity.class);
-            MainActivity.this.startActivity(intent);
+        // Go to Text Message Mode
+        Intent intent = new Intent(this, TextMessageActivity.class);
+        MainActivity.this.startActivity(intent);
     }
 
     public void onClicktoContactList(View view) {
@@ -316,21 +293,30 @@ public class MainActivity extends AppCompatActivity implements InboxListAdapter.
         dialog_name = (TextView) viewInflated.findViewById(R.id.dialog_mname);
         dialog_num = (TextView) viewInflated.findViewById(R.id.dialog_mnumber);
         dialog_mess = (TextView) viewInflated.findViewById(R.id.dialog_message);
+        dialog_date = (TextView) viewInflated.findViewById(R.id.dialog_mdate);
         // Set up the text
-        dialog_name.setText(contactNames.get(position));
-        dialog_num.setText(contactNum.get(position));
-        dialog_mess.setText(contactMessage.get(position));
+        dialog_name.setText(messageNames.get(position));
+        dialog_num.setText(messageNum.get(position));
+        dialog_mess.setText(messageText.get(position));
+        if(messageSent.get(position) == null) dialog_date.setText(messageReceived.get(position));
+        else dialog_date.setText(messageSent.get(position));
+
         // Specify the type of input expected; this, for example, sets the input as a password, and will mask the text
         builder.setView(viewInflated);
 
         builder.setNeutralButton("Delete", new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
-                contactNames.remove(position);
-                contactNum.remove(position);
+
+                dataBaseHelper.deleteOneContact(messageID.get(position));
+                messageNames.remove(position);
+                messageText.remove(position);
+                messageNum.remove(position);
+                messageReceived.remove(position);
+                messageSent.remove(position);
                 recyclerView.removeViewAt(position);
                 inboxListAdapter.notifyItemRemoved(position);
-                inboxListAdapter.notifyItemRangeChanged(position, contactNames.size());
+                inboxListAdapter.notifyItemRangeChanged(position, messageText.size());
             }
         });
         builder.setPositiveButton("Back", new DialogInterface.OnClickListener() {
@@ -357,14 +343,29 @@ public class MainActivity extends AppCompatActivity implements InboxListAdapter.
     }
 
     void storeDBtoArrays(){
-        Cursor cursor = dataBaseHelper.readAllDataContactsTable();
+        Cursor cursor = dataBaseHelper.readAllDataMessagesTable();
+        Cursor num;
         if(cursor.getCount() == 0){
-            Toast.makeText(this, "No Data", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "No Messages Found!", Toast.LENGTH_SHORT).show();
         }else{
             while (cursor.moveToNext()){
-                contactNames.add(cursor.getString(0));
-                contactNum.add(cursor.getString(1));
-                contactMessage.add(cursor.getString(2));
+                messageID.add(cursor.getString(0));     //ID
+                messageNum.add(cursor.getString(1));    //Number
+
+                // Get Name from Contact Table
+                // num is a cursor for contact table. need to put movetoFirst() since first index
+                // of a cursor is always -1, giving us errors
+                num = dataBaseHelper.readContactName(cursor.getString(1));
+                if(num.moveToFirst() && cursor.getCount() == 1) {
+                    do {
+                        messageNames.add(num.getString(0));
+                    } while (num.moveToNext());
+                }
+
+                messageText.add(cursor.getString(2));    //Message
+                messageReceived.add(cursor.getString(3));    //Date and Time Received
+                messageSent.add(cursor.getString(4));    //Date and Time Sent
+
             }
         }
     }

@@ -5,6 +5,7 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.database.Cursor;
 import android.hardware.usb.UsbDevice;
 import android.hardware.usb.UsbDeviceConnection;
 import android.hardware.usb.UsbManager;
@@ -27,6 +28,8 @@ import com.felhr.usbserial.UsbSerialInterface;
 import org.w3c.dom.Text;
 
 import java.io.UnsupportedEncodingException;
+import java.sql.DatabaseMetaData;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -42,9 +45,8 @@ public class TextMessageActivity extends AppCompatActivity {
     Toast toast_send;
     EditText message;
     Spinner number;
-
-    //This array will be replaced with the SQL database
-    String[] spinnerTest = new String[]{"Select Contact", "09159301068", "0923424241", "0999232451"};
+    ArrayList<String> spinnerContacts;
+    DataBaseHelper dataBaseHelper;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -57,9 +59,14 @@ public class TextMessageActivity extends AppCompatActivity {
         sendButton = findViewById(R.id.textMessage_sendButton);
         message = findViewById(R.id.textMessage_message);
 
+        dataBaseHelper = new DataBaseHelper(TextMessageActivity.this);
+        spinnerContacts = new ArrayList<>();
+        storeDBtoArrays();
+
+
         number = findViewById(R.id.textMessage_Spinner);
         ArrayAdapter<String> adapter = new ArrayAdapter<>(this,
-                android.R.layout.simple_spinner_item, spinnerTest);
+                android.R.layout.simple_spinner_item, spinnerContacts);
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         number.setAdapter(adapter);
 
@@ -208,6 +215,18 @@ public class TextMessageActivity extends AppCompatActivity {
         }
 
     }
+
+    void storeDBtoArrays(){
+        Cursor cursor = dataBaseHelper.readAllDataContactsTable();
+        if(cursor.getCount() <= 1){
+            Toast.makeText(this, "No Contacts Found!", Toast.LENGTH_SHORT).show();
+        }else{
+            while (cursor.moveToNext()){
+                spinnerContacts.add(cursor.getString(1));  //Names
+            }
+        }
+    }
+
 
     public void onBackPressed() {
         //Go back to Main Activity

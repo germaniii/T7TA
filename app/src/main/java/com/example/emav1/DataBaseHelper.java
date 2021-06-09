@@ -13,7 +13,10 @@ public class DataBaseHelper extends SQLiteOpenHelper {
 
     public static final String MESSAGE = "MESSAGE";
     public static final String MESSAGES_TABLE = MESSAGE + "S_TABLE";
+    public static final String MESSAGES_CACHE = MESSAGE + "S_CACHE";
     public static final String SENDER_ID = "SENDER_ID";
+    public static final String TEMP_SENDER_ID = "TEMP_SENDER_ID";
+    public static final String TEMP_MESSAGE = "TEMP_MESSAGE";
     public static final String RECEIVED = "RECEIVED";
     public static final String SENT = "SENT";
     Context context;
@@ -32,15 +35,18 @@ public class DataBaseHelper extends SQLiteOpenHelper {
     @Override
     public void onCreate(SQLiteDatabase db) {
         String createContactsTableStatement = "CREATE TABLE " + CONTACTS_TABLE + "(CONTACT_ID INTEGER PRIMARY KEY AUTOINCREMENT, " + CONTACT_NAME + " VARCHAR(255), " +
-                CONTACT_NUMBER + " VARCHAR(255) UNIQUE, " + CONTACT_KEY + " VARCHAR(255));";
-        String createMessageTableStatement = "CREATE TABLE " + MESSAGES_TABLE + "(MESSAGE_ID INTEGER PRIMARY KEY AUTOINCREMENT, " + SENDER_ID + " VARCHAR(255), " +
+                CONTACT_NUMBER + " VARCHAR(4) UNIQUE, " + CONTACT_KEY + " VARCHAR(255));";
+        String createMessageTableStatement = "CREATE TABLE " + MESSAGES_TABLE + "(MESSAGE_ID INTEGER PRIMARY KEY AUTOINCREMENT, " + SENDER_ID + " VARCHAR(4), " +
                 MESSAGE + " TEXT, " + RECEIVED + " VARCHAR(255), " + SENT + " VARCHAR(255), " +
                 "FOREIGN KEY(" + SENDER_ID + ") REFERENCES " + CONTACTS_TABLE + "(CONTACT_ID) ON UPDATE CASCADE ON DELETE CASCADE);";
+        String createMessageCache = "CREATE TABLE " + MESSAGES_CACHE + "(TEMP_ID INTEGER PRIMARY KEY AUTOINCREMENT, " + TEMP_SENDER_ID + " VARCHAR(4), " +
+                TEMP_MESSAGE + " TEXT);";
         String enableForeignKey = "PRAGMA foreign_keys = ON;";
 
         db.execSQL(enableForeignKey);
         db.execSQL(createContactsTableStatement);
         db.execSQL(createMessageTableStatement);
+        db.execSQL(createMessageCache);
     }
 
     // this is called if the database version number changes. Prevents crash when db is updated
@@ -48,6 +54,7 @@ public class DataBaseHelper extends SQLiteOpenHelper {
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
         db.execSQL("DROP TABLE IF EXISTS " + CONTACTS_TABLE);
         db.execSQL("DROP TABLE IF EXISTS " + MESSAGES_TABLE);
+        db.execSQL("DROP TABLE IF EXISTS " + MESSAGES_CACHE);
         onCreate(db);
     }
 
@@ -64,7 +71,22 @@ public class DataBaseHelper extends SQLiteOpenHelper {
             Toast.makeText(context, "Failed to Add", Toast.LENGTH_SHORT).show();
         else
             Toast.makeText(context, "Added Successfully", Toast.LENGTH_SHORT).show();
+    }
 
+    public void addOneMessage(String messageSenderID, String messageText, String messageReceived, String messageSent){
+        SQLiteDatabase db = this.getWritableDatabase();
+        ContentValues cv = new ContentValues();
+
+        cv.put(SENDER_ID, messageSenderID);
+        cv.put(MESSAGE, messageText);
+        cv.put(RECEIVED, messageReceived);
+        cv.put(SENT, messageSent);
+
+        long insert = db.insert(MESSAGES_TABLE, null, cv);
+        if(insert == -1)
+            Toast.makeText(context, "Failed to Add", Toast.LENGTH_SHORT).show();
+        else
+            Toast.makeText(context, "Added Successfully", Toast.LENGTH_SHORT).show();
     }
 
     Cursor readAllDataContactsTable(){
@@ -76,9 +98,33 @@ public class DataBaseHelper extends SQLiteOpenHelper {
         if(db != null){
             cursor = db.rawQuery(query, null);
         }
-
         return cursor;
     }
+
+    Cursor readAllDataMessagesTable(){
+        String query = "SELECT * FROM " + MESSAGES_TABLE;
+        SQLiteDatabase db = this.getWritableDatabase();
+
+        Cursor cursor = null;
+
+        if(db != null){
+            cursor = db.rawQuery(query, null);
+        }
+        return cursor;
+    }
+
+    Cursor readContactName(String senderID){
+        String query = "SELECT CONTACT_NAME FROM " + CONTACTS_TABLE + " WHERE " + CONTACT_NUMBER + " = " + senderID;
+        SQLiteDatabase db = this.getWritableDatabase();
+
+        Cursor cursor = null;
+
+        if(db != null){
+            cursor = db.rawQuery(query, null);
+        }
+        return cursor;
+    }
+
 
     void updateContact(String row_id, String name, String number, String key){
         SQLiteDatabase db = this.getWritableDatabase();

@@ -252,44 +252,45 @@ public class ContactListActivity extends AppCompatActivity implements ContactLis
         // Specify the type of input expected; this, for example, sets the input as a password, and will mask the text
         builder.setView(viewInflated);
         // Set up the buttons
-        builder.setPositiveButton("Edit", new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
-                try{
-                    if(editName.getText().toString() == "" || editNumber.getText().toString() == "" || editKey.getText().toString() == ""){
-                        toast_send = Toast.makeText(ContactListActivity.this, "Please fill up all fields!", Toast.LENGTH_SHORT);
+        if(position > 0) {     // Show edit and delete button if not User's Contact Number
+            builder.setPositiveButton("Edit", new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialog, int which) {
+                    try {
+                        if (editName.getText().toString() == "" || editNumber.getText().toString() == "" || editKey.getText().toString() == "") {
+                            toast_send = Toast.makeText(ContactListActivity.this, "Please fill up all fields!", Toast.LENGTH_SHORT);
+                            toast_send.show();
+                        } else {
+                            dataBaseHelper.updateContact(contactID.get(position), editName.getText().toString(), editNumber.getText().toString(),
+                                    editKey.getText().toString());
+                            contactNames.set(position, editName.getText().toString());
+                            contactNum.set(position, editNumber.getText().toString());
+                            contactKey.set(position, editKey.getText().toString());
+                            contactListAdapter.notifyDataSetChanged();
+                        }
+                    } catch (Exception e) {
+                        toast_send = Toast.makeText(ContactListActivity.this, "Edit Error", Toast.LENGTH_SHORT);
                         toast_send.show();
-                    }else{
-                        dataBaseHelper.updateContact(contactID.get(position), editName.getText().toString(), editNumber.getText().toString(),
-                                editKey.getText().toString());
-                        contactNames.set(position, editName.getText().toString());
-                        contactNum.set(position, editNumber.getText().toString());
-                        contactKey.set(position, editKey.getText().toString());
-                        contactListAdapter.notifyDataSetChanged();
                     }
-                }catch(Exception e){
-                    toast_send = Toast.makeText(ContactListActivity.this, "Edit Error", Toast.LENGTH_SHORT);
-                    toast_send.show();
                 }
-            }
-        });
-        builder.setNeutralButton("Delete", new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
+            });
+            builder.setNeutralButton("Delete", new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialog, int which) {
                     AlertDialog.Builder builder_son = new AlertDialog.Builder(ContactListActivity.this);
                     builder_son.setTitle("Delete");
                     builder_son.setMessage("Are you sure you want to delete " + contactListAdapter.getName(position) + "?");
                     builder_son.setPositiveButton("Yes", new DialogInterface.OnClickListener() {
                         @Override
                         public void onClick(DialogInterface dialog, int which) {
-                            try{
+                            try {
                                 dataBaseHelper.deleteOneContact(contactID.get(position));
                                 contactNames.remove(position);
                                 contactNum.remove(position);
                                 recyclerView.removeViewAt(position);
                                 contactListAdapter.notifyItemRemoved(position);
                                 contactListAdapter.notifyItemRangeChanged(position, contactNames.size());
-                            }catch(Exception e){
+                            } catch (Exception e) {
                                 Toast.makeText(ContactListActivity.this, "Delete Error", Toast.LENGTH_SHORT).show();
                             }
 
@@ -306,9 +307,11 @@ public class ContactListActivity extends AppCompatActivity implements ContactLis
                     builder_son.create().show();
 
 
-            }
-        });
-        builder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+                }
+            });
+        }
+
+        builder.setNegativeButton("Back", new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
                 dialog.cancel();
