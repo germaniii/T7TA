@@ -30,6 +30,7 @@ import org.w3c.dom.Text;
 import java.io.UnsupportedEncodingException;
 import java.sql.DatabaseMetaData;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -42,11 +43,11 @@ public class TextMessageActivity extends AppCompatActivity {
     UsbSerialDevice serialPort;
     UsbDeviceConnection connection;
     ImageButton  beacon, sendButton;
-    Toast toast_send;
     EditText message;
     Spinner number;
     ArrayList<String> spinnerContacts;
     DataBaseHelper dataBaseHelper;
+    PacketHandler packetHandler;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -59,6 +60,7 @@ public class TextMessageActivity extends AppCompatActivity {
         sendButton = findViewById(R.id.textMessage_sendButton);
         message = findViewById(R.id.textMessage_message);
 
+        packetHandler = new PacketHandler();
         dataBaseHelper = new DataBaseHelper(TextMessageActivity.this);
         spinnerContacts = new ArrayList<>();
         storeDBtoArrays();
@@ -107,18 +109,32 @@ public class TextMessageActivity extends AppCompatActivity {
 
     public void arduinoDisconnected() {
         serialPort.close();
-        toast_send = Toast.makeText(TextMessageActivity.this, "Serial Connection Closed!", Toast.LENGTH_SHORT);
-        toast_send.show();
+        sendButton.setEnabled(false);
     }
 
     UsbSerialInterface.UsbReadCallback mCallback = new UsbSerialInterface.UsbReadCallback() { //Defining a Callback which triggers whenever data is read.
         @Override
         public void onReceivedData(byte[] arg0) {
             String data;
+            byte[] stream;
             try {
+                stream = arg0;
                 data = new String(arg0, "UTF-8");
-                data.concat("/n");
-                tvAppend(textView, data);
+
+                // Control Code 1, Send SID to Arduino Device
+                if(stream[0] == 1) {
+                    tvAppend(textView, "Received " + stream[0] + "\n");
+                    serialPort.write(getUserSID().getBytes());
+                    sendButton.setEnabled(false);
+                    tvAppend(textView, "OutStream : " + getUserSID() + "\n");
+                }else if(stream[0] == 2){
+                    // Control Code 2, Send from MessagesOut_Table, from TextMessagingMode
+                }else if(stream[0] == 3){
+                    // Control Code 3, Receive Messages and store to MessagesIn_Table
+                }
+
+                tvAppend(textView, "InStream : " + data);
+                tvAppend(textView, Arrays.toString(stream) + "\n");
             } catch (UnsupportedEncodingException e) {
                 e.printStackTrace();
             }
@@ -141,8 +157,6 @@ public class TextMessageActivity extends AppCompatActivity {
                             serialPort.setParity(UsbSerialInterface.PARITY_NONE);
                             serialPort.setFlowControl(UsbSerialInterface.FLOW_CONTROL_OFF);
                             serialPort.read(mCallback);
-                            toast_send = Toast.makeText(TextMessageActivity.this, "Serial Connection Opened!", Toast.LENGTH_SHORT);
-                            toast_send.show();
 
                         }else{
                             Log.d("SERIAL", "PORT NOT OPEN");
@@ -157,14 +171,12 @@ public class TextMessageActivity extends AppCompatActivity {
                 arduinoConnected();
                 //beacon.setImageResource(R.drawable.icon_beacon_on);
                 //sendButton.setImageResource(R.drawable.icon_textmode_on);
-                toast_send = Toast.makeText(TextMessageActivity.this, "EMA device connected!", Toast.LENGTH_SHORT);
-                toast_send.show();
+                Toast.makeText(TextMessageActivity.this, "EMA Device Connected", Toast.LENGTH_SHORT).show();
             } else if (intent.getAction().equals(UsbManager.ACTION_USB_DEVICE_DETACHED)) {
                 arduinoDisconnected();
                 //beacon.setImageResource(R.drawable.icon_beacon_off);
                 //sendButton.setImageResource(R.drawable.icon_textmode_off);
-                toast_send = Toast.makeText(TextMessageActivity.this, "EMA device disconnected!", Toast.LENGTH_SHORT);
-                toast_send.show();
+                Toast.makeText(TextMessageActivity.this, "EMA Device Disconnected", Toast.LENGTH_SHORT).show();
             }
         }
     };
@@ -183,20 +195,18 @@ public class TextMessageActivity extends AppCompatActivity {
 
     public void onClickSendButton(View view) {
         try {
-            if (sendButton.isEnabled()) {
-                if ((message.getText().length() == 0) || number.getSelectedItem() == "Select Contact") {
-                    toast_send = Toast.makeText(TextMessageActivity.this, "Please fill up all fields!", Toast.LENGTH_SHORT);
-                    toast_send.show();
-                } else {
-                    String string = message.getText().toString() + " from " + number.getSelectedItem();
+            if (sendButton.isEnabled()){
+                if ((message.getText().length() == 0) || number.getSelectedItem() == "") {
+                    Toast.makeText(TextMessageActivity.this, "Please Fill Up All Fields!", Toast.LENGTH_SHORT).show();
+                }else {
+                    String string = message.getText().toString();
                     serialPort.write(string.getBytes());
-                    tvAppend(textView, "\nTransmit: " + string + "\n");
+                    tvAppend(textView, "\nTransmit: " + string  + " to " + number.getSelectedItem() + "\n");
                 }
-
-            }
+            }else
+                Toast.makeText(TextMessageActivity.this, "Synchronizing EMA Device, Please Wait", Toast.LENGTH_SHORT).show();
         }catch (Exception e){
-            toast_send = Toast.makeText(TextMessageActivity.this, "Please Connect the EMA Device!", Toast.LENGTH_SHORT);
-            toast_send.show();
+            Toast.makeText(TextMessageActivity.this, "Please Connect EMA Device", Toast.LENGTH_SHORT).show();
         }
     }
 
@@ -210,8 +220,7 @@ public class TextMessageActivity extends AppCompatActivity {
                 }
             }
         }catch(Exception e){
-            toast_send = Toast.makeText(TextMessageActivity.this, "Please Connect the EMA Device!", Toast.LENGTH_SHORT);
-            toast_send.show();
+            Toast.makeText(TextMessageActivity.this, "Please Connect the EMA Device!", Toast.LENGTH_SHORT).show();
         }
 
     }
@@ -229,6 +238,20 @@ public class TextMessageActivity extends AppCompatActivity {
         }
     }
 
+    String getUserSID(){
+        String SID = null;
+        Cursor cursor;
+        cursor = dataBaseHelper.readUserSID();
+        if(cursor.getCount() == 0){
+            Toast.makeText(TextMessageActivity.this, "No User SID!", Toast.LENGTH_SHORT).show();
+        }else{
+            while (cursor.moveToNext())
+                SID = cursor.getString(0);     //CONTACT NUM
+        }
+        return SID;
+    }
+
+    @Override protected void onDestroy() { super.onDestroy(); unregisterReceiver(broadcastReceiver); }
 
     public void onBackPressed() {
         //Go back to Main Activity

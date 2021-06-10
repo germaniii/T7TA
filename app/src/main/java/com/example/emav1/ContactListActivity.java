@@ -50,6 +50,7 @@ public class ContactListActivity extends AppCompatActivity implements ContactLis
 
     ContactListAdapter contactListAdapter;
     DataBaseHelper dataBaseHelper;
+    PacketHandler packetHandler;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -58,6 +59,7 @@ public class ContactListActivity extends AppCompatActivity implements ContactLis
 
         usbManager = (UsbManager) getSystemService(MainActivity.USB_SERVICE);
         beacon = findViewById(R.id.contactList_beaconButton);
+        packetHandler = new PacketHandler();
 
         // to be populated with db Data
         contactID = new ArrayList<>();
@@ -334,6 +336,9 @@ public class ContactListActivity extends AppCompatActivity implements ContactLis
             }
         }
     }
+
+
+    @Override protected void onDestroy() { super.onDestroy(); unregisterReceiver(broadcastReceiver); }
 
     public void onBackPressed() {
         //Go back to Main Activity

@@ -40,6 +40,7 @@ import org.w3c.dom.Text;
 
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -59,6 +60,7 @@ public class MainActivity extends AppCompatActivity implements InboxListAdapter.
     Date date;
     SimpleDateFormat dateFormat;
 
+    PacketHandler packetHandler;
     InboxListAdapter inboxListAdapter;
     ArrayList<String> contactNames, contactNum, contactMessage;
     ArrayList<String> messageID, messageNames, messageNum, messageText, messageReceived, messageSent;
@@ -74,6 +76,7 @@ public class MainActivity extends AppCompatActivity implements InboxListAdapter.
         AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO);     // Only use light mode
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
         usbManager = (UsbManager) getSystemService(this.USB_SERVICE);
         sendButton = findViewById(R.id.main_buttonSend);
         textView = findViewById(R.id.main_serialMonitor);
@@ -83,6 +86,7 @@ public class MainActivity extends AppCompatActivity implements InboxListAdapter.
         textView.setMovementMethod(new ScrollingMovementMethod());
         date = Calendar.getInstance().getTime();
         dateFormat = new SimpleDateFormat("hh:mm mm-dd-yyyy");
+        packetHandler = new PacketHandler();
 
 
         // data to populate the RecyclerView with
@@ -159,14 +163,16 @@ public class MainActivity extends AppCompatActivity implements InboxListAdapter.
         public void onReceivedData(byte[] arg0) {
             String data;
             try {
+                byte[] stream;
+                stream = arg0;
                 data = new String(arg0, "UTF-8");
                 //if(data == 'noSID'){  <--- if arduino sends a no senderID message, ask for it
                 // serialPort.write(last 4 numbers of the phone number);
                 //
                 //
                 // }
-                data.concat("/n");
                 tvAppend(textView, data);
+                tvAppend(textView, Arrays.toString(stream) + "\n");
             } catch (UnsupportedEncodingException e) {
                 e.printStackTrace();
             }
@@ -248,7 +254,7 @@ public class MainActivity extends AppCompatActivity implements InboxListAdapter.
     public void onClickSendTest(View view) {
         try {
             // THIS CAN BE USED FOR SIMULATION OF RECEIVING PACKETS
-            String string = editText.getText().toString();
+            String string = "";
             serialPort.write(string.getBytes());
             tvAppend(textView, "\nData Sent : " + string + "\n");
         }catch (Exception e){
@@ -369,6 +375,9 @@ public class MainActivity extends AppCompatActivity implements InboxListAdapter.
             }
         }
     }
+
+
+    @Override protected void onDestroy() { super.onDestroy(); unregisterReceiver(broadcastReceiver); }
 
     public void onBackPressed() {
         //doing nothing on pressing Back key

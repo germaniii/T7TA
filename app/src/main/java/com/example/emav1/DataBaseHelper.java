@@ -125,6 +125,18 @@ public class DataBaseHelper extends SQLiteOpenHelper {
         return cursor;
     }
 
+    Cursor readUserSID(){
+        String query = "SELECT CONTACT_NUMBER FROM " + CONTACTS_TABLE + " WHERE CONTACT_ID = 1";
+        SQLiteDatabase db = this.getWritableDatabase();
+
+        Cursor cursor = null;
+
+        if(db != null){
+            cursor = db.rawQuery(query, null);
+        }
+        return cursor;
+    }
+
 
     void updateContact(String row_id, String name, String number, String key){
         SQLiteDatabase db = this.getWritableDatabase();
