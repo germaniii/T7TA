@@ -101,19 +101,6 @@
         app:layout_constraintTop_toBottomOf="@+id/divider"
         app:srcCompat="@drawable/ico_inbox" />
 
-    <TextView
-        android:id="@+id/main_serialMonitor"
-        android:layout_width="350dp"
-        android:layout_height="50dp"
-        android:layout_marginTop="12dp"
-        android:hint="This is where messages from Arduino will output"
-        android:scrollbars="vertical"
-        android:textColorHint="#6C6C6C"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.494"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/main_inboxList" />
-
     <View
         android:id="@+id/divider"
         android:layout_width="447dp"
@@ -132,6 +119,20 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/main_MessageSign" />
+
+
+    <TextView
+        android:id="@+id/main_serialMonitor"
+        android:layout_width="350dp"
+        android:layout_height="50dp"
+        android:layout_marginTop="12dp"
+        android:hint="This is where messages from Arduino will output"
+        android:scrollbars="vertical"
+        android:textColorHint="#6C6C6C"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.494"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/main_inboxList" />
 
 
 </androidx.constraintlayout.widget.ConstraintLayout>
