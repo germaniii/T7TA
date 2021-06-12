@@ -185,10 +185,6 @@ public class MainActivity extends AppCompatActivity{
                             serialPort.setParity(UsbSerialInterface.PARITY_NONE);
                             serialPort.setFlowControl(UsbSerialInterface.FLOW_CONTROL_OFF);
                             serialPort.read(mCallback);
-                            //
-
-                            toast_send = Toast.makeText(MainActivity.this, "Serial Connection Opened!", Toast.LENGTH_SHORT);
-                            toast_send.show();
 
                         }else{
                             Log.d("SERIAL", "PORT NOT OPEN");
@@ -201,12 +197,10 @@ public class MainActivity extends AppCompatActivity{
                 }
             } else if (intent.getAction().equals(UsbManager.ACTION_USB_DEVICE_ATTACHED)) {
                 arduinoConnected();
-                toast_send = Toast.makeText(MainActivity.this, "EMA device connected!", Toast.LENGTH_SHORT);
-                toast_send.show();
+                Toast.makeText(MainActivity.this, "EMA device connected!", Toast.LENGTH_SHORT).show();
             } else if (intent.getAction().equals(UsbManager.ACTION_USB_DEVICE_DETACHED)) {
                 arduinoDisconnected();
-                toast_send = Toast.makeText(MainActivity.this, "EMA device disconnected!", Toast.LENGTH_SHORT);
-                toast_send.show();
+                Toast.makeText(MainActivity.this, "EMA device disconnected!", Toast.LENGTH_SHORT).show();
             }
         }
     };
@@ -237,8 +231,6 @@ public class MainActivity extends AppCompatActivity{
 
     public void arduinoDisconnected() {
         serialPort.close();
-        toast_send = Toast.makeText(MainActivity.this, "Serial Connection Closed!", Toast.LENGTH_SHORT);
-        toast_send.show();
     }
 
     public void onClickBeaconMode(View view){
@@ -250,8 +242,7 @@ public class MainActivity extends AppCompatActivity{
                 tvAppend(textView, "\nINFO:\n" + string + "\n");
             }
         }catch(Exception e){
-            toast_send = Toast.makeText(MainActivity.this, "Please Connect the EMA Device!", Toast.LENGTH_SHORT);
-            toast_send.show();
+            Toast.makeText(MainActivity.this, "Please Connect the EMA Device!", Toast.LENGTH_SHORT).show();
         }
 
     }

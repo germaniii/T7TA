@@ -226,8 +226,6 @@ public class FragmentContactList extends Fragment implements ContactListAdapter.
                     });
 
                     builder_son.create().show();
-
-
                 }
             });
         }
