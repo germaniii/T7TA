@@ -44,7 +44,6 @@ public class MainActivity extends AppCompatActivity{
     UsbSerialDevice serialPort;
     UsbDeviceConnection connection;
     ImageButton  beacon, toTextMode, toContactList, toReceiverMode;
-    Toast toast_send;
 
     PacketHandler packetHandler;
 
@@ -90,8 +89,6 @@ public class MainActivity extends AppCompatActivity{
     }
 
     public void ChangeFragment(View view){
-
-        Fragment currentFragment = this.getSupportFragmentManager().findFragmentById(R.id.fragment_container_view);
 
         if (view == findViewById(R.id.toContactList) && !isContactList) {
             fragmentManager = getSupportFragmentManager();
@@ -141,34 +138,6 @@ public class MainActivity extends AppCompatActivity{
     }
 
 
-    UsbSerialInterface.UsbReadCallback mCallback = new UsbSerialInterface.UsbReadCallback() { //Defining a Callback which triggers whenever data is read.
-        @Override
-        public void onReceivedData(byte[] arg0) {
-            String data;
-            byte[] stream;
-            try {
-                stream = arg0;
-                data = new String(arg0, "UTF-8");
-
-                // Control Code 1, Send SID to Arduino Device
-                if(stream[0] == 1) {
-                    tvAppend(textView, "Received " + stream[0] + "\n");
-                    serialPort.write(getUserSID().getBytes());
-                    tvAppend(textView, "OutStream : " + getUserSID() + "\n");
-                }else if(stream[0] == 2){
-                    // Control Code 2, Send from MessagesOut_Table, from TextMessagingMode
-                }else if(stream[0] == 3){
-                    // Control Code 3, Receive Messages and store to MessagesIn_Table
-                }
-
-                tvAppend(textView, "InStream : " + data);
-                tvAppend(textView, Arrays.toString(stream) + "\n");
-            } catch (UnsupportedEncodingException e) {
-                e.printStackTrace();
-            }
-        }
-    };
-
     private final BroadcastReceiver broadcastReceiver = new BroadcastReceiver() { //Broadcast Receiver to automatically start and stop the Serial connection.
         @Override
         public void onReceive(Context context, Intent intent) {
@@ -201,6 +170,43 @@ public class MainActivity extends AppCompatActivity{
             } else if (intent.getAction().equals(UsbManager.ACTION_USB_DEVICE_DETACHED)) {
                 arduinoDisconnected();
                 Toast.makeText(MainActivity.this, "EMA device disconnected!", Toast.LENGTH_SHORT).show();
+            }
+        }
+    };
+
+
+    UsbSerialInterface.UsbReadCallback mCallback = new UsbSerialInterface.UsbReadCallback() { //Defining a Callback which triggers whenever data is read.
+        @Override
+        public void onReceivedData(byte[] arg0) {
+            String data;
+            byte[] stream;
+            try {
+                stream = arg0;
+                if(stream == null)
+                    stream[0] = 3;
+
+                data = new String(arg0, "UTF-8");
+
+                // Control Code 1, Send SID to Arduino Device
+                if(stream[0] == 1) {
+                    tvAppend(textView, "Received : " + stream[0] + "\n");
+                    tvAppend(textView, "Before serialWrite\n");
+                    serialPort.write(getUserSID().getBytes());
+                    tvAppend(textView, "OutStream : " + getUserSID() + "\n");
+                }else if(stream[0] == 2){
+                    // Control Code 2, Send from MessagesOut_Table, from TextMessagingMode
+                }else if(stream[0] == 3){
+                    // Control Code 3, Receive Messages and store to MessagesIn_Table
+                }else{
+                    //do nothing
+                }
+
+                tvAppend(textView, "InStream : " + data);
+                if(stream!=null) {
+                    tvAppend(textView, Arrays.toString(stream) + "\n");
+                }
+            } catch (UnsupportedEncodingException e) {
+                e.printStackTrace();
             }
         }
     };
@@ -296,6 +302,8 @@ public class MainActivity extends AppCompatActivity{
         if(cursor.getCount() == 0){
             Toast.makeText(this, "No User SID!", Toast.LENGTH_SHORT).show();
         }else{
+            if(cursor.moveToFirst())
+                SID = cursor.getString(0);
             while (cursor.moveToNext())
                 SID = cursor.getString(0);     //CONTACT NUM
         }
