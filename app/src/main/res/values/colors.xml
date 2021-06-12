@@ -1,16 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="purple_200">#FFBB86FC</color>
-    <color name="black">#FF000000</color>
     <color name="white">#eeeeee</color>
-    <color name="flesh">#30e3ca</color>
-    <color name="darker_flesh">#2bcfb8</color>
     <color name="bluegreen">#00adb5</color>
     <color name="brown">#393e46</color>
     <color name="night_blue">#222831</color>
     <color name="gray1">#AFAFAF</color>
-    <color name="gray2">#045757</color>
     <color name="gray3">#222222</color>
-    <color name="dark_background">#374046</color>
 
 </resources>

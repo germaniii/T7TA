@@ -72,7 +72,7 @@ public class ContactListAdapter extends RecyclerView.Adapter<ContactListAdapter.
     }
 
     // allows clicks events to be caught
-    void setClickListener(ContactListActivity itemClickListener) {
+    void setClickListener(FragmentContactList itemClickListener) {
         mClickListener = (ContactListAdapter.ItemClickListener) itemClickListener;
     }
 

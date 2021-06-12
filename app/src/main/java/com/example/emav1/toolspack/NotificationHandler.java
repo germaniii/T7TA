@@ -1,4 +1,4 @@
-package com.example.emav1;
+package com.example.emav1.toolspack;
 
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
@@ -7,6 +7,8 @@ import android.os.Build;
 
 import androidx.core.app.NotificationCompat;
 import androidx.core.app.NotificationManagerCompat;
+
+import com.example.emav1.R;
 
 public class NotificationHandler {
     Context context;

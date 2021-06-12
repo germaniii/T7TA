@@ -19,8 +19,6 @@
             android:name="com.google.android.actions"
             android:resource="@xml/device_filter" />
 
-        <activity android:name=".TextMessageActivity"/>
-        <activity android:name=".ContactListActivity"/>
         <activity android:name=".MainActivity"
             android:noHistory="false"
             android:configChanges="orientation"

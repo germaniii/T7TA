@@ -63,11 +63,11 @@ public class InboxListAdapter extends RecyclerView.Adapter<InboxListAdapter.View
 
         ViewHolder(View itemView) {
             super(itemView);
+            itemView.setOnClickListener(this);
             TextViewName = itemView.findViewById(R.id.inboxName);
             TextViewNumber = itemView.findViewById(R.id.inboxNumber);
             TextViewMessage = itemView.findViewById(R.id.inboxMessage);
             TextViewDate = itemView.findViewById(R.id.inboxDate);
-            itemView.setOnClickListener(this);
         }
 
         @Override
@@ -82,8 +82,8 @@ public class InboxListAdapter extends RecyclerView.Adapter<InboxListAdapter.View
     }
 
     // allows clicks events to be caught
-    void setClickListener(MainActivity itemClickListener) {
-        mClickListener = (ItemClickListener) itemClickListener;
+    void setClickListener(FragmentMain itemClickListener) {
+        mClickListener = (FragmentMain) itemClickListener;
     }
 
     // parent activity will implement this method to respond to click events
