@@ -4,7 +4,6 @@ import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.app.AppCompatDelegate;
 import androidx.core.content.ContextCompat;
-import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
 
@@ -30,7 +29,6 @@ import com.example.emav1.toolspack.PacketHandler;
 import com.felhr.usbserial.UsbSerialDevice;
 import com.felhr.usbserial.UsbSerialInterface;
 
-import java.io.UnsupportedEncodingException;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
@@ -73,6 +71,8 @@ public class MainActivity extends AppCompatActivity{
         textView.setMovementMethod(new ScrollingMovementMethod());
         packetHandler = new PacketHandler();
 
+        dataBaseHelper = new DataBaseHelper(this);
+
         IntentFilter filter = new IntentFilter();
         filter.addAction(ACTION_USB_PERMISSION);
         filter.addAction(UsbManager.ACTION_USB_DEVICE_ATTACHED);
@@ -85,10 +85,11 @@ public class MainActivity extends AppCompatActivity{
         if(!arduinoConnected()){
             //beacon.setImageResource(R.drawable.icon_beacon_on);
         }
-
     }
 
     public void ChangeFragment(View view){
+
+
 
         if (view == findViewById(R.id.toContactList) && !isContactList) {
             fragmentManager = getSupportFragmentManager();
@@ -98,6 +99,7 @@ public class MainActivity extends AppCompatActivity{
                     R.anim.slide_to_right,  // enter
                     R.anim.fade_out  // popExit
                     )
+                    .remove(this.getSupportFragmentManager().findFragmentById(R.id.fragment_container_view))
                     .replace(R.id.fragment_container_view, FragmentContactList.class, null)
                     .commit();
 
@@ -114,6 +116,7 @@ public class MainActivity extends AppCompatActivity{
                             R.anim.slide_to_left,  // enter
                             R.anim.fade_out // popExit
                     )
+                    .remove(this.getSupportFragmentManager().findFragmentById(R.id.fragment_container_view))
                     .replace(R.id.fragment_container_view, FragmentTextMessage.class, null)
                     .commit();
 
@@ -129,6 +132,7 @@ public class MainActivity extends AppCompatActivity{
                             R.anim.slide_to_down,  // enter
                             R.anim.fade_out // popExit
                     )
+                    .remove(this.getSupportFragmentManager().findFragmentById(R.id.fragment_container_view))
                     .replace(R.id.fragment_container_view, FragmentMain.class, null)
                     .commit();
 
@@ -179,6 +183,7 @@ public class MainActivity extends AppCompatActivity{
         @Override
         public void onReceivedData(byte[] arg0) {
             String data;
+            String num = getUserSID().trim();
             byte[] stream;
             try {
                 stream = arg0;
@@ -190,9 +195,8 @@ public class MainActivity extends AppCompatActivity{
                 // Control Code 1, Send SID to Arduino Device
                 if(stream[0] == 1) {
                     tvAppend(textView, "Received : " + stream[0] + "\n");
-                    tvAppend(textView, "Before serialWrite\n");
-                    serialPort.write(getUserSID().getBytes());
-                    tvAppend(textView, "OutStream : " + getUserSID() + "\n");
+                    serialPort.write(num.getBytes());
+                    tvAppend(textView, "OutStream : " + num + "\n");
                 }else if(stream[0] == 2){
                     // Control Code 2, Send from MessagesOut_Table, from TextMessagingMode
                 }else if(stream[0] == 3){
@@ -202,11 +206,10 @@ public class MainActivity extends AppCompatActivity{
                 }
 
                 tvAppend(textView, "InStream : " + data);
-                if(stream!=null) {
-                    tvAppend(textView, Arrays.toString(stream) + "\n");
-                }
-            } catch (UnsupportedEncodingException e) {
-                e.printStackTrace();
+                tvAppend(textView, Arrays.toString(stream) + "\n");
+            } catch (Exception e) {
+                Toast.makeText(MainActivity.this, "Receive Error", Toast.LENGTH_SHORT).show();
+
             }
         }
     };
@@ -299,13 +302,15 @@ public class MainActivity extends AppCompatActivity{
         String SID = null;
         Cursor cursor;
         cursor = dataBaseHelper.readUserSID();
-        if(cursor.getCount() == 0){
-            Toast.makeText(this, "No User SID!", Toast.LENGTH_SHORT).show();
-        }else{
-            if(cursor.moveToFirst())
-                SID = cursor.getString(0);
-            while (cursor.moveToNext())
+
+        if (cursor.getCount() == 0) {
+            Toast.makeText(MainActivity.this, "No User SID!", Toast.LENGTH_SHORT).show();
+        } else {
+            if(cursor.moveToFirst()){
                 SID = cursor.getString(0);     //CONTACT NUM
+                    while(cursor.moveToNext())
+                        SID = cursor.getString(0);     //CONTACT NUM
+            }
         }
         return SID;
     }
