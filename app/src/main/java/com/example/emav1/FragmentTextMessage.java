@@ -2,10 +2,6 @@ package com.example.emav1;
 
 import android.content.Context;
 import android.database.Cursor;
-import android.hardware.usb.UsbDevice;
-import android.hardware.usb.UsbDeviceConnection;
-import android.hardware.usb.UsbManager;
-import android.media.Image;
 import android.os.Bundle;
 
 import androidx.annotation.NonNull;
@@ -54,7 +50,7 @@ public class FragmentTextMessage extends Fragment {
         this.context = getActivity();
 
         textView = getActivity().findViewById(R.id.main_serialMonitor);
-        sendButton = (ImageButton) getActivity().findViewById(R.id.textMessage_sendButton);
+        sendButton = getActivity().findViewById(R.id.textMessage_sendButton);
         message = getActivity().findViewById(R.id.textMessage_message);
 
         packetHandler = new PacketHandler();
