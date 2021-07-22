@@ -38,9 +38,9 @@ public class MainActivity extends AppCompatActivity{
     public final String ACTION_USB_PERMISSION = "com.example.emav1.USB_PERMISSION";
     TextView textView;
     UsbManager usbManager;
-    UsbDevice device;
-    UsbSerialDevice serialPort;
-    UsbDeviceConnection connection;
+    public UsbDevice device;
+    static UsbSerialDevice serialPort;
+    public UsbDeviceConnection connection;
     ImageButton  beacon, toTextMode, toContactList, toReceiverMode;
 
     PacketHandler packetHandler;
@@ -206,7 +206,7 @@ public class MainActivity extends AppCompatActivity{
                 }
 
                 tvAppend(textView, "InStream : " + data);
-                tvAppend(textView, Arrays.toString(stream) + "\n");
+                //tvAppend(textView, Arrays.toString(stream) + "\n");
             } catch (Exception e) {
                 Toast.makeText(MainActivity.this, "Receive Error", Toast.LENGTH_SHORT).show();
 
