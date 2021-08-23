@@ -51,6 +51,50 @@ public class FragmentTextMessage extends Fragment {
 
     Context context;
 
+    /*
+    This is the only thing you need to touch in this class.
+    This handles when the Send Button is being pressed.
+
+    To implement:
+        - Background process of sending?
+        - if not, Loading screen to wait until all the message packets are successfully sent?
+     */
+    public void onClickSendButton(View view) {
+        try {
+            if (sendButton.isEnabled()){
+                if ((message.getText().length() == 0) || number.getSelectedItem() == "") {
+                    Toast.makeText(context, "Please Fill Up All Fields!", Toast.LENGTH_SHORT).show();
+                }else {
+                    String SMP = "1";
+                    getSID();
+                    getRID();
+                    String MESSAGE = message.getText().toString();
+                    String MESSAGE_SPLICE;
+
+                    /*if(string.length() > 44){
+                        int numberOfPackets = string.length()/44;
+                        for(int i = 0; i < numberOfPackets; i++){
+                            //this code will loop until all packets are sent.
+                        }
+
+                    }
+
+                    */
+
+                    //should use the serial port from MainActivity to reference the registered serialPort Arduino
+                    MainActivity.serialPort.write((SMP + SID + RID + MESSAGE).getBytes());
+
+                    tvAppend(textView, "\nTransmit: " + MESSAGE  + " to " + number.getSelectedItem() + "No:" + SID + "\n");
+                    Toast.makeText(context, "Transmitted", Toast.LENGTH_SHORT).show();
+                }
+            }else
+                Toast.makeText(context, "Synchronizing EMA Device, Please Wait", Toast.LENGTH_SHORT).show();
+        }catch (Exception e){
+            //Toast.makeText(context, "Please Connect EMA Device", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
@@ -91,42 +135,8 @@ public class FragmentTextMessage extends Fragment {
 
     }
 
-    public void onClickSendButton(View view) {
-        try {
-            if (sendButton.isEnabled()){
-                if ((message.getText().length() == 0) || number.getSelectedItem() == "") {
-                    Toast.makeText(context, "Please Fill Up All Fields!", Toast.LENGTH_SHORT).show();
-                }else {
-                    String SMP = "1";
-                    getSID();
-                    getRID();
-                    String MESSAGE = message.getText().toString();
-                    String MESSAGE_SPLICE;
 
-                    /*if(string.length() > 44){
-                        int numberOfPackets = string.length()/44;
-                        for(int i = 0; i < numberOfPackets; i++){
-                            //this code will loop until all packets are sent.
-                        }
-
-                    }
-
-                    */
-
-                    //should use the serial port from MainActivity to reference the registered serialPort Arduino
-                    MainActivity.serialPort.write((SMP + SID + RID + MESSAGE).getBytes());
-
-                    tvAppend(textView, "\nTransmit: " + MESSAGE  + " to " + number.getSelectedItem() + "No:" + SID + "\n");
-                    Toast.makeText(context, "Transmitted", Toast.LENGTH_SHORT).show();
-                }
-            }else
-                Toast.makeText(context, "Synchronizing EMA Device, Please Wait", Toast.LENGTH_SHORT).show();
-        }catch (Exception e){
-            //Toast.makeText(context, "Please Connect EMA Device", Toast.LENGTH_SHORT).show();
-        }
-    }
-
-
+    // This function retrieves the contact number (SID) of the user.
     void getSID(){
         Cursor cursor = dataBaseHelper.readUserSID();
         if(cursor.getCount() < 1){
@@ -139,6 +149,7 @@ public class FragmentTextMessage extends Fragment {
         }
     }
 
+    // This function retrieves the RID of the contact that is selected.
     void getRID(){
         Cursor cursor = dataBaseHelper.readContactNumber(number.getSelectedItem().toString());
         if(cursor.getCount() < 1){

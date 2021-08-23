@@ -118,6 +118,7 @@ public class FragmentMain extends Fragment  implements InboxListAdapter.ItemClic
 
     }
 
+    // This function is used to update the inboxlist whenever the DB changes.
     public static void storeDBtoArrays(){
         Cursor cursor = dataBaseHelper.readAllDataMessagesTable();
         Cursor num;

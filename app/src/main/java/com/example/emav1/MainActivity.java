@@ -62,6 +62,48 @@ public class MainActivity extends AppCompatActivity{
     private String data;
     private byte[] stream;
 
+    /*
+    This is the only function you need to touch in this class.
+    Mao rani ang hilabti if mag manipulate mo sa data nga ma receive from the EMA device.
+
+    This is where all the data passed to and from the EMA device is processed.
+
+    To implement:
+        - Twofish Algorithm
+        - JH?
+        -
+     */
+    UsbSerialInterface.UsbReadCallback mCallback = new UsbSerialInterface.UsbReadCallback() { //Defining a Callback which triggers whenever data is read.
+        @Override
+        public void onReceivedData(byte[] arg0) {
+            String num = getUserSID().trim();
+            try {
+                stream = arg0; // assign the received data from arduino to stream variable
+                if(stream == null); // do nothing if nothing is received
+
+                data = new String(arg0, "UTF-8");
+
+                // Control Code 1, Send SID to Arduino Device
+                if(stream[0] == 1) {
+                    tvAppend(textView, "Received : " + stream[0] + "\n");
+                    serialPort.write(num.getBytes());
+                    tvAppend(textView, "OutStream : " + num + "\n");
+                }else{
+                    // decryption for display, and store it in a temporary string.
+                    // notification function
+                    // store to messages table in database encrypted
+                }
+
+                tvAppend(textView, "InStream : " + data);
+                //tvAppend(textView, Arrays.toString(stream) + "\n");
+            } catch (Exception e) {
+                Toast.makeText(MainActivity.this, "Receive Error", Toast.LENGTH_SHORT).show();
+
+            }
+        }
+    };
+
+
     @RequiresApi(api = Build.VERSION_CODES.N)
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -111,7 +153,6 @@ public class MainActivity extends AppCompatActivity{
                             serialPort.setParity(UsbSerialInterface.PARITY_NONE);
                             serialPort.setFlowControl(UsbSerialInterface.FLOW_CONTROL_OFF);
                             serialPort.read(mCallback);
-
                         }else{
                             Log.d("SERIAL", "PORT NOT OPEN");
                         }
@@ -127,39 +168,6 @@ public class MainActivity extends AppCompatActivity{
             } else if (intent.getAction().equals(UsbManager.ACTION_USB_DEVICE_DETACHED)) {
                 arduinoDisconnected();
                 Toast.makeText(MainActivity.this, "EMA device disconnected!", Toast.LENGTH_SHORT).show();
-            }
-        }
-    };
-
-    /*
-    This is where all the data passed from the EMA device is processed.
-     */
-    UsbSerialInterface.UsbReadCallback mCallback = new UsbSerialInterface.UsbReadCallback() { //Defining a Callback which triggers whenever data is read.
-        @Override
-        public void onReceivedData(byte[] arg0) {
-            String num = getUserSID().trim();
-            try {
-                stream = arg0; // assign the received data from arduino to stream variable
-                if(stream == null); // do nothing if nothing is received
-
-                data = new String(arg0, "UTF-8");
-
-                // Control Code 1, Send SID to Arduino Device
-                if(stream[0] == 1) {
-                    tvAppend(textView, "Received : " + stream[0] + "\n");
-                    serialPort.write(num.getBytes());
-                    tvAppend(textView, "OutStream : " + num + "\n");
-                }else{
-                    // decryption for display, and store it in a temporary string.
-                    // notification function
-                    // store to messages table in database encrypted
-                }
-
-                tvAppend(textView, "InStream : " + data);
-                //tvAppend(textView, Arrays.toString(stream) + "\n");
-            } catch (Exception e) {
-                Toast.makeText(MainActivity.this, "Receive Error", Toast.LENGTH_SHORT).show();
-
             }
         }
     };
