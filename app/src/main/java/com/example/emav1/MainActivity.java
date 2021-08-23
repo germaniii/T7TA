@@ -16,6 +16,9 @@ import android.database.Cursor;
 import android.hardware.usb.UsbDevice;
 import android.hardware.usb.UsbDeviceConnection;
 import android.hardware.usb.UsbManager;
+import android.media.MediaPlayer;
+import android.media.RingtoneManager;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.text.method.ScrollingMovementMethod;
@@ -62,6 +65,9 @@ public class MainActivity extends AppCompatActivity{
     private String data;
     private byte[] stream;
 
+    private Uri notificationSound = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
+    private MediaPlayer mp;
+
     /*
     This is the only function you need to touch in this class.
     Mao rani ang hilabti if mag manipulate mo sa data nga ma receive from the EMA device.
@@ -71,7 +77,7 @@ public class MainActivity extends AppCompatActivity{
     To implement:
         - Twofish Algorithm
         - JH?
-        -
+        - Check if signal is emergency, and play the emergency sound in R.raw
      */
     UsbSerialInterface.UsbReadCallback mCallback = new UsbSerialInterface.UsbReadCallback() { //Defining a Callback which triggers whenever data is read.
         @Override
@@ -89,9 +95,18 @@ public class MainActivity extends AppCompatActivity{
                     serialPort.write(num.getBytes());
                     tvAppend(textView, "OutStream : " + num + "\n");
                 }else{
-                    // decryption for display, and store it in a temporary string.
-                    // notification function
-                    // store to messages table in database encrypted
+                    // ... decryption for display, and store it in a temporary string.
+                    // ... notification function
+                    // ... store to messages table in database encrypted
+                    // if(regular message)
+                    mp = MediaPlayer.create(MainActivity.this, notificationSound);
+                    mp.start(); // Play sound
+                    /*
+                        else(if alarm/beacon mode)
+                        mp = MediaPlayer.create(MainActivity.this, R.raw.emergency_alarm);
+                        mp.start(); // Play sound
+                     */
+
                 }
 
                 tvAppend(textView, "InStream : " + data);
@@ -129,6 +144,8 @@ public class MainActivity extends AppCompatActivity{
         registerReceiver(broadcastReceiver, filter);
         textView.setMovementMethod(new ScrollingMovementMethod());
         setReceiverModeColor();
+
+        //Sets notif sound
 
         // Set Beacon Image Whenever Transmission Device is Connected
         if(!arduinoConnected()){
