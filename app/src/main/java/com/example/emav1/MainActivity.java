@@ -29,9 +29,12 @@ import com.example.emav1.toolspack.PacketHandler;
 import com.felhr.usbserial.UsbSerialDevice;
 import com.felhr.usbserial.UsbSerialInterface;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
+
+import static com.example.emav1.FragmentMain.date;
 
 public class MainActivity extends AppCompatActivity{
 
@@ -54,6 +57,10 @@ public class MainActivity extends AppCompatActivity{
     boolean isReceiverMode;
     boolean isContactList;
     boolean isTextMessageMode;
+
+    // Serial Receiver Variables
+    private String data;
+    private byte[] stream;
 
     @RequiresApi(api = Build.VERSION_CODES.N)
     @Override
@@ -87,61 +94,7 @@ public class MainActivity extends AppCompatActivity{
         }
     }
 
-    public void ChangeFragment(View view){
-
-
-
-        if (view == findViewById(R.id.toContactList) && !isContactList) {
-            fragmentManager = getSupportFragmentManager();
-            fragmentTransaction = fragmentManager.beginTransaction();
-            fragmentTransaction.setReorderingAllowed(true)
-                    .setCustomAnimations(
-                    R.anim.slide_to_right,  // enter
-                    R.anim.fade_out  // popExit
-                    )
-                    .remove(this.getSupportFragmentManager().findFragmentById(R.id.fragment_container_view))
-                    .replace(R.id.fragment_container_view, FragmentContactList.class, null)
-                    .commit();
-
-            //set navbar switches
-            setContactListColor();
-
-        }
-
-        if(view == findViewById(R.id.toTextModeButton) && !isTextMessageMode){
-            fragmentManager = getSupportFragmentManager();
-            fragmentTransaction = fragmentManager.beginTransaction();
-            fragmentTransaction.setReorderingAllowed(true)
-                    .setCustomAnimations(
-                            R.anim.slide_to_left,  // enter
-                            R.anim.fade_out // popExit
-                    )
-                    .remove(this.getSupportFragmentManager().findFragmentById(R.id.fragment_container_view))
-                    .replace(R.id.fragment_container_view, FragmentTextMessage.class, null)
-                    .commit();
-
-            //set navbar switches
-            setTextMessageColor();
-        }
-
-        if(view == findViewById(R.id.toReceiverModeButton) && !isReceiverMode){
-            fragmentManager = getSupportFragmentManager();
-            fragmentTransaction = fragmentManager.beginTransaction();
-            fragmentTransaction.setReorderingAllowed(true)
-                    .setCustomAnimations(
-                            R.anim.slide_to_down,  // enter
-                            R.anim.fade_out // popExit
-                    )
-                    .remove(this.getSupportFragmentManager().findFragmentById(R.id.fragment_container_view))
-                    .replace(R.id.fragment_container_view, FragmentMain.class, null)
-                    .commit();
-
-            //set navbar switches
-            setReceiverModeColor();
-        }
-    }
-
-
+    // This initializes the broadcast receiver whenever the EMA Device is connected to the phone.
     private final BroadcastReceiver broadcastReceiver = new BroadcastReceiver() { //Broadcast Receiver to automatically start and stop the Serial connection.
         @Override
         public void onReceive(Context context, Intent intent) {
@@ -178,17 +131,16 @@ public class MainActivity extends AppCompatActivity{
         }
     };
 
-
+    /*
+    This is where all the data passed from the EMA device is processed.
+     */
     UsbSerialInterface.UsbReadCallback mCallback = new UsbSerialInterface.UsbReadCallback() { //Defining a Callback which triggers whenever data is read.
         @Override
         public void onReceivedData(byte[] arg0) {
-            String data;
             String num = getUserSID().trim();
-            byte[] stream;
             try {
-                stream = arg0;
-                if(stream == null)
-                    stream[0] = 3;
+                stream = arg0; // assign the received data from arduino to stream variable
+                if(stream == null); // do nothing if nothing is received
 
                 data = new String(arg0, "UTF-8");
 
@@ -197,12 +149,10 @@ public class MainActivity extends AppCompatActivity{
                     tvAppend(textView, "Received : " + stream[0] + "\n");
                     serialPort.write(num.getBytes());
                     tvAppend(textView, "OutStream : " + num + "\n");
-                }else if(stream[0] == 2){
-                    // Control Code 2, Send from MessagesOut_Table, from TextMessagingMode
-                }else if(stream[0] == 3){
-                    // Control Code 3, Receive Messages and store to MessagesIn_Table
                 }else{
-                    //do nothing
+                    // decryption for display, and store it in a temporary string.
+                    // notification function
+                    // store to messages table in database encrypted
                 }
 
                 tvAppend(textView, "InStream : " + data);
@@ -214,6 +164,7 @@ public class MainActivity extends AppCompatActivity{
         }
     };
 
+    // This function is called whenever the EMA device is connected
     public boolean arduinoConnected() {
         HashMap<String, UsbDevice> usbDevices = usbManager.getDeviceList();
         boolean keep = true;
@@ -268,8 +219,63 @@ public class MainActivity extends AppCompatActivity{
         });
     }
 
-    //for use when changing fragments
 
+    /*
+     This function handles the changing of the ui
+     from Contact List to Inbox List and Text Message Mode
+     */
+    public void ChangeFragment(View view){
+        if (view == findViewById(R.id.toContactList) && !isContactList) {
+            fragmentManager = getSupportFragmentManager();
+            fragmentTransaction = fragmentManager.beginTransaction();
+            fragmentTransaction.setReorderingAllowed(true)
+                    .setCustomAnimations(
+                            R.anim.slide_to_right,  // enter
+                            R.anim.fade_out  // popExit
+                    )
+                    .remove(this.getSupportFragmentManager().findFragmentById(R.id.fragment_container_view))
+                    .replace(R.id.fragment_container_view, FragmentContactList.class, null)
+                    .commit();
+
+            //set navbar switches
+            setContactListColor();
+
+        }
+
+        if(view == findViewById(R.id.toTextModeButton) && !isTextMessageMode){
+            fragmentManager = getSupportFragmentManager();
+            fragmentTransaction = fragmentManager.beginTransaction();
+            fragmentTransaction.setReorderingAllowed(true)
+                    .setCustomAnimations(
+                            R.anim.slide_to_left,  // enter
+                            R.anim.fade_out // popExit
+                    )
+                    .remove(this.getSupportFragmentManager().findFragmentById(R.id.fragment_container_view))
+                    .replace(R.id.fragment_container_view, FragmentTextMessage.class, null)
+                    .commit();
+
+            //set navbar switches
+            setTextMessageColor();
+        }
+
+        if(view == findViewById(R.id.toReceiverModeButton) && !isReceiverMode){
+            fragmentManager = getSupportFragmentManager();
+            fragmentTransaction = fragmentManager.beginTransaction();
+            fragmentTransaction.setReorderingAllowed(true)
+                    .setCustomAnimations(
+                            R.anim.slide_to_down,  // enter
+                            R.anim.fade_out // popExit
+                    )
+                    .remove(this.getSupportFragmentManager().findFragmentById(R.id.fragment_container_view))
+                    .replace(R.id.fragment_container_view, FragmentMain.class, null)
+                    .commit();
+
+            //set navbar switches
+            setReceiverModeColor();
+        }
+    }
+
+    //for use when changing fragments to change the navbar colors
     public void setContactListColor(){
         toContactList.setColorFilter(ContextCompat.getColor(this, R.color.bluegreen));
         toReceiverMode.setColorFilter(ContextCompat.getColor(this, R.color.white));
@@ -279,7 +285,6 @@ public class MainActivity extends AppCompatActivity{
         isTextMessageMode = false;
 
     }
-
     public void setReceiverModeColor(){
         toContactList.setColorFilter(ContextCompat.getColor(this, R.color.white));
         toReceiverMode.setColorFilter(ContextCompat.getColor(this, R.color.bluegreen));
@@ -288,7 +293,6 @@ public class MainActivity extends AppCompatActivity{
         isReceiverMode = true;
         isTextMessageMode = false;
     }
-
     public void setTextMessageColor(){
         toContactList.setColorFilter(ContextCompat.getColor(this, R.color.white));
         toReceiverMode.setColorFilter(ContextCompat.getColor(this, R.color.white));
@@ -298,6 +302,7 @@ public class MainActivity extends AppCompatActivity{
         isTextMessageMode = true;
     }
 
+    // This is a database handler to get the User SID whenever the Arduino is connected.
     String getUserSID(){
         String SID = null;
         Cursor cursor;
@@ -313,6 +318,29 @@ public class MainActivity extends AppCompatActivity{
             }
         }
         return SID;
+    }
+
+    // This will be called in FragmentTextMessage and mCallback to store messages to database.
+    @RequiresApi(api = Build.VERSION_CODES.N)
+    private void storeMessage(){
+        String SID = getUserSID().toString().trim();
+        String Message = String.copyValueOf(stream.toString().toCharArray(), 9, 44);
+        String Received = FragmentMain.dateFormat.format(FragmentMain.date);
+        String Sent = "-";
+
+        dataBaseHelper.addOneMessage(SID, Message, Received,Sent);
+
+        //refill the contact Array lists so that the Contact ID will be filled with the new information
+        FragmentMain.messageID.clear();
+        FragmentMain.messageNames.clear();
+        FragmentMain.messageNum.clear();
+        FragmentMain.messageText.clear();
+        FragmentMain.messageSent.clear();
+        FragmentMain.messageReceived.clear();
+        FragmentMain.storeDBtoArrays();
+
+        FragmentMain.inboxListAdapter.notifyDataSetChanged();
+
     }
 
     public void onBackPressed() {

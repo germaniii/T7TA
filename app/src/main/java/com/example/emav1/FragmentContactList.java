@@ -35,12 +35,12 @@ public class FragmentContactList extends Fragment implements ContactListAdapter.
     ImageButton addContact;
     Toast toast_send;
 
-    private ArrayList<String> contactNames, contactNum, contactKey, contactID;
+    private static ArrayList<String> contactNames, contactNum, contactKey, contactID;
 
     private EditText editName, editNumber, editKey;
     private RecyclerView recyclerView;
 
-    ContactListAdapter contactListAdapter;
+    static ContactListAdapter contactListAdapter;
     DataBaseHelper dataBaseHelper;
     PacketHandler packetHandler;
 

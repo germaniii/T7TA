@@ -97,10 +97,11 @@ public class FragmentTextMessage extends Fragment {
                 if ((message.getText().length() == 0) || number.getSelectedItem() == "") {
                     Toast.makeText(context, "Please Fill Up All Fields!", Toast.LENGTH_SHORT).show();
                 }else {
-                    String SMP = "0";
+                    String SMP = "1";
                     getSID();
                     getRID();
                     String MESSAGE = message.getText().toString();
+                    String MESSAGE_SPLICE;
 
                     /*if(string.length() > 44){
                         int numberOfPackets = string.length()/44;
@@ -110,7 +111,7 @@ public class FragmentTextMessage extends Fragment {
 
                     }
 
-                     */
+                    */
 
                     //should use the serial port from MainActivity to reference the registered serialPort Arduino
                     MainActivity.serialPort.write((SMP + SID + RID + MESSAGE).getBytes());

@@ -11,6 +11,13 @@ import androidx.annotation.Nullable;
 
 public class DataBaseHelper extends SQLiteOpenHelper {
 
+    /*
+    This is where we will be handling all Database commands.
+    All functions inside this class can be called to store/retrieve/update/delete an entry in the
+    database.
+    If further functions are needed, you can add it easily by just manipulating the query.
+     */
+
     public static final String MESSAGE = "MESSAGE";
     public static final String MESSAGES_TABLE = MESSAGE + "S_TABLE";
     public static final String MESSAGES_IN_CACHE = MESSAGE + "S_IN_CACHE";
@@ -55,7 +62,7 @@ public class DataBaseHelper extends SQLiteOpenHelper {
         db.execSQL(createMessageOutCache);
     }
 
-    // this is called if the database version number changes. Prevents crash when db is updated
+    // This is called if the database version number changes. Prevents crash when db is updated
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
         db.execSQL("DROP TABLE IF EXISTS " + CONTACTS_TABLE);
@@ -65,6 +72,7 @@ public class DataBaseHelper extends SQLiteOpenHelper {
         onCreate(db);
     }
 
+    //This function is used for Adding Contacts in the FragmentContactList.java class
     public void addOneContact(String contactName, String contactNum, String contactKey){
         SQLiteDatabase db = this.getWritableDatabase();
         ContentValues cv = new ContentValues();
@@ -80,6 +88,10 @@ public class DataBaseHelper extends SQLiteOpenHelper {
             Toast.makeText(context, "Added Successfully", Toast.LENGTH_SHORT).show();
     }
 
+    /*
+    This function is used for Adding Messages in the FragmentMain.java class.
+    You can call this, then call a notification function in the Main Activity.
+     */
     public void addOneMessage(String messageSenderID, String messageText, String messageReceived, String messageSent){
         SQLiteDatabase db = this.getWritableDatabase();
         ContentValues cv = new ContentValues();
@@ -96,6 +108,7 @@ public class DataBaseHelper extends SQLiteOpenHelper {
             Toast.makeText(context, "Added Successfully", Toast.LENGTH_SHORT).show();
     }
 
+    // This function returns all the data from the contacts table
     Cursor readAllDataContactsTable(){
         String query = "SELECT * FROM " + CONTACTS_TABLE;
         SQLiteDatabase db = this.getWritableDatabase();
@@ -108,6 +121,7 @@ public class DataBaseHelper extends SQLiteOpenHelper {
         return cursor;
     }
 
+    // This function returns all the data from the messages table
     Cursor readAllDataMessagesTable(){
         String query = "SELECT * FROM " + MESSAGES_TABLE;
         SQLiteDatabase db = this.getWritableDatabase();
@@ -120,6 +134,7 @@ public class DataBaseHelper extends SQLiteOpenHelper {
         return cursor;
     }
 
+    // This function retrieves the contact name by using the contact number (SID) as search key
     Cursor readContactName(String senderID){
         String query = "SELECT CONTACT_NAME FROM " + CONTACTS_TABLE + " WHERE " + CONTACT_NUMBER + " = " + senderID;
         SQLiteDatabase db = this.getWritableDatabase();
@@ -132,7 +147,7 @@ public class DataBaseHelper extends SQLiteOpenHelper {
         return cursor;
     }
 
-
+    // This function retrieves the contact number by using the contact name as search key
     Cursor readContactNumber(String name){
         String query = "SELECT CONTACT_NUMBER FROM " + CONTACTS_TABLE + " WHERE " + CONTACT_NAME + " = \"" + name + "\"";
         SQLiteDatabase db = this.getWritableDatabase();
@@ -145,6 +160,7 @@ public class DataBaseHelper extends SQLiteOpenHelper {
         return cursor;
     }
 
+    // This function retrieves the contact number(SID) of the user of the phone
     Cursor readUserSID(){
         String query = "SELECT CONTACT_NUMBER FROM " + CONTACTS_TABLE + " WHERE CONTACT_ID = 1";
         SQLiteDatabase db = this.getWritableDatabase();
@@ -158,6 +174,7 @@ public class DataBaseHelper extends SQLiteOpenHelper {
     }
 
 
+    // This function updates the contact. Is used in FragmentContactList.java
     void updateContact(String row_id, String name, String number, String key){
         SQLiteDatabase db = this.getWritableDatabase();
         ContentValues cv = new ContentValues();
@@ -173,6 +190,7 @@ public class DataBaseHelper extends SQLiteOpenHelper {
         }
     }
 
+    // This function deletes a contact. Is used in FragmentContactList.java
     void deleteOneContact(String row_id){
         SQLiteDatabase db = this.getWritableDatabase();
         long result = db.delete(CONTACTS_TABLE, "CONTACT_ID=?", new String[]{row_id});

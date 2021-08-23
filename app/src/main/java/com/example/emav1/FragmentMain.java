@@ -29,14 +29,14 @@ public class FragmentMain extends Fragment  implements InboxListAdapter.ItemClic
 
     View view;
 
-    InboxListAdapter inboxListAdapter;
-    ArrayList<String> messageID, messageNames, messageNum, messageText, messageReceived, messageSent;
+    static InboxListAdapter inboxListAdapter;
+    static ArrayList<String> messageID, messageNames,messageNum,messageText,messageReceived, messageSent;
     RecyclerView recyclerView;
     TextView dialog_name, dialog_num, dialog_mess, dialog_date;
     EditText uName, uNumber;
-    Date date;
-    SimpleDateFormat dateFormat;
-    DataBaseHelper dataBaseHelper;
+    static Date date;
+    static SimpleDateFormat dateFormat;
+    static DataBaseHelper dataBaseHelper;
 
     Context context;
 
@@ -118,11 +118,10 @@ public class FragmentMain extends Fragment  implements InboxListAdapter.ItemClic
 
     }
 
-    void storeDBtoArrays(){
+    public static void storeDBtoArrays(){
         Cursor cursor = dataBaseHelper.readAllDataMessagesTable();
         Cursor num;
         if(cursor.getCount() == 0){
-            Toast.makeText(context, "No Messages Found!", Toast.LENGTH_SHORT).show();
         }else{
             while (cursor.moveToNext()){
                 messageID.add(cursor.getString(0));     //ID
