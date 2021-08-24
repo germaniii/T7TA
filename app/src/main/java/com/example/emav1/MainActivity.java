@@ -95,7 +95,7 @@ public class MainActivity extends AppCompatActivity{
                     mp = MediaPlayer.create(MainActivity.this, R.raw.emergency_alarm);
                     mp.start(); // Play sound
                     char[] sender = new char[4];
-                    data.getChars(5,8,sender,0);
+                    data.getChars(5,8,sender,0);    // Extract SID of the received packet
                     new AlertDialog.Builder(MainActivity.this)
                             .setIcon(R.drawable.icon_ema)
                             .setTitle("Emergency Signal Detected!")
@@ -110,10 +110,6 @@ public class MainActivity extends AppCompatActivity{
                     // if(regular message)
                     mp = MediaPlayer.create(MainActivity.this, notificationSound);
                     mp.start(); // Play sound
-                    /*
-                        else(if alarm/beacon mode)
-                     */
-
                 }
 
                 tvAppend(textView, "InStream : " + data);
@@ -131,7 +127,7 @@ public class MainActivity extends AppCompatActivity{
             if(beacon.isEnabled())
                 for(int i=5; i>0; i--) {
                     String string = "0" + "0000"+ getUserSID() + "00000" + "00000" + "00000" +
-                            "00000" + "00000" + "00000" + "00000" + "00000" + "00000" + "1234567890";
+                            "00000" + "00000" + "00000" + "00000" + "00000" + "00000" + "1234567890"; // <-- this HK part will be replaced later on when HK algorithm is finished
                     /*
                         The 'string' is similar to the packet assignment mentioned in the Manuscript
                         | SMP-1 | RID-4 | SID-4 | DATA-40 | HK-10 |  ----> This totals to 64bytes-1packet
@@ -144,9 +140,6 @@ public class MainActivity extends AppCompatActivity{
         }
 
     }
-
-
-
 
     @RequiresApi(api = Build.VERSION_CODES.N)
     @Override
