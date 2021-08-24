@@ -7,6 +7,7 @@ import androidx.core.content.ContextCompat;
 import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
 
+import android.app.AlertDialog;
 import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -32,12 +33,8 @@ import com.example.emav1.toolspack.PacketHandler;
 import com.felhr.usbserial.UsbSerialDevice;
 import com.felhr.usbserial.UsbSerialInterface;
 
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
-
-import static com.example.emav1.FragmentMain.date;
 
 public class MainActivity extends AppCompatActivity{
 
@@ -69,7 +66,7 @@ public class MainActivity extends AppCompatActivity{
     private MediaPlayer mp;
 
     /*
-    This is the only function you need to touch in this class.
+    This and onClickBeaconMode are the only functions you need to touch in this class.
     Mao rani ang hilabti if mag manipulate mo sa data nga ma receive from the EMA device.
 
     This is where all the data passed to and from the EMA device is processed.
@@ -94,6 +91,18 @@ public class MainActivity extends AppCompatActivity{
                     tvAppend(textView, "Received : " + stream[0] + "\n");
                     serialPort.write(num.getBytes());
                     tvAppend(textView, "OutStream : " + num + "\n");
+                }else if(stream[0] == 0) {
+                    mp = MediaPlayer.create(MainActivity.this, R.raw.emergency_alarm);
+                    mp.start(); // Play sound
+                    char[] sender = new char[4];
+                    data.getChars(5,8,sender,0);
+                    new AlertDialog.Builder(MainActivity.this)
+                            .setIcon(R.drawable.icon_ema)
+                            .setTitle("Emergency Signal Detected!")
+                            .setMessage("Emergency Signal from user " + sender.toString())
+                            .setPositiveButton("Ok",null)
+                            .show();
+
                 }else{
                     // ... decryption for display, and store it in a temporary string.
                     // ... notification function
@@ -103,8 +112,6 @@ public class MainActivity extends AppCompatActivity{
                     mp.start(); // Play sound
                     /*
                         else(if alarm/beacon mode)
-                        mp = MediaPlayer.create(MainActivity.this, R.raw.emergency_alarm);
-                        mp.start(); // Play sound
                      */
 
                 }
@@ -117,6 +124,28 @@ public class MainActivity extends AppCompatActivity{
             }
         }
     };
+
+    // This function handles what happens when the beacon mode button is clicked.
+    public void onClickBeaconMode(View view){
+        try{
+            if(beacon.isEnabled())
+                for(int i=5; i>0; i--) {
+                    String string = "0" + "0000"+ getUserSID() + "00000" + "00000" + "00000" +
+                            "00000" + "00000" + "00000" + "00000" + "00000" + "00000" + "1234567890";
+                    /*
+                        The 'string' is similar to the packet assignment mentioned in the Manuscript
+                        | SMP-1 | RID-4 | SID-4 | DATA-40 | HK-10 |  ----> This totals to 64bytes-1packet
+                     */
+                    serialPort.write(string.getBytes());
+                    tvAppend(textView, "\nINFO:\n" + string + "\n");
+                }
+        }catch(Exception e){
+            Toast.makeText(MainActivity.this, "Please Connect the EMA Device!", Toast.LENGTH_SHORT).show();
+        }
+
+    }
+
+
 
 
     @RequiresApi(api = Build.VERSION_CODES.N)
@@ -145,10 +174,8 @@ public class MainActivity extends AppCompatActivity{
         textView.setMovementMethod(new ScrollingMovementMethod());
         setReceiverModeColor();
 
-        //Sets notif sound
-
         // Set Beacon Image Whenever Transmission Device is Connected
-        if(!arduinoConnected()){
+        if (!arduinoConnected()) {
             //beacon.setImageResource(R.drawable.icon_beacon_on);
         }
     }
@@ -216,20 +243,6 @@ public class MainActivity extends AppCompatActivity{
 
     public void arduinoDisconnected() {
         serialPort.close();
-    }
-
-    public void onClickBeaconMode(View view){
-        try{
-            if(beacon.isEnabled())
-            for(int i=5; i>0; i--) {
-                String string = "help";
-                serialPort.write(string.getBytes());
-                tvAppend(textView, "\nINFO:\n" + string + "\n");
-            }
-        }catch(Exception e){
-            Toast.makeText(MainActivity.this, "Please Connect the EMA Device!", Toast.LENGTH_SHORT).show();
-        }
-
     }
 
     private void tvAppend(TextView tv, CharSequence text) {
