@@ -78,8 +78,8 @@ public class FragmentMain extends Fragment  implements InboxListAdapter.ItemClic
         //Checks if Contacts is Empty, if yes, will ask for user's contact number(last 4 digits)
         if(!dataBaseHelper.readAllDataContactsTable().moveToFirst()){
             AlertDialog.Builder builder = new AlertDialog.Builder(context);
-            builder.setTitle("User Set-up");
-            builder.setMessage("\nPlease input your name and the last 4 digits of your phone number.");
+            builder.setTitle("User Set-up")
+                    .setMessage("\nPlease input your name and the last 4 digits of your phone number.");
             // I'm using fragment here so I'm using getView() to provide ViewGroup
             // but you can provide here any other instance of ViewGroup from your Fragment / Activity
             View viewInflated = LayoutInflater.from(context).inflate(R.layout.dialog_usercontact, (ViewGroup) getActivity().findViewById(android.R.id.content), false);

@@ -11,6 +11,7 @@ import android.app.AlertDialog;
 import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.database.Cursor;
@@ -96,14 +97,20 @@ public class MainActivity extends AppCompatActivity{
                     mp.start(); // Play sound
                     char[] sender = new char[4];
                     data.getChars(5,8,sender,0);    // Extract SID of the received packet
-                    new AlertDialog.Builder(MainActivity.this)
-                            .setIcon(R.drawable.icon_ema)
-                            .setTitle("Emergency Signal Detected!")
+                    AlertDialog alert= null;
+                    AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
+                    builder.setTitle("Emergency Signal Detected!")
                             .setMessage("Emergency Signal from user " + sender.toString())
-                            .setPositiveButton("Ok",null)
-                            .show();
+                            .setPositiveButton("Back", new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialog, int which) {
+                                    dialog.cancel();
+                                }
+                            })
+                            .create();
+                       alert.show();
 
-                }else{
+                }else if(stream[0] > 1){
                     // ... decryption for display, and store it in a temporary string.
                     // ... notification function
                     // ... store to messages table in database encrypted
@@ -112,7 +119,7 @@ public class MainActivity extends AppCompatActivity{
                     mp.start(); // Play sound
                 }
 
-                tvAppend(textView, "InStream : " + data);
+                tvAppend(textView, "\nInStream : " + data);
                 //tvAppend(textView, Arrays.toString(stream) + "\n");
             } catch (Exception e) {
                 Toast.makeText(MainActivity.this, "Receive Error", Toast.LENGTH_SHORT).show();
@@ -124,17 +131,20 @@ public class MainActivity extends AppCompatActivity{
     // This function handles what happens when the beacon mode button is clicked.
     public void onClickBeaconMode(View view){
         try{
-            if(beacon.isEnabled())
-                for(int i=5; i>0; i--) {
-                    String string = "0" + "0000"+ getUserSID() + "00000" + "00000" + "00000" +
-                            "00000" + "00000" + "00000" + "00000" + "00000" + "00000" + "1234567890"; // <-- this HK part will be replaced later on when HK algorithm is finished
+            if(beacon.isEnabled()) {
+                String string = "0" + "0000" + getUserSID() + "00000" + "00000" + "00000" + // Data
+                        "00000" + "00000" + "00000" + "00000" + "00000" + "12345678911"; // <-- this HK part will be replaced later on when HK algorithm is finished
                     /*
                         The 'string' is similar to the packet assignment mentioned in the Manuscript
                         | SMP-1 | RID-4 | SID-4 | DATA-40 | HK-10 |  ----> This totals to 64bytes-1packet
+
+                       ____________________________________________________________________________
+
+                       Upon further testing, the arduino buffer is actually just up to the 11 on the last set of numbers above. We have to work with that.
                      */
-                    serialPort.write(string.getBytes());
-                    tvAppend(textView, "\nINFO:\n" + string + "\n");
-                }
+                serialPort.write(string.getBytes());
+                tvAppend(textView, "\nINFO:\n" + string + "\n");
+            }
         }catch(Exception e){
             Toast.makeText(MainActivity.this, "Please Connect the EMA Device!", Toast.LENGTH_SHORT).show();
         }
@@ -265,7 +275,7 @@ public class MainActivity extends AppCompatActivity{
                             R.anim.fade_out  // popExit
                     )
                     .remove(this.getSupportFragmentManager().findFragmentById(R.id.fragment_container_view))
-                    .replace(R.id.fragment_container_view, FragmentContactList.class, null)
+                    .replace(R.id.fragment_container_view, FragmentContactList.class, null, "ContactList")
                     .commit();
 
             //set navbar switches
@@ -282,7 +292,7 @@ public class MainActivity extends AppCompatActivity{
                             R.anim.fade_out // popExit
                     )
                     .remove(this.getSupportFragmentManager().findFragmentById(R.id.fragment_container_view))
-                    .replace(R.id.fragment_container_view, FragmentTextMessage.class, null)
+                    .replace(R.id.fragment_container_view, FragmentTextMessage.class, null, "TextMessageMode")
                     .commit();
 
             //set navbar switches
@@ -298,7 +308,7 @@ public class MainActivity extends AppCompatActivity{
                             R.anim.fade_out // popExit
                     )
                     .remove(this.getSupportFragmentManager().findFragmentById(R.id.fragment_container_view))
-                    .replace(R.id.fragment_container_view, FragmentMain.class, null)
+                    .replace(R.id.fragment_container_view, FragmentMain.class, null, "ReceiverMode")
                     .commit();
 
             //set navbar switches
