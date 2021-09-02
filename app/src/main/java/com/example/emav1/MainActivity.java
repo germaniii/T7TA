@@ -4,6 +4,7 @@ import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.app.AppCompatDelegate;
 import androidx.core.content.ContextCompat;
+import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
 
@@ -34,6 +35,8 @@ import com.example.emav1.toolspack.PacketHandler;
 import com.felhr.usbserial.UsbSerialDevice;
 import com.felhr.usbserial.UsbSerialInterface;
 
+import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -53,6 +56,7 @@ public class MainActivity extends AppCompatActivity{
 
     FragmentManager fragmentManager;
     FragmentTransaction fragmentTransaction;
+    FragmentMain fragmentMain;
 
     //navbar switches
     boolean isReceiverMode;
@@ -65,6 +69,8 @@ public class MainActivity extends AppCompatActivity{
 
     private Uri notificationSound = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
     private MediaPlayer mp;
+    boolean isRinging = false;
+    char[] sender;
 
     /*
     This and onClickBeaconMode are the only functions you need to touch in this class.
@@ -81,34 +87,29 @@ public class MainActivity extends AppCompatActivity{
         @Override
         public void onReceivedData(byte[] arg0) {
             String num = getUserSID().trim();
-            try {
                 stream = arg0; // assign the received data from arduino to stream variable
                 if(stream == null); // do nothing if nothing is received
-
+            try {
                 data = new String(arg0, "UTF-8");
+            } catch (UnsupportedEncodingException e) {
+                e.printStackTrace();
+            }
 
-                // Control Code 1, Send SID to Arduino Device
+            // Control Code 1, Send SID to Arduino Device
                 if(stream[0] == 1) {
                     tvAppend(textView, "Received : " + stream[0] + "\n");
                     serialPort.write(num.getBytes());
                     tvAppend(textView, "OutStream : " + num + "\n");
-                }else if(stream[0] == 0) {
+                }else if(data.charAt(0) == '0') {
                     mp = MediaPlayer.create(MainActivity.this, R.raw.emergency_alarm);
+                    mp.setLooping(true);
                     mp.start(); // Play sound
-                    char[] sender = new char[4];
-                    data.getChars(5,8,sender,0);    // Extract SID of the received packet
-                    AlertDialog alert= null;
-                    AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
-                    builder.setTitle("Emergency Signal Detected!")
-                            .setMessage("Emergency Signal from user " + sender.toString())
-                            .setPositiveButton("Back", new DialogInterface.OnClickListener() {
-                                @Override
-                                public void onClick(DialogInterface dialog, int which) {
-                                    dialog.cancel();
-                                }
-                            })
-                            .create();
-                       alert.show();
+                    isRinging = true;
+                    sender = new char[4];
+                    sender[0] = data.charAt(5);
+                    sender[1] = data.charAt(6);
+                    sender[2] = data.charAt(7);
+                    sender[3] = data.charAt(8);
 
                 }else if(stream[0] > 1){
                     // ... decryption for display, and store it in a temporary string.
@@ -121,19 +122,26 @@ public class MainActivity extends AppCompatActivity{
 
                 tvAppend(textView, "\nInStream : " + data);
                 //tvAppend(textView, Arrays.toString(stream) + "\n");
-            } catch (Exception e) {
-                Toast.makeText(MainActivity.this, "Receive Error", Toast.LENGTH_SHORT).show();
-
-            }
         }
     };
 
     // This function handles what happens when the beacon mode button is clicked.
     public void onClickBeaconMode(View view){
-        try{
-            if(beacon.isEnabled()) {
-                String string = "0" + "0000" + getUserSID() + "00000" + "00000" + "00000" + // Data
-                        "00000" + "00000" + "00000" + "00000" + "00000" + "12345678911"; // <-- this HK part will be replaced later on when HK algorithm is finished
+
+        if(isRinging){
+            mp.stop();
+            try {
+                mp.prepare();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            isRinging = false;
+            Toast.makeText(MainActivity.this, "Emergency signal from " + sender[0] + sender[1] + sender[2] + sender[3], Toast.LENGTH_LONG).show();
+        }else {
+            try {
+                if (beacon.isEnabled()) {
+                    String string = "0" + "0000" + getUserSID() + "00000" + "00000" + "00000" + // Data
+                            "00000" + "00000" + "00000" + "00000" + "00000" + "12345678911"; // <-- this HK part will be replaced later on when HK algorithm is finished
                     /*
                         The 'string' is similar to the packet assignment mentioned in the Manuscript
                         | SMP-1 | RID-4 | SID-4 | DATA-40 | HK-10 |  ----> This totals to 64bytes-1packet
@@ -142,11 +150,12 @@ public class MainActivity extends AppCompatActivity{
 
                        Upon further testing, the arduino buffer is actually just up to the 11 on the last set of numbers above. We have to work with that.
                      */
-                serialPort.write(string.getBytes());
-                tvAppend(textView, "\nINFO:\n" + string + "\n");
+                    serialPort.write(string.getBytes());
+                    tvAppend(textView, "\nINFO:\n" + string + "\n");
+                }
+            } catch (Exception e) {
+                Toast.makeText(MainActivity.this, "Please Connect the EMA Device!", Toast.LENGTH_SHORT).show();
             }
-        }catch(Exception e){
-            Toast.makeText(MainActivity.this, "Please Connect the EMA Device!", Toast.LENGTH_SHORT).show();
         }
 
     }

@@ -1,7 +1,9 @@
 package com.example.emav1;
 
+import android.app.AlertDialog;
 import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.database.Cursor;
 import android.hardware.usb.UsbDevice;
@@ -93,7 +95,6 @@ public class FragmentTextMessage extends Fragment {
             //Toast.makeText(context, "Please Connect EMA Device", Toast.LENGTH_SHORT).show();
         }
     }
-
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
