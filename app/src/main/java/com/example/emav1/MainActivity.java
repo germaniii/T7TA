@@ -3,12 +3,16 @@ package com.example.emav1;
 import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.app.AppCompatDelegate;
+import androidx.core.app.NotificationCompat;
+import androidx.core.app.NotificationManagerCompat;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
 
 import android.app.AlertDialog;
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -87,41 +91,92 @@ public class MainActivity extends AppCompatActivity{
         @Override
         public void onReceivedData(byte[] arg0) {
             String num = getUserSID().trim();
-                stream = arg0; // assign the received data from arduino to stream variable
-                if(stream == null); // do nothing if nothing is received
+            // assign the received data from arduino to stream variable
+            stream = arg0;
+            // do nothing if nothing is received
+            if(stream == null);
+
             try {
                 data = new String(arg0, "UTF-8");
+                // Extract Sender ID from the packet.
             } catch (UnsupportedEncodingException e) {
                 e.printStackTrace();
             }
 
             // Control Code 1, Send SID to Arduino Device
-                if(stream[0] == 1) {
-                    tvAppend(textView, "Received : " + stream[0] + "\n");
-                    serialPort.write(num.getBytes());
-                    tvAppend(textView, "OutStream : " + num + "\n");
-                }else if(data.charAt(0) == '0') {
-                    mp = MediaPlayer.create(MainActivity.this, R.raw.emergency_alarm);
-                    mp.setLooping(true);
-                    mp.start(); // Play sound
-                    isRinging = true;
-                    sender = new char[4];
-                    sender[0] = data.charAt(5);
-                    sender[1] = data.charAt(6);
-                    sender[2] = data.charAt(7);
-                    sender[3] = data.charAt(8);
+            if(stream[0] == 1) {
+                serialPort.write(num.getBytes());
+                tvAppend(textView, "OutStream : " + num + "\n");
 
-                }else if(stream[0] > 1){
-                    // ... decryption for display, and store it in a temporary string.
-                    // ... notification function
-                    // ... store to messages table in database encrypted
-                    // if(regular message)
-                    mp = MediaPlayer.create(MainActivity.this, notificationSound);
-                    mp.start(); // Play sound
-                }
+            }else if(data.charAt(0) == '0') {
+                // Play sound
+                mp = MediaPlayer.create(MainActivity.this, R.raw.emergency_alarm);
+                mp.setLooping(true);
+                mp.start();
+                isRinging = true;
 
-                tvAppend(textView, "\nInStream : " + data);
-                //tvAppend(textView, Arrays.toString(stream) + "\n");
+                sender = new char[4];
+                sender[0] = data.charAt(5);
+                sender[1] = data.charAt(6);
+                sender[2] = data.charAt(7);
+                sender[3] = data.charAt(8);
+
+                // Create an explicit intent for an Activity in your app
+                Intent intent = new Intent(String.valueOf(MainActivity.this));
+                intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                PendingIntent pendingIntent = PendingIntent.getActivity(MainActivity.this, 0, intent, 0);
+
+                // Notification Builder
+                NotificationCompat.Builder builder = new NotificationCompat.Builder(MainActivity.this, "EMABeaconNotif")
+                        .setSmallIcon(R.drawable.icon_ema)
+                        .setContentTitle("Emergency Beacon Signal Detected!")
+                        .setContentText("There is an emergency beacon signal detected coming from USER:" + sender[0] + sender[1] + sender[2] + sender[3])
+                        .setPriority(NotificationCompat.PRIORITY_HIGH)
+                        // Set the intent that will fire when the user taps the notification
+                        .setContentIntent(pendingIntent)
+                        .setAutoCancel(true)
+                        .setTimeoutAfter(5000);
+
+                // Notification Show
+                NotificationManagerCompat notificationManager = NotificationManagerCompat.from(MainActivity.this);
+                notificationManager.notify(1, builder.build());
+
+
+            }else if(stream[0] > 1){
+                // ... decryption for display, and store it in a temporary string.
+                // ... notification function
+                // ... store to messages table in database encrypted
+                // if(regular message)
+                mp = MediaPlayer.create(MainActivity.this, notificationSound);
+                mp.start(); // Play sound
+
+
+                // Create an explicit intent for an Activity in your app
+                Intent intent = new Intent(String.valueOf(MainActivity.this));
+                intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                PendingIntent pendingIntent = PendingIntent.getActivity(MainActivity.this, 0, intent, 0);
+
+                // Notification Builder
+                NotificationCompat.Builder builder = new NotificationCompat.Builder(MainActivity.this, "EMAMessageNotif")
+                        .setSmallIcon(R.drawable.icon_ema)
+                        .setContentTitle("Message From")
+                        .setContentText("MESSAGE WILL BE SHOWN HERE")
+                        .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+                        // Set the intent that will fire when the user taps the notification
+                        .setContentIntent(pendingIntent)
+                        .setAutoCancel(true)
+                        .setTimeoutAfter(5000);
+
+                // Notification Show
+                NotificationManagerCompat notificationManager = NotificationManagerCompat.from(MainActivity.this);
+                notificationManager.notify(2, builder.build());
+
+
+
+            }
+
+            tvAppend(textView, "\nInStream : " + data);
+            //tvAppend(textView, Arrays.toString(stream) + "\n");
         }
     };
 
@@ -166,6 +221,8 @@ public class MainActivity extends AppCompatActivity{
         AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO);     // Only use light mode
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        createBeaconNotificationChannel();      // start notification channels
+        createMessageNotificationChannel();
 
         usbManager = (UsbManager) getSystemService(this.USB_SERVICE);
         textView = findViewById(R.id.main_serialMonitor);
@@ -392,6 +449,40 @@ public class MainActivity extends AppCompatActivity{
         FragmentMain.inboxListAdapter.notifyDataSetChanged();
 
     }
+
+    private void createBeaconNotificationChannel() {
+        // Create the NotificationChannel, but only on API 26+ because
+        // the NotificationChannel class is new and not in the support library
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            CharSequence name = "EMABeaconNotifChannel";
+            String description = "Handles Beacon notifications for EMA App";
+            int importance = NotificationManager.IMPORTANCE_HIGH;
+            NotificationChannel channel = new NotificationChannel("EMABeaconNotif", name, importance);
+            channel.setDescription(description);
+            // Register the channel with the system; you can't change the importance
+            // or other notification behaviors after this
+            NotificationManager notificationManager = getSystemService(NotificationManager.class);
+            notificationManager.createNotificationChannel(channel);
+        }
+    }
+
+
+    private void createMessageNotificationChannel() {
+        // Create the NotificationChannel, but only on API 26+ because
+        // the NotificationChannel class is new and not in the support library
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            CharSequence name = "EMAMessageNotifChannel";
+            String description = "Handles Message notifications for EMA App";
+            int importance = NotificationManager.IMPORTANCE_DEFAULT;
+            NotificationChannel channel = new NotificationChannel("EMAMessageNotif", name, importance);
+            channel.setDescription(description);
+            // Register the channel with the system; you can't change the importance
+            // or other notification behaviors after this
+            NotificationManager notificationManager = getSystemService(NotificationManager.class);
+            notificationManager.createNotificationChannel(channel);
+        }
+    }
+
 
     public void onBackPressed() {
         //doing nothing on pressing Back key
