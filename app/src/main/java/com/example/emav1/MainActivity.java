@@ -142,14 +142,13 @@ public class MainActivity extends AppCompatActivity{
                 notificationManager.notify(1, builder.build());
 
 
-            }else if(stream[0] > 1){
+            }else if(data.charAt(0) >= '2'){
                 // ... decryption for display, and store it in a temporary string.
                 // ... notification function
                 // ... store to messages table in database encrypted
                 // if(regular message)
                 mp = MediaPlayer.create(MainActivity.this, notificationSound);
                 mp.start(); // Play sound
-
 
                 // Create an explicit intent for an Activity in your app
                 Intent intent = new Intent(String.valueOf(MainActivity.this));
@@ -159,8 +158,8 @@ public class MainActivity extends AppCompatActivity{
                 // Notification Builder
                 NotificationCompat.Builder builder = new NotificationCompat.Builder(MainActivity.this, "EMAMessageNotif")
                         .setSmallIcon(R.drawable.icon_ema)
-                        .setContentTitle("Message From")
-                        .setContentText("MESSAGE WILL BE SHOWN HERE")
+                        .setContentTitle("Message From ")
+                        .setContentText("Message: " + data)
                         .setPriority(NotificationCompat.PRIORITY_DEFAULT)
                         // Set the intent that will fire when the user taps the notification
                         .setContentIntent(pendingIntent)
@@ -170,9 +169,6 @@ public class MainActivity extends AppCompatActivity{
                 // Notification Show
                 NotificationManagerCompat notificationManager = NotificationManagerCompat.from(MainActivity.this);
                 notificationManager.notify(2, builder.build());
-
-
-
             }
 
             tvAppend(textView, "\nInStream : " + data);
@@ -182,7 +178,6 @@ public class MainActivity extends AppCompatActivity{
 
     // This function handles what happens when the beacon mode button is clicked.
     public void onClickBeaconMode(View view){
-
         if(isRinging){
             mp.stop();
             try {
@@ -199,11 +194,15 @@ public class MainActivity extends AppCompatActivity{
                             "00000" + "00000" + "00000" + "00000" + "00000" + "12345678911"; // <-- this HK part will be replaced later on when HK algorithm is finished
                     /*
                         The 'string' is similar to the packet assignment mentioned in the Manuscript
-                        | SMP-1 | RID-4 | SID-4 | DATA-40 | HK-10 |  ----> This totals to 64bytes-1packet
+                        | SMP-1 | RID-4 | SID-4 | DATA-45 | HK-11 |  ----> This totals to 64bytes-1packet
 
                        ____________________________________________________________________________
 
                        Upon further testing, the arduino buffer is actually just up to the 11 on the last set of numbers above. We have to work with that.
+
+                       New format:
+                       | SMP - 1 | RID - 4 | SID - 4 | DATA - 40 | HK - 11 |
+
                      */
                     serialPort.write(string.getBytes());
                     tvAppend(textView, "\nINFO:\n" + string + "\n");

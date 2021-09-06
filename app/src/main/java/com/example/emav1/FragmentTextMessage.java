@@ -67,26 +67,37 @@ public class FragmentTextMessage extends Fragment {
                 if ((message.getText().length() == 0) || number.getSelectedItem() == "") {
                     Toast.makeText(context, "Please Fill Up All Fields!", Toast.LENGTH_SHORT).show();
                 }else {
-                    String SMP = "1";
+                    String SMP = "2";
                     getSID();
                     getRID();
-                    String MESSAGE = message.getText().toString();
-                    String MESSAGE_SPLICE;
+                    String MESSAGE = message.getText().toString().trim();
+                    String MESSAGE_FINAL = MESSAGE;
+                    String HK = "12345678911";
+                    /*
+                       New format:
+                       | SMP - 1 | RID - 4 | SID - 4 | DATA - 40 | HK - 11 |
+                     */
 
-                    /*if(string.length() > 44){
+                    //if message entered is less than 40 characters, add whitespace characters to fill up the packet.
+                    if(MESSAGE.length() < 40){
+                        for(int i = 0; i < 40 - MESSAGE.length(); i++)
+                            MESSAGE_FINAL = MESSAGE_FINAL.concat("0");
+                    }
+
+                    //if message entered is more than 40 characters, splice.
+                    /*
+                    if(string.length() > 40){
                         int numberOfPackets = string.length()/44;
                         for(int i = 0; i < numberOfPackets; i++){
                             //this code will loop until all packets are sent.
                         }
 
                     }
-
                     */
-
                     //should use the serial port from MainActivity to reference the registered serialPort Arduino
-                    MainActivity.serialPort.write((SMP + SID + RID + MESSAGE).getBytes());
-
-                    tvAppend(textView, "\nTransmit: " + MESSAGE  + " to " + number.getSelectedItem() + "No:" + SID + "\n");
+                    MainActivity.serialPort.write((SMP + SID + RID + MESSAGE_FINAL + HK).getBytes());
+                    tvAppend(textView, "ML:" + MESSAGE.length() +
+                            "\n" + SMP + SID + RID + MESSAGE_FINAL + HK + "\n");
                     Toast.makeText(context, "Transmitted", Toast.LENGTH_SHORT).show();
                 }
             }else
@@ -158,8 +169,8 @@ public class FragmentTextMessage extends Fragment {
         }else{
             if(cursor.moveToFirst()){
                     RID = cursor.getString(0);  //Names
-                    tvAppend(textView, RID+"\n");
             }
+                    tvAppend(textView, "Name:" + number.getSelectedItem().toString() + RID+"\n");
         }
     }
 
