@@ -74,7 +74,8 @@ public class MainActivity extends AppCompatActivity{
     private Uri notificationSound = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
     private MediaPlayer mp;
     boolean isRinging = false;
-    char[] sender;
+    String sender, message;
+
 
     /*
     This and onClickBeaconMode are the only functions you need to touch in this class.
@@ -88,6 +89,8 @@ public class MainActivity extends AppCompatActivity{
         - Check if signal is emergency, and play the emergency sound in R.raw
      */
     UsbSerialInterface.UsbReadCallback mCallback = new UsbSerialInterface.UsbReadCallback() { //Defining a Callback which triggers whenever data is read.
+
+        @RequiresApi(api = Build.VERSION_CODES.N)
         @Override
         public void onReceivedData(byte[] arg0) {
             String num = getUserSID().trim();
@@ -109,17 +112,13 @@ public class MainActivity extends AppCompatActivity{
                 tvAppend(textView, "OutStream : " + num + "\n");
 
             }else if(data.charAt(0) == '0') {
+                getDetailsfromPacket();
+
                 // Play sound
                 mp = MediaPlayer.create(MainActivity.this, R.raw.emergency_alarm);
                 mp.setLooping(true);
                 mp.start();
                 isRinging = true;
-
-                sender = new char[4];
-                sender[0] = data.charAt(5);
-                sender[1] = data.charAt(6);
-                sender[2] = data.charAt(7);
-                sender[3] = data.charAt(8);
 
                 // Create an explicit intent for an Activity in your app
                 Intent intent = new Intent(String.valueOf(MainActivity.this));
@@ -130,19 +129,18 @@ public class MainActivity extends AppCompatActivity{
                 NotificationCompat.Builder builder = new NotificationCompat.Builder(MainActivity.this, "EMABeaconNotif")
                         .setSmallIcon(R.drawable.icon_ema)
                         .setContentTitle("Emergency Beacon Signal Detected!")
-                        .setContentText("There is an emergency beacon signal detected coming from USER:" + sender[0] + sender[1] + sender[2] + sender[3])
+                        .setContentText("There is an emergency beacon signal detected coming from USER:" + sender)
                         .setPriority(NotificationCompat.PRIORITY_HIGH)
                         // Set the intent that will fire when the user taps the notification
                         .setContentIntent(pendingIntent)
-                        .setAutoCancel(true)
-                        .setTimeoutAfter(5000);
+                        .setAutoCancel(true);
 
                 // Notification Show
                 NotificationManagerCompat notificationManager = NotificationManagerCompat.from(MainActivity.this);
                 notificationManager.notify(1, builder.build());
 
-
             }else if(data.charAt(0) >= '2'){
+                getDetailsfromPacket();
                 // ... decryption for display, and store it in a temporary string.
                 // ... notification function
                 // ... store to messages table in database encrypted
@@ -158,17 +156,20 @@ public class MainActivity extends AppCompatActivity{
                 // Notification Builder
                 NotificationCompat.Builder builder = new NotificationCompat.Builder(MainActivity.this, "EMAMessageNotif")
                         .setSmallIcon(R.drawable.icon_ema)
-                        .setContentTitle("Message From ")
-                        .setContentText("Message: " + data)
+                        .setContentTitle("Message from User: " + sender)
+                        .setContentText("Message: " + message)
                         .setPriority(NotificationCompat.PRIORITY_DEFAULT)
                         // Set the intent that will fire when the user taps the notification
                         .setContentIntent(pendingIntent)
-                        .setAutoCancel(true)
-                        .setTimeoutAfter(5000);
+                        .setAutoCancel(true);
 
                 // Notification Show
                 NotificationManagerCompat notificationManager = NotificationManagerCompat.from(MainActivity.this);
                 notificationManager.notify(2, builder.build());
+
+                //Storing to Messages Table
+                storeMessage(sender, message);
+
             }
 
             tvAppend(textView, "\nInStream : " + data);
@@ -186,7 +187,7 @@ public class MainActivity extends AppCompatActivity{
                 e.printStackTrace();
             }
             isRinging = false;
-            Toast.makeText(MainActivity.this, "Emergency signal from " + sender[0] + sender[1] + sender[2] + sender[3], Toast.LENGTH_LONG).show();
+            Toast.makeText(MainActivity.this, "Emergency signal from " + sender, Toast.LENGTH_LONG).show();
         }else {
             try {
                 if (beacon.isEnabled()) {
@@ -428,13 +429,11 @@ public class MainActivity extends AppCompatActivity{
 
     // This will be called in FragmentTextMessage and mCallback to store messages to database.
     @RequiresApi(api = Build.VERSION_CODES.N)
-    private void storeMessage(){
-        String SID = getUserSID().toString().trim();
-        String Message = String.copyValueOf(stream.toString().toCharArray(), 9, 44);
+    private void storeMessage(String ID, String MESSAGE){
         String Received = FragmentMain.dateFormat.format(FragmentMain.date);
         String Sent = "-";
 
-        dataBaseHelper.addOneMessage(SID, Message, Received,Sent);
+        dataBaseHelper.addOneMessage(ID, MESSAGE, Received,Sent);
 
         //refill the contact Array lists so that the Contact ID will be filled with the new information
         FragmentMain.messageID.clear();
@@ -444,7 +443,6 @@ public class MainActivity extends AppCompatActivity{
         FragmentMain.messageSent.clear();
         FragmentMain.messageReceived.clear();
         FragmentMain.storeDBtoArrays();
-
         FragmentMain.inboxListAdapter.notifyDataSetChanged();
 
     }
@@ -479,6 +477,18 @@ public class MainActivity extends AppCompatActivity{
             // or other notification behaviors after this
             NotificationManager notificationManager = getSystemService(NotificationManager.class);
             notificationManager.createNotificationChannel(channel);
+        }
+    }
+
+    private void getDetailsfromPacket(){
+        sender = "";
+        message = "";
+
+        for(int i = 0; i < 4; i++){
+            sender = sender.concat(String.valueOf(data.charAt(i+5))).trim();
+        }
+        for(int i = 0; i < 40; i++){
+            message = message.concat(String.valueOf(data.charAt(i+9)));
         }
     }
 

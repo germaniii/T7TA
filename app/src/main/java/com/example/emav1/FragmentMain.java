@@ -103,7 +103,7 @@ public class FragmentMain extends Fragment  implements InboxListAdapter.ItemClic
                         String uNameString = uName.getText().toString().trim();
                         uNameString += " (My Number)";
                         dataBaseHelper.addOneContact(uNameString, uNumber.getText().toString(), "");
-                        dataBaseHelper.addOneMessage(uNumber.getText().toString(), "This is a test Message!", strDate, null);
+                        dataBaseHelper.addOneMessage(uNumber.getText().toString(), "This is a test Message!", strDate, "");
 
                         //refill the contact Array lists so that the Contact ID will be filled with the new information
                         storeDBtoArrays();
@@ -136,6 +136,8 @@ public class FragmentMain extends Fragment  implements InboxListAdapter.ItemClic
                     do {
                         messageNames.add(num.getString(0));
                     } while (num.moveToNext());
+                }else{
+                    messageNames.add(num.getString(0));
                 }
 
                 messageText.add(cursor.getString(2));    //Message
@@ -143,7 +145,9 @@ public class FragmentMain extends Fragment  implements InboxListAdapter.ItemClic
                 messageSent.add(cursor.getString(4));    //Date and Time Sent
 
             }
+
         }
+
     }
 
     //ON ITEM CLICK FROM RECYCLER VIEW
@@ -169,7 +173,7 @@ public class FragmentMain extends Fragment  implements InboxListAdapter.ItemClic
             @Override
             public void onClick(DialogInterface dialog, int which) {
 
-                dataBaseHelper.deleteOneContact(messageID.get(position));
+                dataBaseHelper.deleteOneMessage(messageID.get(position));
                 messageNames.remove(position);
                 messageText.remove(position);
                 messageNum.remove(position);

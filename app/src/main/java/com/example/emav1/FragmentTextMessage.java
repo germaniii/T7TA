@@ -81,7 +81,7 @@ public class FragmentTextMessage extends Fragment {
                     //if message entered is less than 40 characters, add whitespace characters to fill up the packet.
                     if(MESSAGE.length() < 40){
                         for(int i = 0; i < 40 - MESSAGE.length(); i++)
-                            MESSAGE_FINAL = MESSAGE_FINAL.concat("0");
+                            MESSAGE_FINAL = MESSAGE_FINAL.concat(" ");
                     }
 
                     //if message entered is more than 40 characters, splice.
@@ -91,7 +91,6 @@ public class FragmentTextMessage extends Fragment {
                         for(int i = 0; i < numberOfPackets; i++){
                             //this code will loop until all packets are sent.
                         }
-
                     }
                     */
                     //should use the serial port from MainActivity to reference the registered serialPort Arduino
