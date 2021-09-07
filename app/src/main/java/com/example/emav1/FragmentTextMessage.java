@@ -95,7 +95,7 @@ public class FragmentTextMessage extends Fragment {
                     }
                     */
                     //should use the serial port from MainActivity to reference the registered serialPort Arduino
-                    MainActivity.serialPort.write((SMP + SID + RID + MESSAGE_FINAL + HK).getBytes());
+                    MainActivity.serialPort.write((SMP + RID + SID + MESSAGE_FINAL + HK).getBytes());
                     tvAppend(textView, "ML:" + MESSAGE.length() +
                             "\n" + SMP + SID + RID + MESSAGE_FINAL + HK + "\n");
                     Toast.makeText(context, "Transmitted", Toast.LENGTH_SHORT).show();
