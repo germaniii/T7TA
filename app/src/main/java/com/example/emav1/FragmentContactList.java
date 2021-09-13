@@ -121,7 +121,7 @@ public class FragmentContactList extends Fragment implements ContactListAdapter.
         builder.setPositiveButton("Add", new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
-                if(editName.getText().toString() == "" || editNumber.getText().toString() == "" || editKey.getText().toString() == ""){
+                if(editName.getText().toString().equals("") || editNumber.getText().toString().equals("") || editKey.getText().toString().equals("")){
                     Toast.makeText(context, "Please fill up all fields!", Toast.LENGTH_SHORT).show();
                 }else{
                     contactNames.add(editName.getText().toString());

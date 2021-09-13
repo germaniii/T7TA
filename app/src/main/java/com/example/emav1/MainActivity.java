@@ -85,7 +85,9 @@ public class MainActivity extends AppCompatActivity{
 
     To implement:
         - Twofish Algorithm
-        - JH?
+        - JH
+
+   Finished:
         - Check if signal is emergency, and play the emergency sound in R.raw
      */
     UsbSerialInterface.UsbReadCallback mCallback = new UsbSerialInterface.UsbReadCallback() { //Defining a Callback which triggers whenever data is read.
@@ -167,7 +169,7 @@ public class MainActivity extends AppCompatActivity{
                 NotificationManagerCompat notificationManager = NotificationManagerCompat.from(MainActivity.this);
                 notificationManager.notify(2, builder.build());
 
-                //Storing to Messages Table
+                //Storing to Messages Table Database
                 storeMessage(sender, message);
 
             }

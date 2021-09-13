@@ -123,6 +123,7 @@ public class FragmentMain extends Fragment  implements InboxListAdapter.ItemClic
         Cursor cursor = dataBaseHelper.readAllDataMessagesTable();
         Cursor num;
         if(cursor.getCount() == 0){
+            //do nothing
         }else{
             while (cursor.moveToNext()){
                 messageID.add(cursor.getString(0));     //ID
@@ -163,7 +164,7 @@ public class FragmentMain extends Fragment  implements InboxListAdapter.ItemClic
         dialog_name.setText(messageNames.get(position));
         dialog_num.setText(messageNum.get(position));
         dialog_mess.setText(messageText.get(position));
-        if(messageSent.get(position) == null) dialog_date.setText(messageReceived.get(position));
+        if(messageSent.get(position) == "-") dialog_date.setText(messageReceived.get(position));
         else dialog_date.setText(messageSent.get(position));
 
         // Specify the type of input expected; this, for example, sets the input as a password, and will mask the text

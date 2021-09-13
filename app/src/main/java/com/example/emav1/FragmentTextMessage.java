@@ -60,6 +60,7 @@ public class FragmentTextMessage extends Fragment {
     To implement:
         - Background process of sending?
         - if not, Loading screen to wait until all the message packets are successfully sent?
+
      */
     public void onClickSendButton(View view) {
         try {
