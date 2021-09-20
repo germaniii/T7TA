@@ -69,7 +69,7 @@ public class MainActivity extends AppCompatActivity{
 
     // Serial Receiver Variables
     private String data;
-    private byte[] stream;
+    private byte[] stream = new byte[100];
 
     private Uri notificationSound = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
     private MediaPlayer mp;
@@ -96,86 +96,91 @@ public class MainActivity extends AppCompatActivity{
         @Override
         public void onReceivedData(byte[] arg0) {
             String num = getUserSID().trim();
-            // assign the received data from arduino to stream variable
-            stream = arg0;
-            // do nothing if nothing is received
-            if(stream == null);
-
             try {
+                //assign stream with the value of arg0, which is the value passed from the arduino.
+                stream = arg0;
                 data = new String(arg0, "UTF-8");
                 // Extract Sender ID from the packet.
             } catch (UnsupportedEncodingException e) {
                 e.printStackTrace();
             }
 
-            // Control Code 1, Send SID to Arduino Device
-            if(stream[0] == 1) {
-                serialPort.write(num.getBytes());
-                tvAppend(textView, "OutStream : " + num + "\n");
+            // Check if stream is not empty.
+            if(stream.length > 0) {
+                // Control Code 1, Send SID to Arduino Device
+                if (stream[0] == 1) {
+                    serialPort.write(num.getBytes());
+                    tvAppend(textView, "OutStream : " + num + "\n");
 
-            }else if(data.charAt(0) == '0') {
-                getDetailsfromPacket();
+                } else if (data.charAt(0) == '0') {
+                    getDetailsfromPacket();
 
-                // Play sound
-                mp = MediaPlayer.create(MainActivity.this, R.raw.emergency_alarm);
-                mp.setLooping(true);
-                mp.start();
-                isRinging = true;
+                    // Play sound
+                    mp = MediaPlayer.create(MainActivity.this, R.raw.emergency_alarm);
+                    mp.setLooping(true);
+                    mp.start();
+                    isRinging = true;
 
-                // Create an explicit intent for an Activity in your app
-                Intent intent = new Intent(String.valueOf(MainActivity.this));
-                intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-                PendingIntent pendingIntent = PendingIntent.getActivity(MainActivity.this, 0, intent, 0);
+                    // Create an explicit intent for an Activity in your app
+                    Intent intent = new Intent(String.valueOf(MainActivity.this));
+                    intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                    PendingIntent pendingIntent = PendingIntent.getActivity(MainActivity.this, 0, intent, 0);
 
-                // Notification Builder
-                NotificationCompat.Builder builder = new NotificationCompat.Builder(MainActivity.this, "EMABeaconNotif")
-                        .setSmallIcon(R.drawable.icon_ema)
-                        .setContentTitle("Emergency Beacon Signal Detected!")
-                        .setContentText("There is an emergency beacon signal detected coming from USER:" + sender)
-                        .setPriority(NotificationCompat.PRIORITY_HIGH)
-                        // Set the intent that will fire when the user taps the notification
-                        .setContentIntent(pendingIntent)
-                        .setAutoCancel(true);
+                    // Notification Builder
+                    NotificationCompat.Builder builder = new NotificationCompat.Builder(MainActivity.this, "EMABeaconNotif")
+                            .setSmallIcon(R.drawable.icon_ema)
+                            .setContentTitle("Emergency Beacon Signal Detected!")
+                            .setContentText("There is an emergency beacon signal detected coming from USER:" + sender)
+                            .setPriority(NotificationCompat.PRIORITY_HIGH)
+                            // Set the intent that will fire when the user taps the notification
+                            .setContentIntent(pendingIntent)
+                            .setAutoCancel(true);
 
-                // Notification Show
-                NotificationManagerCompat notificationManager = NotificationManagerCompat.from(MainActivity.this);
-                notificationManager.notify(1, builder.build());
+                    // Notification Show
+                    NotificationManagerCompat notificationManager = NotificationManagerCompat.from(MainActivity.this);
+                    notificationManager.notify(1, builder.build());
 
-            }else if(data.charAt(0) >= '2'){
-                getDetailsfromPacket();
-                // ... decryption for display, and store it in a temporary string.
-                // ... notification function
-                // ... store to messages table in database encrypted
-                // if(regular message)
-                mp = MediaPlayer.create(MainActivity.this, notificationSound);
-                mp.start(); // Play sound
+                    // THis line is for debugging purposes
+                    // Shows what is the incoming message from the arduino
+                    tvAppend(textView, "\nInStream : " + data);
 
-                // Create an explicit intent for an Activity in your app
-                Intent intent = new Intent(String.valueOf(MainActivity.this));
-                intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-                PendingIntent pendingIntent = PendingIntent.getActivity(MainActivity.this, 0, intent, 0);
+                } else if (data.charAt(0) >= '2') {
+                    getDetailsfromPacket();
+                    // ... decryption for display, and store it in a temporary string.
+                    // ... notification function
+                    // ... store to messages table in database encrypted
+                    // if(regular message)
+                    mp = MediaPlayer.create(MainActivity.this, notificationSound);
+                    mp.start(); // Play sound
 
-                // Notification Builder
-                NotificationCompat.Builder builder = new NotificationCompat.Builder(MainActivity.this, "EMAMessageNotif")
-                        .setSmallIcon(R.drawable.icon_ema)
-                        .setContentTitle("Message from User: " + sender)
-                        .setContentText("Message: " + message)
-                        .setPriority(NotificationCompat.PRIORITY_DEFAULT)
-                        // Set the intent that will fire when the user taps the notification
-                        .setContentIntent(pendingIntent)
-                        .setAutoCancel(true);
+                    // Create an explicit intent for an Activity in your app
+                    Intent intent = new Intent(String.valueOf(MainActivity.this));
+                    intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                    PendingIntent pendingIntent = PendingIntent.getActivity(MainActivity.this, 0, intent, 0);
 
-                // Notification Show
-                NotificationManagerCompat notificationManager = NotificationManagerCompat.from(MainActivity.this);
-                notificationManager.notify(2, builder.build());
+                    // Notification Builder
+                    NotificationCompat.Builder builder = new NotificationCompat.Builder(MainActivity.this, "EMAMessageNotif")
+                            .setSmallIcon(R.drawable.icon_ema)
+                            .setContentTitle("Message from User: " + sender)
+                            .setContentText("Message: " + message)
+                            .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+                            // Set the intent that will fire when the user taps the notification
+                            .setContentIntent(pendingIntent)
+                            .setAutoCancel(true);
 
-                //Storing to Messages Table Database
-                storeMessage(sender, message);
+                    // Notification Show
+                    NotificationManagerCompat notificationManager = NotificationManagerCompat.from(MainActivity.this);
+                    notificationManager.notify(2, builder.build());
 
+                    //Storing to Messages Table Database
+                    storeMessage(sender, message);
+
+                    // THis line is for debugging purposes
+                    // Shows what is the incoming message from the arduino
+                    tvAppend(textView, "\nInStream : " + data);
+
+                }
             }
-            // THis line is for debugging purposes
-            // Shows what is the incoming message from the arduino
-            tvAppend(textView, "\nInStream : " + data);
         }
     };
 
@@ -255,34 +260,38 @@ public class MainActivity extends AppCompatActivity{
     private final BroadcastReceiver broadcastReceiver = new BroadcastReceiver() { //Broadcast Receiver to automatically start and stop the Serial connection.
         @Override
         public void onReceive(Context context, Intent intent) {
-            if (intent.getAction().equals(ACTION_USB_PERMISSION)) {
-                boolean granted = intent.getExtras().getBoolean(UsbManager.EXTRA_PERMISSION_GRANTED);
-                if (granted) {
-                    connection = usbManager.openDevice(device);
-                    serialPort = UsbSerialDevice.createUsbSerialDevice(device, connection);
-                    if (serialPort != null) {
-                        if (serialPort.open()) { //Set Serial Connection Parameters.
-                            serialPort.setBaudRate(9600);
-                            serialPort.setDataBits(UsbSerialInterface.DATA_BITS_8);
-                            serialPort.setStopBits(UsbSerialInterface.STOP_BITS_1);
-                            serialPort.setParity(UsbSerialInterface.PARITY_NONE);
-                            serialPort.setFlowControl(UsbSerialInterface.FLOW_CONTROL_OFF);
-                            serialPort.read(mCallback);
-                        }else{
-                            Log.d("SERIAL", "PORT NOT OPEN");
+            try {
+                if (intent.getAction().equals(ACTION_USB_PERMISSION)) {
+                    boolean granted = intent.getExtras().getBoolean(UsbManager.EXTRA_PERMISSION_GRANTED);
+                    if (granted) {
+                        connection = usbManager.openDevice(device);
+                        serialPort = UsbSerialDevice.createUsbSerialDevice(device, connection);
+                        if (serialPort != null) {
+                            if (serialPort.open()) { //Set Serial Connection Parameters.
+                                serialPort.setBaudRate(9600);
+                                serialPort.setDataBits(UsbSerialInterface.DATA_BITS_8);
+                                serialPort.setStopBits(UsbSerialInterface.STOP_BITS_1);
+                                serialPort.setParity(UsbSerialInterface.PARITY_NONE);
+                                serialPort.setFlowControl(UsbSerialInterface.FLOW_CONTROL_OFF);
+                                serialPort.read(mCallback);
+                            } else {
+                                Log.d("SERIAL", "PORT NOT OPEN");
+                            }
+                        } else {
+                            Log.d("SERIAL", "PORT IS NULL");
                         }
-                    }else{
-                        Log.d("SERIAL", "PORT IS NULL");
+                    } else {
+                        Log.d("SERIAL", "PERM NOT GRANTED");
                     }
-                }else{
-                    Log.d("SERIAL", "PERM NOT GRANTED");
+                } else if (intent.getAction().equals(UsbManager.ACTION_USB_DEVICE_ATTACHED)) {
+                    arduinoConnected();
+                    Toast.makeText(MainActivity.this, "EMA device connected!", Toast.LENGTH_SHORT).show();
+                } else if (intent.getAction().equals(UsbManager.ACTION_USB_DEVICE_DETACHED)) {
+                    arduinoDisconnected();
+                    Toast.makeText(MainActivity.this, "EMA device disconnected!", Toast.LENGTH_SHORT).show();
                 }
-            } else if (intent.getAction().equals(UsbManager.ACTION_USB_DEVICE_ATTACHED)) {
-                arduinoConnected();
-                Toast.makeText(MainActivity.this, "EMA device connected!", Toast.LENGTH_SHORT).show();
-            } else if (intent.getAction().equals(UsbManager.ACTION_USB_DEVICE_DETACHED)) {
-                arduinoDisconnected();
-                Toast.makeText(MainActivity.this, "EMA device disconnected!", Toast.LENGTH_SHORT).show();
+            }catch (Exception e){
+                Toast.makeText(MainActivity.this, "EMA Device Disconnected!", Toast.LENGTH_SHORT).show();
             }
         }
     };
@@ -313,7 +322,11 @@ public class MainActivity extends AppCompatActivity{
     }
 
     public void arduinoDisconnected() {
-        serialPort.close();
+        try{
+            serialPort.close();
+        }catch(Exception e){
+            Toast.makeText(MainActivity.this, "Failed to close Serial Port", Toast.LENGTH_SHORT).show();
+        }
     }
 
     private void tvAppend(TextView tv, CharSequence text) {
