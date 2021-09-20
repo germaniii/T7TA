@@ -173,9 +173,9 @@ public class MainActivity extends AppCompatActivity{
                 storeMessage(sender, message);
 
             }
-
+            // THis line is for debugging purposes
+            // Shows what is the incoming message from the arduino
             tvAppend(textView, "\nInStream : " + data);
-            //tvAppend(textView, Arrays.toString(stream) + "\n");
         }
     };
 
@@ -226,7 +226,7 @@ public class MainActivity extends AppCompatActivity{
         createBeaconNotificationChannel();      // start notification channels
         createMessageNotificationChannel();
 
-        usbManager = (UsbManager) getSystemService(this.USB_SERVICE);
+        usbManager = (UsbManager) getSystemService(USB_SERVICE);
         textView = findViewById(R.id.main_serialMonitor);
         beacon = findViewById(R.id.main_beaconButton);
         toTextMode = findViewById(R.id.toTextModeButton);
@@ -246,7 +246,7 @@ public class MainActivity extends AppCompatActivity{
         setReceiverModeColor();
 
         // Set Beacon Image Whenever Transmission Device is Connected
-        if (!arduinoConnected()) {
+        if(!arduinoConnected()) {
             //beacon.setImageResource(R.drawable.icon_beacon_on);
         }
     }
@@ -320,12 +320,7 @@ public class MainActivity extends AppCompatActivity{
         final TextView ftv = tv;
         final CharSequence ftext = text;
 
-        runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                ftv.append(ftext);
-            }
-        });
+        runOnUiThread(() -> ftv.append(ftext));
     }
 
 
@@ -392,7 +387,6 @@ public class MainActivity extends AppCompatActivity{
         isContactList = true;
         isReceiverMode = false;
         isTextMessageMode = false;
-
     }
     public void setReceiverModeColor(){
         toContactList.setColorFilter(ContextCompat.getColor(this, R.color.white));
@@ -464,7 +458,6 @@ public class MainActivity extends AppCompatActivity{
             notificationManager.createNotificationChannel(channel);
         }
     }
-
 
     private void createMessageNotificationChannel() {
         // Create the NotificationChannel, but only on API 26+ because
