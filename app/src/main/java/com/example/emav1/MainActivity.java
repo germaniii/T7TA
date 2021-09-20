@@ -260,7 +260,6 @@ public class MainActivity extends AppCompatActivity{
     private final BroadcastReceiver broadcastReceiver = new BroadcastReceiver() { //Broadcast Receiver to automatically start and stop the Serial connection.
         @Override
         public void onReceive(Context context, Intent intent) {
-            try {
                 if (intent.getAction().equals(ACTION_USB_PERMISSION)) {
                     boolean granted = intent.getExtras().getBoolean(UsbManager.EXTRA_PERMISSION_GRANTED);
                     if (granted) {
@@ -290,9 +289,6 @@ public class MainActivity extends AppCompatActivity{
                     arduinoDisconnected();
                     Toast.makeText(MainActivity.this, "EMA device disconnected!", Toast.LENGTH_SHORT).show();
                 }
-            }catch (Exception e){
-                Toast.makeText(MainActivity.this, "EMA Device Disconnected!", Toast.LENGTH_SHORT).show();
-            }
         }
     };
 
