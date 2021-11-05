@@ -99,6 +99,25 @@ public class FragmentTextMessage extends Fragment {
                     tvAppend(textView, "ML:" + MESSAGE.length() +
                             "\n" + SMP + SID + RID + MESSAGE_FINAL + HK + "\n");
                     Toast.makeText(context, "Transmitted", Toast.LENGTH_SHORT).show();
+
+                    /*
+                    This segment will wait for the confirmation byte of the receiver.
+
+                    //Countdown timer to disable sending for 3 seconds
+                            new CountDownTimer(3000, 1000) {
+
+                                @Override
+                                public void onTick(long l) {
+                                    isDisabled = true;
+                                }
+
+                                @Override
+                                public void onFinish() {
+                                    isDisabled = false;
+                                }
+                    }.start();
+                     */
+
                 }
             }else
                 Toast.makeText(context, "Synchronizing EMA Device, Please Wait", Toast.LENGTH_SHORT).show();

@@ -28,6 +28,7 @@ import android.media.RingtoneManager;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.CountDownTimer;
 import android.text.method.ScrollingMovementMethod;
 import android.util.Log;
 import android.view.View;
@@ -74,6 +75,7 @@ public class MainActivity extends AppCompatActivity{
     private Uri notificationSound = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
     private MediaPlayer mp;
     boolean isRinging = false;
+    boolean isDisabled = false;
     String sender, message;
 
 
@@ -115,11 +117,14 @@ public class MainActivity extends AppCompatActivity{
                 } else if (data.charAt(0) == '0') {
                     getDetailsfromPacket();
 
-                    // Play sound
-                    mp = MediaPlayer.create(MainActivity.this, R.raw.emergency_alarm);
-                    mp.setLooping(true);
-                    mp.start();
-                    isRinging = true;
+                    // Prevent multiple instances of the infinite sound
+                    if(!isRinging){
+                        // Play sound
+                        mp = MediaPlayer.create(MainActivity.this, R.raw.emergency_alarm);
+                        mp.setLooping(true);
+                        mp.start();
+                        isRinging = true;
+                    }
 
                     // Create an explicit intent for an Activity in your app
                     Intent intent = new Intent(String.valueOf(MainActivity.this));
@@ -186,39 +191,59 @@ public class MainActivity extends AppCompatActivity{
 
     // This function handles what happens when the beacon mode button is clicked.
     public void onClickBeaconMode(View view){
-        if(isRinging){
-            mp.stop();
-            try {
-                mp.prepare();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-            isRinging = false;
-            Toast.makeText(MainActivity.this, "Emergency signal from " + sender, Toast.LENGTH_LONG).show();
-        }else {
-            try {
-                if (beacon.isEnabled()) {
-                    String string = "0" + "0000" + getUserSID() + "00000" + "00000" + "00000" + // Data
-                            "00000" + "00000" + "00000" + "00000" + "00000" + "12345678911"; // <-- this HK part will be replaced later on when HK algorithm is finished
-                    /*
-                        The 'string' is similar to the packet assignment mentioned in the Manuscript
-                        | SMP-1 | RID-4 | SID-4 | DATA-45 | HK-11 |  ----> This totals to 64bytes-1packet
-
-                       ____________________________________________________________________________
-
-                       Upon further testing, the arduino buffer is actually just up to the 11 on the last set of numbers above. We have to work with that.
-
-                       New format:
-                       | SMP - 1 | RID - 4 | SID - 4 | DATA - 40 | HK - 11 |
-
-                     */
-                    serialPort.write(string.getBytes());
-                    tvAppend(textView, "\nINFO:\n" + string + "\n");
+            if (isRinging) {
+                mp.stop();
+                try {
+                    mp.prepare();
+                } catch (IOException e) {
+                    e.printStackTrace();
                 }
-            } catch (Exception e) {
-                Toast.makeText(MainActivity.this, "Please Connect the EMA Device!", Toast.LENGTH_SHORT).show();
+                isRinging = false;
+                Toast.makeText(MainActivity.this, "Emergency signal from " + sender, Toast.LENGTH_LONG).show();
+            } else {
+                try {
+                    if (beacon.isEnabled()) {
+                        if(!isDisabled){
+                            String string = "0" + "0000" + getUserSID() + "00000" + "00000" + "00000" + // Data
+                                    "00000" + "00000" + "00000" + "00000" + "00000" + "12345678911"; // <-- this HK part will be replaced later on when HK algorithm is finished
+                        /*
+                            The 'string' is similar to the packet assignment mentioned in the Manuscript
+                            | SMP-1 | RID-4 | SID-4 | DATA-45 | HK-11 |  ----> This totals to 64bytes-1packet
+
+                           ____________________________________________________________________________
+
+                           Upon further testing, the arduino buffer is actually just up to the 11 on the last set of numbers above. We have to work with that.
+
+                           New format:
+                           | SMP - 1 | RID - 4 | SID - 4 | DATA - 40 | HK - 11 |
+
+                         */
+                            // Send message/packet to the EMA Device
+                            serialPort.write(string.getBytes());
+                            //Countdown timer to disable sending for 3 seconds
+                            new CountDownTimer(3000, 1000) {
+
+                                @Override
+                                public void onTick(long l) {
+                                    isDisabled = true;
+                                }
+
+                                @Override
+                                public void onFinish() {
+                                    isDisabled = false;
+                                }
+                            }.start();
+
+                            tvAppend(textView, "\nINFO:\n" + string + "\n");
+
+                        }else{
+                            Toast.makeText(MainActivity.this, "Please wait 3 seconds before sending again.", Toast.LENGTH_SHORT).show();
+                        }
+                    }
+                } catch (Exception e) {
+                    Toast.makeText(MainActivity.this, "Please Connect the EMA Device!", Toast.LENGTH_SHORT).show();
+                }
             }
-        }
 
     }
 
