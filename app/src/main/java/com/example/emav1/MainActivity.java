@@ -9,6 +9,7 @@ import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
+import androidx.recyclerview.widget.RecyclerView;
 
 import android.annotation.SuppressLint;
 import android.app.AlertDialog;
@@ -146,7 +147,6 @@ public class MainActivity extends AppCompatActivity{
                     NotificationManagerCompat notificationManager = NotificationManagerCompat.from(MainActivity.this);
                     notificationManager.notify(1, builder.build());
 
-                    storeMessage(sender, "URGENT BEACON SIGNAL!");
                     storeMessage(sender, "URGENT BEACON SIGNAL!");
 
                     // THis line is for debugging purposes
@@ -488,7 +488,12 @@ public class MainActivity extends AppCompatActivity{
         FragmentMain.messageSent.clear();
         FragmentMain.messageReceived.clear();
         FragmentMain.storeDBtoArrays();
-        FragmentMain.inboxListAdapter.notifyDataSetChanged();
+
+        // run on ui thread is needed to avoid crash when updating the recycler view
+        runOnUiThread(() -> {
+            FragmentMain.inboxListAdapter.notifyDataSetChanged();
+            // Stuff that updates the UI
+        });
 
     }
 

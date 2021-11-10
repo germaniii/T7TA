@@ -151,6 +151,11 @@ public class FragmentMain extends Fragment  implements InboxListAdapter.ItemClic
 
     }
 
+    public static void updateRecyclerView(){
+        storeDBtoArrays();
+
+    }
+
     //ON ITEM CLICK FROM RECYCLER VIEW
     @Override
     public void onItemClick(View view, int position) {

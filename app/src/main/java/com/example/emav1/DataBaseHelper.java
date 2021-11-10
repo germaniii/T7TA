@@ -94,10 +94,6 @@ public class DataBaseHelper extends SQLiteOpenHelper {
         cv.put(SENT, messageSent);
 
         long insert = db.insert(MESSAGES_TABLE, null, cv);
-        if(insert == -1)
-            Toast.makeText(context, "Failed to Add", Toast.LENGTH_SHORT).show();
-        else
-            Toast.makeText(context, "Added Successfully", Toast.LENGTH_SHORT).show();
     }
 
     // This function returns all the data from the contacts table
