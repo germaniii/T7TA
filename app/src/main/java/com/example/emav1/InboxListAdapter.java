@@ -47,7 +47,7 @@ public class InboxListAdapter extends RecyclerView.Adapter<InboxListAdapter.View
         holder.TextViewName.setText(name);
         holder.TextViewNumber.setText(number);
         holder.TextViewMessage.setText(message);
-        if(sent == null) holder.TextViewDate.setText(received);
+        if(sent.equals("-")) holder.TextViewDate.setText(received);
         else holder.TextViewDate.setText(sent);
     }
 

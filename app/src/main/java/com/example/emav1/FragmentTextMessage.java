@@ -15,6 +15,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 
+import android.os.CountDownTimer;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -50,6 +51,10 @@ public class FragmentTextMessage extends Fragment {
     PacketHandler packetHandler;
 
     String SMP, SID, RID, MESSAGE;
+    boolean isDisabled = false;
+
+    int repTimer = 0; // max of 2
+    static boolean isReceivedConfirmationByte = false;
 
     Context context;
 
@@ -68,56 +73,59 @@ public class FragmentTextMessage extends Fragment {
                 if ((message.getText().length() == 0) || number.getSelectedItem() == "") {
                     Toast.makeText(context, "Please Fill Up All Fields!", Toast.LENGTH_SHORT).show();
                 }else {
-                    String SMP = "2";
-                    getSID();
-                    getRID();
-                    String MESSAGE = message.getText().toString().trim();
-                    String MESSAGE_FINAL = MESSAGE;
-                    String HK = "12345678911";
-                    /*
-                       New format:
-                       | SMP - 1 | RID - 4 | SID - 4 | DATA - 40 | HK - 11 |
-                     */
+                    if(!isDisabled) {
+                        String SMP = "2";
+                        getSID();
+                        getRID();
+                        String MESSAGE = message.getText().toString().trim();
+                        String MESSAGE_FINAL = MESSAGE;
+                        String HK = "12345678911";
 
-                    //if message entered is less than 40 characters, add whitespace characters to fill up the packet.
-                    if(MESSAGE.length() < 40){
-                        for(int i = 0; i < 40 - MESSAGE.length(); i++)
-                            MESSAGE_FINAL = MESSAGE_FINAL.concat(" ");
-                    }
+                        //   New format:
+                        //   | SMP - 1 | RID - 4 | SID - 4 | DATA - 40 | HK - 11 |
 
-                    //if message entered is more than 40 characters, splice.
-                    /*
-                    if(string.length() > 40){
-                        int numberOfPackets = string.length()/44;
-                        for(int i = 0; i < numberOfPackets; i++){
-                            //this code will loop until all packets are sent.
+                        //if message entered is less than 40 characters, add whitespace characters to fill up the packet.
+                        if (MESSAGE.length() < 40) {
+                            for (int i = 0; i < 40 - MESSAGE.length(); i++)
+                                MESSAGE_FINAL = MESSAGE_FINAL.concat(" ");
                         }
+
+                        //if message entered is more than 40 characters, splice. <--- Optional
+                        /*
+                        if(string.length() > 40){
+                            int numberOfPackets = string.length()/44;
+                            for(int i = 0; i < numberOfPackets; i++){
+                                //this code will loop until all packets are sent.
+                            }
+                        }
+                        */
+
+                        //Should use the serial port from MainActivity to reference the registered serialPort Arduino
+                        MainActivity.serialPort.write((SMP + RID + SID + MESSAGE_FINAL + HK).getBytes());
+                        tvAppend(textView, "ML:" + MESSAGE.length() +
+                                "\n" + SMP + SID + RID + MESSAGE_FINAL + HK + "\n");
+                        Toast.makeText(context, "Transmitted", Toast.LENGTH_SHORT).show();
+
+                        // prevent multiple send touches
+                        new CountDownTimer(3000, 1000) {
+
+                            @Override
+                            public void onTick(long l) {
+                                isDisabled = true;
+                            }
+
+                            @Override
+                            public void onFinish() {
+                                isDisabled = false;
+                            }
+                        }.start();
+                        countDownTimer.start();
+                    }else{
+                        Toast.makeText(context, "Please wait 3 seconds before sending again.", Toast.LENGTH_SHORT).show();
                     }
-                    */
-                    //should use the serial port from MainActivity to reference the registered serialPort Arduino
-                    MainActivity.serialPort.write((SMP + RID + SID + MESSAGE_FINAL + HK).getBytes());
-                    tvAppend(textView, "ML:" + MESSAGE.length() +
-                            "\n" + SMP + SID + RID + MESSAGE_FINAL + HK + "\n");
-                    Toast.makeText(context, "Transmitted", Toast.LENGTH_SHORT).show();
 
-                    /*
-                    This segment will wait for the confirmation byte of the receiver.
-
-                    //Countdown timer to disable sending for 3 seconds
-                            new CountDownTimer(3000, 1000) {
-
-                                @Override
-                                public void onTick(long l) {
-                                    isDisabled = true;
-                                }
-
-                                @Override
-                                public void onFinish() {
-                                    isDisabled = false;
-                                }
-                    }.start();
-                     */
-
+                    //Countdown timer to wait for variable change (confirmation byte received.)
+                    // Max repetition would be 3? times
                 }
             }else
                 Toast.makeText(context, "Synchronizing EMA Device, Please Wait", Toast.LENGTH_SHORT).show();
@@ -125,6 +133,38 @@ public class FragmentTextMessage extends Fragment {
             //Toast.makeText(context, "Please Connect EMA Device", Toast.LENGTH_SHORT).show();
         }
     }
+
+     CountDownTimer countDownTimer = new CountDownTimer(3000, 100) {
+        @Override
+        public void onTick(long l) {
+            if(isReceivedConfirmationByte) // this will stop the counting
+                repTimer = 4;
+        }
+
+        @Override
+        public void onFinish() {
+            countDownRepeater();
+        }
+    };
+
+    private void countDownRepeater(){
+        if (repTimer < 3){
+            repTimer++;
+            countDownTimer.cancel();
+            countDownTimer.start();
+        }else if(repTimer == 3){
+            // if needed, add a notification part here
+            countDownTimer.cancel();
+            Toast.makeText(context, "Failed to send message(" + repTimer + ") to " + RID, Toast.LENGTH_SHORT).show();
+        }else if (repTimer == 4){
+            countDownTimer.cancel();
+            Toast.makeText(context, "Successfully sent message to " + RID, Toast.LENGTH_SHORT).show();
+            //if message is longer than 44 characters, add a function here to send the next packet.
+        }else countDownTimer.cancel(); // for error trapping (stop the loop)
+    }
+
+
+
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,

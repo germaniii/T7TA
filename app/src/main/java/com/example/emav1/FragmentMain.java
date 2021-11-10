@@ -85,8 +85,8 @@ public class FragmentMain extends Fragment  implements InboxListAdapter.ItemClic
             View viewInflated = LayoutInflater.from(context).inflate(R.layout.dialog_usercontact, (ViewGroup) getActivity().findViewById(android.R.id.content), false);
             // Set up the input
             //final EditText input = (EditText) viewInflated.findViewById(R.id.input);
-            uName = (EditText) viewInflated.findViewById(R.id.dialog_uName);
-            uNumber = (EditText) viewInflated.findViewById(R.id.dialog_uNumber);
+            uName = viewInflated.findViewById(R.id.dialog_uName);
+            uNumber = viewInflated.findViewById(R.id.dialog_uNumber);
             builder.setView(viewInflated);
 
             // Set up the buttons
@@ -155,16 +155,16 @@ public class FragmentMain extends Fragment  implements InboxListAdapter.ItemClic
     @Override
     public void onItemClick(View view, int position) {
         AlertDialog.Builder builder = new AlertDialog.Builder(context);
-        View viewInflated = LayoutInflater.from(context).inflate(R.layout.dialog_inboxmessage, (ViewGroup) getActivity().findViewById(android.R.id.content), false);
-        dialog_name = (TextView) viewInflated.findViewById(R.id.dialog_mname);
-        dialog_num = (TextView) viewInflated.findViewById(R.id.dialog_mnumber);
-        dialog_mess = (TextView) viewInflated.findViewById(R.id.dialog_message);
-        dialog_date = (TextView) viewInflated.findViewById(R.id.dialog_mdate);
+        View viewInflated = LayoutInflater.from(context).inflate(R.layout.dialog_inboxmessage, getActivity().findViewById(android.R.id.content), false);
+        dialog_name = viewInflated.findViewById(R.id.dialog_mname);
+        dialog_num = viewInflated.findViewById(R.id.dialog_mnumber);
+        dialog_mess = viewInflated.findViewById(R.id.dialog_message);
+        dialog_date = viewInflated.findViewById(R.id.dialog_mdate);
         // Set up the text
         dialog_name.setText(messageNames.get(position));
         dialog_num.setText(messageNum.get(position));
         dialog_mess.setText(messageText.get(position));
-        if(messageSent.get(position) == "-") dialog_date.setText(messageReceived.get(position));
+        if(messageSent.get(position).equals("-")) dialog_date.setText(messageReceived.get(position));
         else dialog_date.setText(messageSent.get(position));
 
         // Specify the type of input expected; this, for example, sets the input as a password, and will mask the text

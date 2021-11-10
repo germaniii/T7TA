@@ -10,6 +10,7 @@ import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
 
+import android.annotation.SuppressLint;
 import android.app.AlertDialog;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
@@ -145,11 +146,14 @@ public class MainActivity extends AppCompatActivity{
                     NotificationManagerCompat notificationManager = NotificationManagerCompat.from(MainActivity.this);
                     notificationManager.notify(1, builder.build());
 
+                    storeMessage(sender, "URGENT BEACON SIGNAL!");
+                    storeMessage(sender, "URGENT BEACON SIGNAL!");
+
                     // THis line is for debugging purposes
                     // Shows what is the incoming message from the arduino
                     tvAppend(textView, "\nInStream : " + data);
 
-                } else if (data.charAt(0) >= '2') {
+                } else if (data.charAt(0) == '2') {
                     getDetailsfromPacket();
                     // ... decryption for display, and store it in a temporary string.
                     // ... notification function
@@ -180,11 +184,22 @@ public class MainActivity extends AppCompatActivity{
                     //Storing to Messages Table Database
                     storeMessage(sender, message);
 
+                    //Confirmation packet segment
+                    String confirmPacket = "3" + sender + getUserSID() + "00000" + "00000" + "00000" + // Data
+                            "00000" + "00000" + "00000" + "00000" + "00000" + "12345678911";
+                    serialPort.write(confirmPacket.getBytes());
+
                     // THis line is for debugging purposes
                     // Shows what is the incoming message from the arduino
                     tvAppend(textView, "\nInStream : " + data);
 
+                }else if (data.charAt(0) >= '3') {
+                    FragmentTextMessage.isReceivedConfirmationByte = true;
+                    tvAppend(textView, "Received Confirmation Byte" + data);
+                    //add one message to
                 }
+
+
             }
         }
     };
