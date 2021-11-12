@@ -51,6 +51,7 @@ public class FragmentTextMessage extends Fragment {
     PacketHandler packetHandler;
 
     String SMP, SID, RID, MESSAGE;
+    String MESSAGE_FINAL_2, HK2;
     boolean isDisabled = false;
 
     int repTimer = 0; // max of 2
@@ -74,7 +75,7 @@ public class FragmentTextMessage extends Fragment {
                     Toast.makeText(context, "Please Fill Up All Fields!", Toast.LENGTH_SHORT).show();
                 }else {
                     if(!isDisabled) {
-                        String SMP = "2";
+                        SMP = "2";
                         getSID();
                         getRID();
                         String MESSAGE = message.getText().toString().trim();
@@ -100,6 +101,9 @@ public class FragmentTextMessage extends Fragment {
                         }
                         */
 
+                        MESSAGE_FINAL_2 = MESSAGE_FINAL;
+                        HK2 = HK;
+
                         //Should use the serial port from MainActivity to reference the registered serialPort Arduino
                         MainActivity.serialPort.write((SMP + RID + SID + MESSAGE_FINAL + HK).getBytes());
                         tvAppend(textView, "ML:" + MESSAGE.length() +
@@ -107,21 +111,12 @@ public class FragmentTextMessage extends Fragment {
                         Toast.makeText(context, "Transmitted", Toast.LENGTH_SHORT).show();
 
                         // prevent multiple send touches
-                        new CountDownTimer(3000, 1000) {
+                        isDisabled = true;
 
-                            @Override
-                            public void onTick(long l) {
-                                isDisabled = true;
-                            }
-
-                            @Override
-                            public void onFinish() {
-                                isDisabled = false;
-                            }
-                        }.start();
+                        //Start repitition Counter
                         countDownTimer.start();
                     }else{
-                        Toast.makeText(context, "Please wait 3 seconds before sending again.", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(context, "A message is still sending, please try again later.", Toast.LENGTH_SHORT).show();
                     }
 
                     //Countdown timer to wait for variable change (confirmation byte received.)
@@ -134,7 +129,7 @@ public class FragmentTextMessage extends Fragment {
         }
     }
 
-     CountDownTimer countDownTimer = new CountDownTimer(3000, 100) {
+     CountDownTimer countDownTimer = new CountDownTimer(3000, 1000) {
         @Override
         public void onTick(long l) {
             if(isReceivedConfirmationByte) // this will stop the counting
@@ -143,24 +138,33 @@ public class FragmentTextMessage extends Fragment {
 
         @Override
         public void onFinish() {
+            MainActivity.serialPort.write((SMP + RID + SID + MESSAGE_FINAL_2 + HK2).getBytes());
             countDownRepeater();
         }
     };
 
     private void countDownRepeater(){
-        if (repTimer < 3){
+        if (repTimer == 4){
+            countDownTimer.cancel();
+            isDisabled = false;
+            repTimer = 0;
+            Toast.makeText(context, "Successfully sent message to " + RID, Toast.LENGTH_SHORT).show();
+            //if message is longer than 44 characters, add a function here to send the next packet.
+        }else if(repTimer < 3){
             repTimer++;
             countDownTimer.cancel();
             countDownTimer.start();
-        }else if(repTimer == 3){
+        }else if (repTimer == 3){
             // if needed, add a notification part here
+            isDisabled = false;
             countDownTimer.cancel();
-            Toast.makeText(context, "Failed to send message(" + repTimer + ") to " + RID, Toast.LENGTH_SHORT).show();
-        }else if (repTimer == 4){
-            countDownTimer.cancel();
-            Toast.makeText(context, "Successfully sent message to " + RID, Toast.LENGTH_SHORT).show();
-            //if message is longer than 44 characters, add a function here to send the next packet.
-        }else countDownTimer.cancel(); // for error trapping (stop the loop)
+            repTimer = 0;
+            Toast.makeText(context, "Failed to send message to " + RID, Toast.LENGTH_SHORT).show();
+        }else{
+            repTimer = 0;
+            isDisabled = false;
+            countDownTimer.cancel(); // for error trapping (stop the loop)
+        }
     }
 
 

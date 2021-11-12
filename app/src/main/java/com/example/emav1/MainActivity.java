@@ -153,7 +153,11 @@ public class MainActivity extends AppCompatActivity{
                     // Shows what is the incoming message from the arduino
                     tvAppend(textView, "\nInStream : " + data);
 
-                } else if (data.charAt(0) == '2') {
+                }else if (data.charAt(9) == '3') {
+                    FragmentTextMessage.isReceivedConfirmationByte = true;
+                    tvAppend(textView, "Received Confirmation Byte" + data);
+                    //add one message to
+                }else if (data.charAt(0) == '2') {
                     getDetailsfromPacket();
                     // ... decryption for display, and store it in a temporary string.
                     // ... notification function
@@ -185,18 +189,16 @@ public class MainActivity extends AppCompatActivity{
                     storeMessage(sender, message);
 
                     //Confirmation packet segment
-                    String confirmPacket = "3" + sender + getUserSID() + "00000" + "00000" + "00000" + // Data
+                    String confirmPacket = "2" + sender + getUserSID()+ "30000" + "00000" + "00000" + // Data
                             "00000" + "00000" + "00000" + "00000" + "00000" + "12345678911";
                     serialPort.write(confirmPacket.getBytes());
+
+                    tvAppend(textView, "\nConfirm : " + confirmPacket);
 
                     // THis line is for debugging purposes
                     // Shows what is the incoming message from the arduino
                     tvAppend(textView, "\nInStream : " + data);
 
-                }else if (data.charAt(0) >= '3') {
-                    FragmentTextMessage.isReceivedConfirmationByte = true;
-                    tvAppend(textView, "Received Confirmation Byte" + data);
-                    //add one message to
                 }
 
 

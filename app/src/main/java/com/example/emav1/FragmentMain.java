@@ -138,7 +138,11 @@ public class FragmentMain extends Fragment  implements InboxListAdapter.ItemClic
                         messageNames.add(num.getString(0));
                     } while (num.moveToNext());
                 }else{
-                    messageNames.add(num.getString(0));
+                    try {
+                        messageNames.add(num.getString(0));
+                    }catch (Exception e){
+                        messageNames.add("Uknown");
+                    }
                 }
 
                 messageText.add(cursor.getString(2));    //Message
@@ -148,11 +152,6 @@ public class FragmentMain extends Fragment  implements InboxListAdapter.ItemClic
             }
 
         }
-
-    }
-
-    public static void updateRecyclerView(){
-        storeDBtoArrays();
 
     }
 
