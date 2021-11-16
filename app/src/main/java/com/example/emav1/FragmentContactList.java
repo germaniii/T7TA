@@ -208,9 +208,7 @@ public class FragmentContactList extends Fragment implements ContactListAdapter.
                                 dataBaseHelper.deleteOneContact(contactID.get(position));
                                 contactNames.remove(position);
                                 contactNum.remove(position);
-                                recyclerView.removeViewAt(position);
-                                contactListAdapter.notifyItemRemoved(position);
-                                contactListAdapter.notifyItemRangeChanged(position, contactNames.size());
+                                contactListAdapter.notifyDataSetChanged();
                             } catch (Exception e) {
                                 Toast.makeText(context, "Delete Error", Toast.LENGTH_SHORT).show();
                             }

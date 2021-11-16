@@ -141,7 +141,7 @@ public class FragmentMain extends Fragment  implements InboxListAdapter.ItemClic
                     try {
                         messageNames.add(num.getString(0));
                     }catch (Exception e){
-                        messageNames.add("Uknown");
+                        messageNames.add("Unknown");
                     }
                 }
 
@@ -184,9 +184,7 @@ public class FragmentMain extends Fragment  implements InboxListAdapter.ItemClic
                 messageNum.remove(position);
                 messageReceived.remove(position);
                 messageSent.remove(position);
-                recyclerView.removeViewAt(position);
-                inboxListAdapter.notifyItemRemoved(position);
-                inboxListAdapter.notifyItemRangeChanged(position, messageText.size());
+                inboxListAdapter.notifyDataSetChanged();
             }
         });
         builder.setPositiveButton("Back", new DialogInterface.OnClickListener() {
