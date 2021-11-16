@@ -87,7 +87,7 @@
         android:longClickable="true"
         android:onClick="onClickBeaconMode"
         android:scaleType="fitCenter"
-        android:tint="@color/night_blue"
+        android:tint="@color/gray1"
         app:layout_constraintBottom_toTopOf="@+id/linearLayout3"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"

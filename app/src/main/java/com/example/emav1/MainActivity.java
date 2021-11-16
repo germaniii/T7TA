@@ -22,6 +22,7 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.database.Cursor;
+import android.graphics.Color;
 import android.hardware.usb.UsbDevice;
 import android.hardware.usb.UsbDeviceConnection;
 import android.hardware.usb.UsbManager;
@@ -44,6 +45,7 @@ import com.felhr.usbserial.UsbSerialInterface;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
+import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -77,8 +79,11 @@ public class MainActivity extends AppCompatActivity{
     private Uri notificationSound = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
     private MediaPlayer mp;
     boolean isRinging = false;
-    boolean isDisabled = false;
+    boolean isDisabled = true;
+    boolean isBeaconMode = false;
     String sender, message;
+    boolean isFlashingSend = false;
+    boolean isFlashingRecv = false;
 
 
     /*
@@ -149,6 +154,9 @@ public class MainActivity extends AppCompatActivity{
 
                     storeMessage(sender, "URGENT BEACON SIGNAL!");
 
+                    //Flashing Timer
+                    beaconReceiveTimer.start();
+
                     // THis line is for debugging purposes
                     // Shows what is the incoming message from the arduino
                     tvAppend(textView, "\nInStream : " + data);
@@ -206,9 +214,30 @@ public class MainActivity extends AppCompatActivity{
         }
     };
 
+    CountDownTimer beaconReceiveTimer = new CountDownTimer(3000, 1000) {
+        @Override
+        public void onTick(long l) {
+            if(isFlashingRecv) {
+                beacon.setColorFilter(Color.rgb(13, 16, 19));
+                isFlashingRecv = false;
+            }else {
+                beacon.setColorFilter(Color.rgb(255, 25, 0));
+                isFlashingRecv = true;
+            }
+        }
+
+        @Override
+        public void onFinish() {
+            beaconReceiveTimer.cancel();
+            beaconReceiveTimer.start();
+        }
+    };
+
     // This function handles what happens when the beacon mode button is clicked.
     public void onClickBeaconMode(View view){
             if (isRinging) {
+                beaconReceiveTimer.cancel();
+                beacon.setColorFilter(Color.rgb(13, 16, 19));
                 mp.stop();
                 try {
                     mp.prepare();
@@ -220,41 +249,27 @@ public class MainActivity extends AppCompatActivity{
             } else {
                 try {
                     if (beacon.isEnabled()) {
-                        if(!isDisabled){
-                            String string = "0" + "0000" + getUserSID() + "00000" + "00000" + "00000" + // Data
-                                    "00000" + "00000" + "00000" + "00000" + "00000" + "12345678911"; // <-- this HK part will be replaced later on when HK algorithm is finished
+                        if (!isDisabled) {
                         /*
-                            The 'string' is similar to the packet assignment mentioned in the Manuscript
-                            | SMP-1 | RID-4 | SID-4 | DATA-45 | HK-11 |  ----> This totals to 64bytes-1packet
-
-                           ____________________________________________________________________________
-
-                           Upon further testing, the arduino buffer is actually just up to the 11 on the last set of numbers above. We have to work with that.
-
-                           New format:
-                           | SMP - 1 | RID - 4 | SID - 4 | DATA - 40 | HK - 11 |
-
+                        The 'string' is similar to the packet assignment mentioned in the Manuscript
+                        | SMP-1 | RID-4 | SID-4 | DATA-45 | HK-11 |  ----> This totals to 64bytes-1packet
+                       ____________________________________________________________________________
+                       Upon further testing, the arduino buffer is actually just up to the 11 on the last set of numbers above. We have to work with that.
+                       New format:
+                       | SMP - 1 | RID - 4 | SID - 4 | DATA - 40 | HK - 11 |
                          */
-                            // Send message/packet to the EMA Device
-                            serialPort.write(string.getBytes());
                             //Countdown timer to disable sending for 3 seconds
-                            new CountDownTimer(3000, 1000) {
+                            Toast.makeText(MainActivity.this, "Beacon Mode ON", Toast.LENGTH_SHORT).show();
+                            isDisabled = true;
+                            beaconSendTimer.start();
 
-                                @Override
-                                public void onTick(long l) {
-                                    isDisabled = true;
-                                }
-
-                                @Override
-                                public void onFinish() {
-                                    isDisabled = false;
-                                }
-                            }.start();
-
-                            tvAppend(textView, "\nINFO:\n" + string + "\n");
-
-                        }else{
-                            Toast.makeText(MainActivity.this, "Please wait 3 seconds before sending again.", Toast.LENGTH_SHORT).show();
+                        } else {
+                            beaconSendTimer.cancel();
+                            isDisabled = false;
+                            //Reset Color
+                            beacon.setColorFilter(Color.rgb(13, 16, 19));
+                            isFlashingSend = false;
+                            Toast.makeText(MainActivity.this, "Beacon Mode OFF", Toast.LENGTH_SHORT).show();
                         }
                     }
                 } catch (Exception e) {
@@ -263,6 +278,32 @@ public class MainActivity extends AppCompatActivity{
             }
 
     }
+
+    CountDownTimer beaconSendTimer = new CountDownTimer(3000, 1000) {
+
+        @Override
+        public void onTick(long l) {
+            if(isFlashingSend) {
+                beacon.setColorFilter(Color.rgb(13, 16, 19));
+                isFlashingSend = false;
+            }else {
+                beacon.setColorFilter(Color.rgb(25, 255, 0));
+                isFlashingSend = true;
+            }
+        }
+
+        @Override
+        public void onFinish() {
+            String string = "0" + "0000" + getUserSID() + "00000" + "00000" + "00000" + // Data
+                    "00000" + "00000" + "00000" + "00000" + "00000" + "12345678911";
+            serialPort.write(string.getBytes());
+            tvAppend(textView, "\nINFO:\n" + string + "\n");
+
+            beaconSendTimer.cancel();
+            beaconSendTimer.start();
+        }
+    };
+
 
     @RequiresApi(api = Build.VERSION_CODES.N)
     @Override
@@ -291,11 +332,8 @@ public class MainActivity extends AppCompatActivity{
         registerReceiver(broadcastReceiver, filter);
         textView.setMovementMethod(new ScrollingMovementMethod());
         setReceiverModeColor();
+        beacon.setEnabled(false);
 
-        // Set Beacon Image Whenever Transmission Device is Connected
-        if(!arduinoConnected()) {
-            //beacon.setImageResource(R.drawable.icon_beacon_on);
-        }
     }
 
     // This initializes the broadcast receiver whenever the EMA Device is connected to the phone.
@@ -325,9 +363,30 @@ public class MainActivity extends AppCompatActivity{
                         Log.d("SERIAL", "PERM NOT GRANTED");
                     }
                 } else if (intent.getAction().equals(UsbManager.ACTION_USB_DEVICE_ATTACHED)) {
+                    beacon.setColorFilter(Color.rgb(13, 16, 19));
                     arduinoConnected();
                     Toast.makeText(MainActivity.this, "EMA device connected!", Toast.LENGTH_SHORT).show();
                 } else if (intent.getAction().equals(UsbManager.ACTION_USB_DEVICE_DETACHED)) {
+                    // MainActivity
+                    beaconSendTimer.cancel();
+                    beacon.setColorFilter(Color.rgb(175, 175, 175));
+                    isFlashingSend = false;
+                    isBeaconMode = false;
+                    isDisabled = false;
+                    isFlashingRecv = false;
+                    beaconReceiveTimer.cancel();
+                    mp.stop();
+                    try {
+                        mp.prepare();
+                    }catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                    isRinging = false;
+
+                    //Fragment Text Message
+                    FragmentTextMessage.repTimer = 0;
+                    FragmentTextMessage.isReceivedConfirmationByte = false;
+
                     arduinoDisconnected();
                     Toast.makeText(MainActivity.this, "EMA device disconnected!", Toast.LENGTH_SHORT).show();
                 }
@@ -337,6 +396,7 @@ public class MainActivity extends AppCompatActivity{
     // This function is called whenever the EMA device is connected
     public boolean arduinoConnected() {
         HashMap<String, UsbDevice> usbDevices = usbManager.getDeviceList();
+        beacon.setEnabled(true);
         boolean keep = true;
         if (!usbDevices.isEmpty()) {
             for (Map.Entry<String, UsbDevice> entry : usbDevices.entrySet()) {
@@ -365,6 +425,7 @@ public class MainActivity extends AppCompatActivity{
         }catch(Exception e){
             Toast.makeText(MainActivity.this, "Failed to close Serial Port", Toast.LENGTH_SHORT).show();
         }
+        beacon.setEnabled(false);
     }
 
     private void tvAppend(TextView tv, CharSequence text) {

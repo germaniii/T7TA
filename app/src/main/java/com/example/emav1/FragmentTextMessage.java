@@ -54,7 +54,7 @@ public class FragmentTextMessage extends Fragment {
     String MESSAGE_FINAL_2, HK2;
     boolean isDisabled = false;
 
-    int repTimer = 0; // max of 2
+    static int repTimer = 0; // max of 2
     static boolean isReceivedConfirmationByte = false;
 
     Context context;
