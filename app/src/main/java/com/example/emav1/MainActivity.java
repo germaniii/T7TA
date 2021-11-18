@@ -6,19 +6,14 @@ import androidx.appcompat.app.AppCompatDelegate;
 import androidx.core.app.NotificationCompat;
 import androidx.core.app.NotificationManagerCompat;
 import androidx.core.content.ContextCompat;
-import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
-import androidx.recyclerview.widget.RecyclerView;
 
-import android.annotation.SuppressLint;
-import android.app.AlertDialog;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.database.Cursor;
@@ -39,13 +34,14 @@ import android.widget.ImageButton;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.example.emav1.toolspack.PacketHandler;
+import com.example.emav1.toolspack.HashProcessor;
 import com.felhr.usbserial.UsbSerialDevice;
 import com.felhr.usbserial.UsbSerialInterface;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.nio.charset.StandardCharsets;
+import java.security.NoSuchAlgorithmException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -59,13 +55,11 @@ public class MainActivity extends AppCompatActivity{
     public UsbDeviceConnection connection;
     ImageButton  beacon, toTextMode, toContactList, toReceiverMode;
 
-    PacketHandler packetHandler;
 
     DataBaseHelper dataBaseHelper;
 
     FragmentManager fragmentManager;
     FragmentTransaction fragmentTransaction;
-    FragmentMain fragmentMain;
 
     //navbar switches
     boolean isReceiverMode;
@@ -84,6 +78,8 @@ public class MainActivity extends AppCompatActivity{
     String sender, message;
     boolean isFlashingSend = false;
     boolean isFlashingRecv = false;
+
+    HashProcessor hashProcessor = new HashProcessor();
 
 
     /*
@@ -152,7 +148,7 @@ public class MainActivity extends AppCompatActivity{
                     NotificationManagerCompat notificationManager = NotificationManagerCompat.from(MainActivity.this);
                     notificationManager.notify(1, builder.build());
 
-                    storeMessage(sender, "URGENT BEACON SIGNAL!");
+                    storeMessage(sender, "URGENT BEACON SIGNAL RECEIVED!");
 
                     //Flashing Timer
                     beaconReceiveTimer.start();
@@ -234,14 +230,15 @@ public class MainActivity extends AppCompatActivity{
     };
 
     // This function handles what happens when the beacon mode button is clicked.
+    @RequiresApi(api = Build.VERSION_CODES.N)
     public void onClickBeaconMode(View view){
             if (isRinging) {
                 beaconReceiveTimer.cancel();
                 beacon.setColorFilter(Color.rgb(13, 16, 19));
-                mp.stop();
                 try {
+                    mp.stop();
                     mp.prepare();
-                } catch (IOException e) {
+                } catch (Exception e) {
                     e.printStackTrace();
                 }
                 isRinging = false;
@@ -250,26 +247,29 @@ public class MainActivity extends AppCompatActivity{
                 try {
                     if (beacon.isEnabled()) {
                         if (!isDisabled) {
-                        /*
-                        The 'string' is similar to the packet assignment mentioned in the Manuscript
-                        | SMP-1 | RID-4 | SID-4 | DATA-45 | HK-11 |  ----> This totals to 64bytes-1packet
-                       ____________________________________________________________________________
-                       Upon further testing, the arduino buffer is actually just up to the 11 on the last set of numbers above. We have to work with that.
-                       New format:
-                       | SMP - 1 | RID - 4 | SID - 4 | DATA - 40 | HK - 11 |
-                         */
-                            //Countdown timer to disable sending for 3 seconds
-                            Toast.makeText(MainActivity.this, "Beacon Mode ON", Toast.LENGTH_SHORT).show();
-                            isDisabled = true;
-                            beaconSendTimer.start();
 
-                        } else {
                             beaconSendTimer.cancel();
-                            isDisabled = false;
+                            isDisabled = true;
                             //Reset Color
                             beacon.setColorFilter(Color.rgb(13, 16, 19));
                             isFlashingSend = false;
                             Toast.makeText(MainActivity.this, "Beacon Mode OFF", Toast.LENGTH_SHORT).show();
+
+                        } else {
+
+                            /*
+                            The 'string' is similar to the packet assignment mentioned in the Manuscript
+                            | SMP-1 | RID-4 | SID-4 | DATA-45 | HK-11 |  ----> This totals to 64bytes-1packet
+                           ____________________________________________________________________________
+                           Upon further testing, the arduino buffer is actually just up to the 11 on the last set of numbers above. We have to work with that.
+                           New format:
+                           | SMP - 1 | RID - 4 | SID - 4 | DATA - 40 | HK - 11 |
+                             */
+                            //Countdown timer to disable sending for 3 seconds
+                            Toast.makeText(MainActivity.this, "Beacon Mode ON", Toast.LENGTH_SHORT).show();
+                            isDisabled = false;
+                            beaconSendTimer.start();
+                            storeMessage(getUserSID(), "URGENT BEACON SIGNAL SENT!");
                         }
                     }
                 } catch (Exception e) {
@@ -279,7 +279,7 @@ public class MainActivity extends AppCompatActivity{
 
     }
 
-    CountDownTimer beaconSendTimer = new CountDownTimer(3000, 1000) {
+    CountDownTimer beaconSendTimer = new CountDownTimer(1000, 1000) {
 
         @Override
         public void onTick(long l) {
@@ -295,14 +295,15 @@ public class MainActivity extends AppCompatActivity{
         @Override
         public void onFinish() {
             String string = "0" + "0000" + getUserSID() + "00000" + "00000" + "00000" + // Data
-                    "00000" + "00000" + "00000" + "00000" + "00000" + "12345678911";
+                    "00000" + "00000" + "00000" + "00000" + "00000" + "12345678911"; // + "12345678911"
+
             serialPort.write(string.getBytes());
             tvAppend(textView, "\nINFO:\n" + string + "\n");
-
             beaconSendTimer.cancel();
             beaconSendTimer.start();
         }
     };
+
 
 
     @RequiresApi(api = Build.VERSION_CODES.N)
@@ -321,7 +322,6 @@ public class MainActivity extends AppCompatActivity{
         toContactList = findViewById(R.id.toContactList);
         toReceiverMode = findViewById(R.id.toReceiverModeButton);
         textView.setMovementMethod(new ScrollingMovementMethod());
-        packetHandler = new PacketHandler();
 
         dataBaseHelper = new DataBaseHelper(this);
 
@@ -331,6 +331,7 @@ public class MainActivity extends AppCompatActivity{
         filter.addAction(UsbManager.ACTION_USB_DEVICE_DETACHED);
         registerReceiver(broadcastReceiver, filter);
         textView.setMovementMethod(new ScrollingMovementMethod());
+
         setReceiverModeColor();
         beacon.setEnabled(false);
 
@@ -353,6 +354,7 @@ public class MainActivity extends AppCompatActivity{
                                 serialPort.setParity(UsbSerialInterface.PARITY_NONE);
                                 serialPort.setFlowControl(UsbSerialInterface.FLOW_CONTROL_OFF);
                                 serialPort.read(mCallback);
+
                             } else {
                                 Log.d("SERIAL", "PORT NOT OPEN");
                             }
@@ -368,17 +370,17 @@ public class MainActivity extends AppCompatActivity{
                     Toast.makeText(MainActivity.this, "EMA device connected!", Toast.LENGTH_SHORT).show();
                 } else if (intent.getAction().equals(UsbManager.ACTION_USB_DEVICE_DETACHED)) {
                     // MainActivity
-                    beaconSendTimer.cancel();
                     beacon.setColorFilter(Color.rgb(175, 175, 175));
                     isFlashingSend = false;
                     isBeaconMode = false;
                     isDisabled = false;
                     isFlashingRecv = false;
-                    beaconReceiveTimer.cancel();
-                    mp.stop();
                     try {
+                        beaconSendTimer.cancel();
+                        beaconReceiveTimer.cancel();
+                        mp.stop();
                         mp.prepare();
-                    }catch (IOException e) {
+                    }catch (Exception e) {
                         e.printStackTrace();
                     }
                     isRinging = false;

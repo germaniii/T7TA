@@ -1,10 +1,6 @@
 package com.example.emav1;
 
-import android.app.AlertDialog;
-import android.content.BroadcastReceiver;
 import android.content.Context;
-import android.content.DialogInterface;
-import android.content.Intent;
 import android.database.Cursor;
 import android.hardware.usb.UsbDevice;
 import android.hardware.usb.UsbDeviceConnection;
@@ -16,7 +12,6 @@ import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 
 import android.os.CountDownTimer;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -27,13 +22,9 @@ import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.example.emav1.toolspack.PacketHandler;
 import com.felhr.usbserial.UsbSerialDevice;
-import com.felhr.usbserial.UsbSerialInterface;
 
 import java.util.ArrayList;
-
-import static androidx.core.content.ContextCompat.getSystemService;
 
 public class FragmentTextMessage extends Fragment {
 
@@ -48,7 +39,6 @@ public class FragmentTextMessage extends Fragment {
     Spinner number;
     ArrayList<String> spinnerContacts;
     DataBaseHelper dataBaseHelper;
-    PacketHandler packetHandler;
 
     String SMP, SID, RID, MESSAGE;
     String MESSAGE_FINAL_2, HK2;
@@ -187,7 +177,6 @@ public class FragmentTextMessage extends Fragment {
         sendButton = getActivity().findViewById(R.id.textMessage_sendButton);
         message = getActivity().findViewById(R.id.textMessage_message);
 
-        packetHandler = new PacketHandler();
         dataBaseHelper = new DataBaseHelper(context);
         spinnerContacts = new ArrayList<>();
         storeDBtoArrays();

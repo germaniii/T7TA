@@ -4,10 +4,6 @@ import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.database.Cursor;
-import android.hardware.usb.UsbDevice;
-import android.hardware.usb.UsbDeviceConnection;
-import android.hardware.usb.UsbManager;
-import android.media.Image;
 import android.os.Bundle;
 
 import androidx.annotation.NonNull;
@@ -15,7 +11,6 @@ import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
-import androidx.transition.TransitionInflater;
 
 import android.view.LayoutInflater;
 import android.view.View;
@@ -23,9 +18,6 @@ import android.view.ViewGroup;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.Toast;
-
-import com.example.emav1.toolspack.PacketHandler;
-import com.felhr.usbserial.UsbSerialDevice;
 
 import java.util.ArrayList;
 
@@ -42,7 +34,6 @@ public class FragmentContactList extends Fragment implements ContactListAdapter.
 
     static ContactListAdapter contactListAdapter;
     DataBaseHelper dataBaseHelper;
-    PacketHandler packetHandler;
 
     Context context;
 
@@ -60,7 +51,6 @@ public class FragmentContactList extends Fragment implements ContactListAdapter.
         context = getActivity();
         addContact = (ImageButton) getActivity().findViewById(R.id.contactlist_addcontactbutton);
 
-        packetHandler = new PacketHandler();
 
         // to be populated with db Data
         contactID = new ArrayList<>();
