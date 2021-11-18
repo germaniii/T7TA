@@ -140,6 +140,7 @@ public class FragmentTextMessage extends Fragment {
             repTimer = 0;
             Toast.makeText(context, "Successfully sent message to "
                     + RID, Toast.LENGTH_SHORT).show();
+
             //if message is longer than 44 characters, add a function here to send the next packet.
         }else if(repTimer < 3){
             repTimer++;

@@ -333,7 +333,11 @@ public class MainActivity extends AppCompatActivity{
         textView.setMovementMethod(new ScrollingMovementMethod());
 
         setReceiverModeColor();
-        beacon.setEnabled(false);
+        if(!arduinoConnected()){
+            beacon.setColorFilter(Color.rgb(13, 16, 19));
+            beacon.setEnabled(true);
+        }else
+            beacon.setEnabled(false);
 
     }
 
@@ -371,9 +375,9 @@ public class MainActivity extends AppCompatActivity{
                 } else if (intent.getAction().equals(UsbManager.ACTION_USB_DEVICE_DETACHED)) {
                     // MainActivity
                     beacon.setColorFilter(Color.rgb(175, 175, 175));
+                    isDisabled = true;
                     isFlashingSend = false;
                     isBeaconMode = false;
-                    isDisabled = false;
                     isFlashingRecv = false;
                     try {
                         beaconSendTimer.cancel();
@@ -398,7 +402,6 @@ public class MainActivity extends AppCompatActivity{
     // This function is called whenever the EMA device is connected
     public boolean arduinoConnected() {
         HashMap<String, UsbDevice> usbDevices = usbManager.getDeviceList();
-        beacon.setEnabled(true);
         boolean keep = true;
         if (!usbDevices.isEmpty()) {
             for (Map.Entry<String, UsbDevice> entry : usbDevices.entrySet()) {
@@ -427,7 +430,6 @@ public class MainActivity extends AppCompatActivity{
         }catch(Exception e){
             Toast.makeText(MainActivity.this, "Failed to close Serial Port", Toast.LENGTH_SHORT).show();
         }
-        beacon.setEnabled(false);
     }
 
     private void tvAppend(TextView tv, CharSequence text) {
