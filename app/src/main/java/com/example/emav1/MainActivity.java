@@ -370,11 +370,13 @@ public class MainActivity extends AppCompatActivity{
                     }
                 } else if (intent.getAction().equals(UsbManager.ACTION_USB_DEVICE_ATTACHED)) {
                     beacon.setColorFilter(Color.rgb(13, 16, 19));
+                    beacon.setEnabled(true);
                     arduinoConnected();
                     Toast.makeText(MainActivity.this, "EMA device connected!", Toast.LENGTH_SHORT).show();
                 } else if (intent.getAction().equals(UsbManager.ACTION_USB_DEVICE_DETACHED)) {
                     // MainActivity
                     beacon.setColorFilter(Color.rgb(175, 175, 175));
+                    beacon.setEnabled(false);
                     isDisabled = true;
                     isFlashingSend = false;
                     isBeaconMode = false;
