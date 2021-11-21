@@ -52,10 +52,8 @@ public class FragmentMain extends Fragment  implements InboxListAdapter.ItemClic
         super.onViewCreated(view, savedInstanceState);
 
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-            date = Calendar.getInstance().getTime();
-            dateFormat = new SimpleDateFormat("hh:mm mm-dd-yyyy");
-        }
+        date = Calendar.getInstance().getTime();
+        dateFormat = new SimpleDateFormat("hh:mm mm-dd-yyyy");
 
         // data to populate the RecyclerView with
         messageID = new ArrayList<>();

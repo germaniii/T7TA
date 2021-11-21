@@ -38,10 +38,7 @@ import com.example.emav1.toolspack.HashProcessor;
 import com.felhr.usbserial.UsbSerialDevice;
 import com.felhr.usbserial.UsbSerialInterface;
 
-import java.io.IOException;
-import java.io.UnsupportedEncodingException;
 import java.nio.charset.StandardCharsets;
-import java.security.NoSuchAlgorithmException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -68,9 +65,8 @@ public class MainActivity extends AppCompatActivity{
 
     // Serial Receiver Variables
     private String data;
-    private byte[] stream = new byte[100];
 
-    private Uri notificationSound = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
+    private final Uri notificationSound = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
     private MediaPlayer mp;
     boolean isRinging = false;
     boolean isDisabled = true;
@@ -97,23 +93,18 @@ public class MainActivity extends AppCompatActivity{
      */
     UsbSerialInterface.UsbReadCallback mCallback = new UsbSerialInterface.UsbReadCallback() { //Defining a Callback which triggers whenever data is read.
 
-        @RequiresApi(api = Build.VERSION_CODES.N)
+        @RequiresApi(api = Build.VERSION_CODES.KITKAT)
         @Override
         public void onReceivedData(byte[] arg0) {
             String num = getUserSID().trim();
-            try {
-                //assign stream with the value of arg0, which is the value passed from the arduino.
-                stream = arg0;
-                data = new String(arg0, "UTF-8");
-                // Extract Sender ID from the packet.
-            } catch (UnsupportedEncodingException e) {
-                e.printStackTrace();
-            }
+            //assign stream with the value of arg0, which is the value passed from the arduino.
+            data = new String(arg0, StandardCharsets.UTF_8);
+            // Extract Sender ID from the packet.
 
             // Check if stream is not empty.
-            if(stream.length > 0) {
+            if(arg0.length > 0) {
                 // Control Code 1, Send SID to Arduino Device
-                if (stream[0] == 1) {
+                if (arg0[0] == 1) {
                     serialPort.write(num.getBytes());
                     tvAppend(textView, "OutStream : " + num + "\n");
 
@@ -123,10 +114,10 @@ public class MainActivity extends AppCompatActivity{
                     // Prevent multiple instances of the infinite sound
                     if(!isRinging){
                         // Play sound
-                        mp = MediaPlayer.create(MainActivity.this, R.raw.emergency_alarm);
-                        mp.setLooping(true);
-                        mp.start();
-                        isRinging = true;
+                            mp = MediaPlayer.create(MainActivity.this, R.raw.emergency_alarm);
+                            mp.setLooping(true);
+                            mp.start();
+                            isRinging = true;
                     }
 
                     // Create an explicit intent for an Activity in your app
@@ -136,7 +127,7 @@ public class MainActivity extends AppCompatActivity{
 
                     // Notification Builder
                     NotificationCompat.Builder builder = new NotificationCompat.Builder(MainActivity.this, "EMABeaconNotif")
-                            .setSmallIcon(R.drawable.icon_ema)
+                            .setSmallIcon(android.R.color.transparent)
                             .setContentTitle("Emergency Beacon Signal Detected!")
                             .setContentText("There is an emergency beacon signal detected coming from USER:" + sender)
                             .setPriority(NotificationCompat.PRIORITY_HIGH)
@@ -167,8 +158,9 @@ public class MainActivity extends AppCompatActivity{
                     // ... notification function
                     // ... store to messages table in database encrypted
                     // if(regular message)
-                    mp = MediaPlayer.create(MainActivity.this, notificationSound);
-                    mp.start(); // Play sound
+
+                        mp = MediaPlayer.create(MainActivity.this, notificationSound);
+                        mp.start(); // Play sound
 
                     // Create an explicit intent for an Activity in your app
                     Intent intent = new Intent(String.valueOf(MainActivity.this));
@@ -177,7 +169,7 @@ public class MainActivity extends AppCompatActivity{
 
                     // Notification Builder
                     NotificationCompat.Builder builder = new NotificationCompat.Builder(MainActivity.this, "EMAMessageNotif")
-                            .setSmallIcon(R.drawable.icon_ema)
+                            .setSmallIcon(android.R.color.transparent)
                             .setContentTitle("Message from User: " + sender)
                             .setContentText("Message: " + message)
                             .setPriority(NotificationCompat.PRIORITY_DEFAULT)
@@ -230,7 +222,6 @@ public class MainActivity extends AppCompatActivity{
     };
 
     // This function handles what happens when the beacon mode button is clicked.
-    @RequiresApi(api = Build.VERSION_CODES.N)
     public void onClickBeaconMode(View view){
             if (isRinging) {
                 beaconReceiveTimer.cancel();
@@ -306,7 +297,6 @@ public class MainActivity extends AppCompatActivity{
 
 
 
-    @RequiresApi(api = Build.VERSION_CODES.N)
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO);     // Only use light mode
@@ -542,7 +532,6 @@ public class MainActivity extends AppCompatActivity{
     }
 
     // This will be called in FragmentTextMessage and mCallback to store messages to database.
-    @RequiresApi(api = Build.VERSION_CODES.N)
     private void storeMessage(String ID, String MESSAGE){
         String Received = FragmentMain.dateFormat.format(FragmentMain.date);
         String Sent = "-";
@@ -602,12 +591,16 @@ public class MainActivity extends AppCompatActivity{
         sender = "";
         message = "";
 
-        for(int i = 0; i < 4; i++){
-            sender = sender.concat(String.valueOf(data.charAt(i+5))).trim();
-        }
-        for(int i = 0; i < 40; i++){
-            message = message.concat(String.valueOf(data.charAt(i+9)));
-        }
+        //for(int i = 0; i < 4; i++){
+        //    sender = sender.concat(String.valueOf(data.charAt(i+5))).trim();
+        //}
+        sender = data.substring(5,9);
+
+        //for(int i = 0; i < 40; i++){
+        //        message = message.concat(String.valueOf(data.charAt(i+9)));
+        //}
+        message = data.substring(9, 32);
+
     }
 
 
