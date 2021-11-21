@@ -1,5 +1,12 @@
 package com.example.emav1.toolspack;
 
+import android.os.Build;
+
+import androidx.annotation.RequiresApi;
+
+import java.nio.charset.StandardCharsets;
+import android.util.Base64;
+
 public class HashProcessor {
     private static final int[] roundconstant_zero = { 0x6, 0xa, 0x0, 0x9, 0xe, 0x6, 0x6, 0x7, 0xf, 0x3, 0xb, 0xc,
             0xc, 0x9, 0x0, 0x8, 0xb, 0x2, 0xf, 0xb, 0x1, 0x3, 0x6, 0x6, 0xe, 0xa, 0x9, 0x5, 0x7, 0xd, 0x3,
@@ -246,6 +253,20 @@ public class HashProcessor {
         Init();
         Update(data, databitlen);
         Final(hashval);
+
+    }
+
+    @RequiresApi(api = Build.VERSION_CODES.KITKAT)
+    public String getHash(String message){
+        databitlen = 392; // 49bytes = 392 bits
+        byte[] hashval = new byte[256]; // fixed 256 size
+
+        Hash(message.getBytes(), databitlen, hashval); // Perform Hash Function
+
+        String convertedtoUTF8 = new String(hashval, StandardCharsets.UTF_8); // Convert hashval to string in UTF-8
+        String convertedtoString = Base64.encodeToString(convertedtoUTF8.getBytes(), Base64.DEFAULT);
+
+        return convertedtoString.substring(0,11);
 
     }
 

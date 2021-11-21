@@ -6,6 +6,7 @@ import androidx.appcompat.app.AppCompatDelegate;
 import androidx.core.app.NotificationCompat;
 import androidx.core.app.NotificationManagerCompat;
 import androidx.core.content.ContextCompat;
+import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
 
@@ -27,6 +28,7 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.CountDownTimer;
+import android.os.Looper;
 import android.text.method.ScrollingMovementMethod;
 import android.util.Log;
 import android.view.View;
@@ -67,11 +69,11 @@ public class MainActivity extends AppCompatActivity{
     private String data;
 
     private final Uri notificationSound = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
-    private MediaPlayer mp;
+    private MediaPlayer mp, beaconmp;
     boolean isRinging = false;
     boolean isDisabled = true;
     boolean isBeaconMode = false;
-    String sender, message;
+    String sender, message, noHashPart, hashFromPacket, computedHash;
     boolean isFlashingSend = false;
     boolean isFlashingRecv = false;
 
@@ -100,6 +102,7 @@ public class MainActivity extends AppCompatActivity{
             //assign stream with the value of arg0, which is the value passed from the arduino.
             data = new String(arg0, StandardCharsets.UTF_8);
             // Extract Sender ID from the packet.
+            tvAppend(textView, "\nIN: " + data + "\nInLen: " + data.length());
 
             // Check if stream is not empty.
             if(arg0.length > 0) {
@@ -108,96 +111,101 @@ public class MainActivity extends AppCompatActivity{
                     serialPort.write(num.getBytes());
                     tvAppend(textView, "OutStream : " + num + "\n");
 
-                } else if (data.charAt(0) == '0') {
-                    getDetailsfromPacket();
-
-                    // Prevent multiple instances of the infinite sound
-                    if(!isRinging){
-                        // Play sound
-                            mp = MediaPlayer.create(MainActivity.this, R.raw.emergency_alarm);
-                            mp.setLooping(true);
-                            mp.start();
+                }else if (data.charAt(0) == '0') {
+                        // Prevent multiple instances of the infinite sound
+                        if (!isRinging) {
+                            // Play sound
+                            beaconmp.start();
                             isRinging = true;
+                        }
+                        if (checkHashfromPacket()) {
+                            tvAppend(textView, "\nMatching Hashes");
+                            getSenderfromPacket();
+                            // Create an explicit intent for an Activity in your app
+                            Intent intent = new Intent(String.valueOf(MainActivity.this));
+                            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                            PendingIntent pendingIntent = PendingIntent.getActivity(MainActivity.this, 0, intent, 0);
+
+                            // Notification Builder
+                            NotificationCompat.Builder builder = new NotificationCompat.Builder(MainActivity.this, "EMABeaconNotif")
+                                    .setSmallIcon(android.R.color.transparent)
+                                    .setContentTitle("Emergency Beacon Signal Detected!")
+                                    .setContentText("There is an emergency beacon signal detected coming from USER:" + sender)
+                                    .setPriority(NotificationCompat.PRIORITY_HIGH)
+                                    // Set the intent that will fire when the user taps the notification
+                                    .setContentIntent(pendingIntent)
+                                    .setAutoCancel(true);
+
+                            // Notification Show
+                            NotificationManagerCompat notificationManager = NotificationManagerCompat.from(MainActivity.this);
+                            notificationManager.notify(1, builder.build());
+
+                            storeMessage(sender, "URGENT BEACON SIGNAL RECEIVED!");
+
+                            //Flashing Timer
+                            beaconReceiveTimer.start();
+
+                            // THis line is for debugging purposes
+                            // Shows what is the incoming message from the arduino
+                            tvAppend(textView, "\nInStream : " + data);
+                        }
+                    } else if (data.charAt(9) == '3') {
+                        if (checkHashfromPacket()) {
+                            FragmentTextMessage.isReceivedConfirmationByte = true;
+                            FragmentTextMessage.repTimer = 4;
+                            tvAppend(textView, "Received Confirmation Byte" + data);
+                            //add one message to
+                        }
+                    } else if (data.charAt(0) == '2') {
+                        getSenderfromPacket();
+                        getMessagefromPacket();
+                        if (checkHashfromPacket()) {
+                            // ... decryption for display, and store it in a temporary string.
+                            // ... store to messages table in database encrypted
+                            // if(regular message)
+
+                            mp.start(); // Play sound
+                            // Create an explicit intent for an Activity in your app
+                            Intent intent = new Intent(String.valueOf(MainActivity.this));
+                            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                            PendingIntent pendingIntent = PendingIntent.getActivity(MainActivity.this, 0, intent, 0);
+
+                            // Notification Builder
+                            NotificationCompat.Builder builder = new NotificationCompat.Builder(MainActivity.this, "EMAMessageNotif")
+                                    .setSmallIcon(android.R.color.transparent)
+                                    .setContentTitle("Message from User: " + sender)
+                                    .setContentText("Message: " + message)
+                                    .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+                                    // Set the intent that will fire when the user taps the notification
+                                    .setContentIntent(pendingIntent)
+                                    .setAutoCancel(true);
+
+                            // Notification Show
+                            NotificationManagerCompat notificationManager = NotificationManagerCompat.from(MainActivity.this);
+                            notificationManager.notify(2, builder.build());
+
+                            //Storing to Messages Table Database
+                            storeMessage(sender, message);
+
+                            //Confirmation packet segment
+                            String confirmMessage = "3" + sender + getUserSID() + "30000" + "00000" + "00000" + // Data
+                                    "00000" + "00000" + "00000" + "00000" + "00000"; // + "12345678911"
+
+                            String confirmHash = hashProcessor.getHash(confirmMessage);
+
+                            String confirmPacket = confirmMessage + confirmHash;
+
+                            serialPort.write(confirmPacket.getBytes());
+                            tvAppend(textView, "\nConfirm Sent: " + confirmPacket);
+
+                            // THis line is for debugging purposes
+                            // Shows what is the incoming message from the arduino
+                            tvAppend(textView, "\nInStream : " + data + "\nMessageLength = " + data.length());
+                            tvAppend(textView, "\nHashFromPacket : " + hashFromPacket + "\nComputedHash = " + computedHash);
+                        } else {
+                            tvAppend(textView, "\nHashFromPacket : " + hashFromPacket + "\nComputedHash = " + computedHash);
+                        }
                     }
-
-                    // Create an explicit intent for an Activity in your app
-                    Intent intent = new Intent(String.valueOf(MainActivity.this));
-                    intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-                    PendingIntent pendingIntent = PendingIntent.getActivity(MainActivity.this, 0, intent, 0);
-
-                    // Notification Builder
-                    NotificationCompat.Builder builder = new NotificationCompat.Builder(MainActivity.this, "EMABeaconNotif")
-                            .setSmallIcon(android.R.color.transparent)
-                            .setContentTitle("Emergency Beacon Signal Detected!")
-                            .setContentText("There is an emergency beacon signal detected coming from USER:" + sender)
-                            .setPriority(NotificationCompat.PRIORITY_HIGH)
-                            // Set the intent that will fire when the user taps the notification
-                            .setContentIntent(pendingIntent)
-                            .setAutoCancel(true);
-
-                    // Notification Show
-                    NotificationManagerCompat notificationManager = NotificationManagerCompat.from(MainActivity.this);
-                    notificationManager.notify(1, builder.build());
-
-                    storeMessage(sender, "URGENT BEACON SIGNAL RECEIVED!");
-
-                    //Flashing Timer
-                    beaconReceiveTimer.start();
-
-                    // THis line is for debugging purposes
-                    // Shows what is the incoming message from the arduino
-                    tvAppend(textView, "\nInStream : " + data);
-
-                }else if (data.charAt(9) == '3') {
-                    FragmentTextMessage.isReceivedConfirmationByte = true;
-                    tvAppend(textView, "Received Confirmation Byte" + data);
-                    //add one message to
-                }else if (data.charAt(0) == '2') {
-                    getDetailsfromPacket();
-                    // ... decryption for display, and store it in a temporary string.
-                    // ... notification function
-                    // ... store to messages table in database encrypted
-                    // if(regular message)
-
-                        mp = MediaPlayer.create(MainActivity.this, notificationSound);
-                        mp.start(); // Play sound
-
-                    // Create an explicit intent for an Activity in your app
-                    Intent intent = new Intent(String.valueOf(MainActivity.this));
-                    intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-                    PendingIntent pendingIntent = PendingIntent.getActivity(MainActivity.this, 0, intent, 0);
-
-                    // Notification Builder
-                    NotificationCompat.Builder builder = new NotificationCompat.Builder(MainActivity.this, "EMAMessageNotif")
-                            .setSmallIcon(android.R.color.transparent)
-                            .setContentTitle("Message from User: " + sender)
-                            .setContentText("Message: " + message)
-                            .setPriority(NotificationCompat.PRIORITY_DEFAULT)
-                            // Set the intent that will fire when the user taps the notification
-                            .setContentIntent(pendingIntent)
-                            .setAutoCancel(true);
-
-                    // Notification Show
-                    NotificationManagerCompat notificationManager = NotificationManagerCompat.from(MainActivity.this);
-                    notificationManager.notify(2, builder.build());
-
-                    //Storing to Messages Table Database
-                    storeMessage(sender, message);
-
-                    //Confirmation packet segment
-                    String confirmPacket = "2" + sender + getUserSID()+ "30000" + "00000" + "00000" + // Data
-                            "00000" + "00000" + "00000" + "00000" + "00000" + "12345678911";
-                    serialPort.write(confirmPacket.getBytes());
-
-                    tvAppend(textView, "\nConfirm : " + confirmPacket);
-
-                    // THis line is for debugging purposes
-                    // Shows what is the incoming message from the arduino
-                    tvAppend(textView, "\nInStream : " + data);
-
-                }
-
-
             }
         }
     };
@@ -227,8 +235,8 @@ public class MainActivity extends AppCompatActivity{
                 beaconReceiveTimer.cancel();
                 beacon.setColorFilter(Color.rgb(13, 16, 19));
                 try {
-                    mp.stop();
-                    mp.prepare();
+                    beaconmp.stop();
+                    beaconmp.prepare();
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
@@ -283,13 +291,19 @@ public class MainActivity extends AppCompatActivity{
             }
         }
 
+        @RequiresApi(api = Build.VERSION_CODES.KITKAT)
         @Override
         public void onFinish() {
-            String string = "0" + "0000" + getUserSID() + "00000" + "00000" + "00000" + // Data
-                    "00000" + "00000" + "00000" + "00000" + "00000" + "12345678911"; // + "12345678911"
 
-            serialPort.write(string.getBytes());
-            tvAppend(textView, "\nINFO:\n" + string + "\n");
+            String string = "0" + "0000" + getUserSID() + "00000" + "00000" + "00000" + // Data
+                    "00000" + "00000" + "00000" + "00000" + "00000"; // + "123456" + "78911"
+
+            String beaconHash = hashProcessor.getHash(string);
+
+            String beaconMessage = string + beaconHash;
+
+            serialPort.write(beaconMessage.getBytes());
+            tvAppend(textView, "\nINFO:\n" + beaconMessage + "\nHash: " + beaconHash +"\nHashLen: " + beaconHash.length() + "\nMessageLen: " + string.length() + "\nPacketLen: " + beaconMessage.length());
             beaconSendTimer.cancel();
             beaconSendTimer.start();
         }
@@ -321,6 +335,11 @@ public class MainActivity extends AppCompatActivity{
         filter.addAction(UsbManager.ACTION_USB_DEVICE_DETACHED);
         registerReceiver(broadcastReceiver, filter);
         textView.setMovementMethod(new ScrollingMovementMethod());
+
+
+        mp = MediaPlayer.create(MainActivity.this, notificationSound);
+        beaconmp = MediaPlayer.create(MainActivity.this, R.raw.emergency_alarm);
+        beaconmp.setLooping(true);
 
         setReceiverModeColor();
         if(!arduinoConnected()){
@@ -374,6 +393,8 @@ public class MainActivity extends AppCompatActivity{
                     try {
                         beaconSendTimer.cancel();
                         beaconReceiveTimer.cancel();
+                        beaconmp.stop();
+                        beaconmp.prepare();
                         mp.stop();
                         mp.prepare();
                     }catch (Exception e) {
@@ -587,19 +608,48 @@ public class MainActivity extends AppCompatActivity{
         }
     }
 
-    private void getDetailsfromPacket(){
+    private void getSenderfromPacket(){
         sender = "";
+        for(int i = 0; i < 4; i++){
+            sender = sender.concat(String.valueOf(data.charAt(i+5))).trim();
+        }
+
+    }
+
+    private void getMessagefromPacket(){
         message = "";
 
-        //for(int i = 0; i < 4; i++){
-        //    sender = sender.concat(String.valueOf(data.charAt(i+5))).trim();
-        //}
-        sender = data.substring(5,9);
+        for(int i = 0; i < 40; i++){
+                message = message.concat(String.valueOf(data.charAt(i+9)));
+        }
 
-        //for(int i = 0; i < 40; i++){
-        //        message = message.concat(String.valueOf(data.charAt(i+9)));
-        //}
-        message = data.substring(9, 32);
+    }
+
+    @RequiresApi(api = Build.VERSION_CODES.KITKAT)
+    private boolean checkHashfromPacket(){
+        boolean isHashMatched;
+        noHashPart = "";
+        hashFromPacket = "";
+        computedHash = "";
+
+        for(int i = 0; i < 49; i++){
+            noHashPart = noHashPart.concat(String.valueOf(data.charAt(i)));
+        }
+
+        for(int i = 0; i < 11; i++){
+            hashFromPacket = hashFromPacket.concat(String.valueOf(data.charAt(i+49)));
+        }
+
+        computedHash = hashProcessor.getHash(noHashPart);
+
+        if(hashFromPacket.equals(computedHash))
+            isHashMatched = true;
+        else
+            isHashMatched = false;
+
+        return isHashMatched;
+
+
 
     }
 

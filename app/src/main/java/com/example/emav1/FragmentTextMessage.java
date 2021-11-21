@@ -22,6 +22,7 @@ import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.example.emav1.toolspack.HashProcessor;
 import com.felhr.usbserial.UsbSerialDevice;
 
 import java.util.ArrayList;
@@ -48,6 +49,7 @@ public class FragmentTextMessage extends Fragment {
     static boolean isReceivedConfirmationByte = false;
 
     Context context;
+    HashProcessor hashProcessor = new HashProcessor();
 
     /*
     This is the only thing you need to touch in this class.
@@ -70,7 +72,7 @@ public class FragmentTextMessage extends Fragment {
                         getRID();
                         String MESSAGE = message.getText().toString().trim();
                         String MESSAGE_FINAL = MESSAGE;
-                        String HK = "12345678911";
+                        String HK;
 
                         //   New format:
                         //   | SMP - 1 | RID - 4 | SID - 4 | DATA - 40 | HK - 11 |
@@ -80,6 +82,10 @@ public class FragmentTextMessage extends Fragment {
                             for (int i = 0; i < 40 - MESSAGE.length(); i++)
                                 MESSAGE_FINAL = MESSAGE_FINAL.concat(" ");
                         }
+
+                        String textMessage = SMP+RID+SID+MESSAGE_FINAL;
+                        HK = hashProcessor.getHash(textMessage);
+                        String textPacket = textMessage + HK;
 
                         //if message entered is more than 40 characters, splice. <--- Optional
                         /*
@@ -94,8 +100,9 @@ public class FragmentTextMessage extends Fragment {
                         MESSAGE_FINAL_2 = MESSAGE_FINAL;
                         HK2 = HK;
 
+
                         //Should use the serial port from MainActivity to reference the registered serialPort Arduino
-                        MainActivity.serialPort.write((SMP + RID + SID + MESSAGE_FINAL + HK).getBytes());
+                        MainActivity.serialPort.write((textPacket).getBytes());
                         tvAppend(textView, "ML:" + MESSAGE.length() +
                                 "\n" + SMP + SID + RID + MESSAGE_FINAL + HK + "\n");
                         Toast.makeText(context, "Transmitted", Toast.LENGTH_SHORT).show();
