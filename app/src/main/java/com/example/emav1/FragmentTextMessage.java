@@ -5,10 +5,12 @@ import android.database.Cursor;
 import android.hardware.usb.UsbDevice;
 import android.hardware.usb.UsbDeviceConnection;
 import android.hardware.usb.UsbManager;
+import android.os.Build;
 import android.os.Bundle;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.annotation.RequiresApi;
 import androidx.fragment.app.Fragment;
 
 import android.os.CountDownTimer;
@@ -60,6 +62,7 @@ public class FragmentTextMessage extends Fragment {
         - if not, Loading screen to wait until all the message packets are successfully sent?
 
      */
+    @RequiresApi(api = Build.VERSION_CODES.KITKAT)
     public void onClickSendButton(View view) {
         try {
             if (sendButton.isEnabled()){
@@ -80,7 +83,7 @@ public class FragmentTextMessage extends Fragment {
                         //if message entered is less than 40 characters, add whitespace characters to fill up the packet.
                         if (MESSAGE.length() < 40) {
                             for (int i = 0; i < 40 - MESSAGE.length(); i++)
-                                MESSAGE_FINAL = MESSAGE_FINAL.concat(" ");
+                                MESSAGE_FINAL = MESSAGE_FINAL.concat(".");
                         }
 
                         String textMessage = SMP+RID+SID+MESSAGE_FINAL;
@@ -103,8 +106,8 @@ public class FragmentTextMessage extends Fragment {
 
                         //Should use the serial port from MainActivity to reference the registered serialPort Arduino
                         MainActivity.serialPort.write((textPacket).getBytes());
-                        tvAppend(textView, "ML:" + MESSAGE.length() +
-                                "\n" + SMP + SID + RID + MESSAGE_FINAL + HK + "\n");
+                        tvAppend(textView, "ML:" + textPacket.length() +
+                                "\n" + textPacket + "\n");
                         Toast.makeText(context, "Transmitted", Toast.LENGTH_SHORT).show();
 
                         // prevent multiple send touches
