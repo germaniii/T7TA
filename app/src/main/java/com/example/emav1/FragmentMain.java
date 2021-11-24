@@ -53,7 +53,7 @@ public class FragmentMain extends Fragment  implements InboxListAdapter.ItemClic
 
 
         date = Calendar.getInstance().getTime();
-        dateFormat = new SimpleDateFormat("hh:mm mm-dd-yyyy");
+        dateFormat = new SimpleDateFormat("mm-dd-yyyy | hh:mm:ss.SSS");
 
         // data to populate the RecyclerView with
         messageID = new ArrayList<>();
@@ -95,7 +95,7 @@ public class FragmentMain extends Fragment  implements InboxListAdapter.ItemClic
                         Toast.makeText(context, "Please fill up all fields!", Toast.LENGTH_SHORT).show();
                     }else{
                         String strDate = null;
-                        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.N) {
+                        if (android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
                             strDate = dateFormat.format(date);
                         }
                         String uNameString = uName.getText().toString().trim();

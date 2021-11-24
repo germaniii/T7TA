@@ -101,7 +101,10 @@ public class MainActivity extends AppCompatActivity{
         public void onReceivedData(byte[] arg0) {
             String num = getUserSID().trim();
             //assign stream with the value of arg0, which is the value passed from the arduino.
-            data = new String(arg0, StandardCharsets.UTF_8);
+            byte[] tempArg0 = new byte[60];
+            System.arraycopy(arg0, 0, tempArg0, 0, 60);
+
+            data = new String(tempArg0, StandardCharsets.UTF_8);
             // Extract Sender ID from the packet.
             tvAppend(textView, "\nIN: " + data + "\nInLen: " + data.length());
 
