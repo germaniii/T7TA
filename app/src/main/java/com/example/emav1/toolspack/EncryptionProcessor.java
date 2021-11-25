@@ -1,12 +1,5 @@
 package com.example.emav1.toolspack;
 
-
-import android.os.Bundle;
-import android.util.Base64;
-import android.widget.TextView;
-import android.widget.Toast;
-
-import androidx.appcompat.app.AppCompatActivity;
 import org.bouncycastle.crypto.CryptoException;
 import org.bouncycastle.crypto.engines.TwofishEngine;
 import org.bouncycastle.crypto.modes.CBCBlockCipher;
@@ -17,43 +10,57 @@ import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 
 
+
 public class EncryptionProcessor {
-    private String plainText = "Among Us (coloquially termed \"amogus\") teaches us to punish the minority and hate those who are different and unique as \"impostors.\" Instead, I like ";
-    private String key       = "0908812959009085562143";
-    int packetTotal;
-    private byte[] cipherText, receivedCipherText;
+
+    //Variables for Sender operations
+    private byte[] cipherText;
     private byte[][] dividedCipherText;
 
-  /*  @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        cipherText = performEncrypt(key.getBytes(StandardCharsets.UTF_8), plainText);
-        packetTotal =  (int)Math.ceil((double)cipherText.length / 40);
-        //Divides the whole cipherText into a dividedCipherText[x][40] if exceeds 40byte limit, else is saved in dividedCipherText[0][0]
-        dividedCipherText = splitCipherForPacket(cipherText, packetTotal);
-        //after this point, we can send dividedCipherText[][] sa packet
+    //Variables for Receiver operations
+    private String decodedText;
 
-        String senderSideTextString = Base64.encodeToString(cipherText, Base64.DEFAULT); //test var, unused in real application
+    //Variables for all operations
+    private final String key;
+    int packetTotal;
 
-
-        //Receiver part, putting together the divided Strings:
-        receivedCipherText = concatenatedCipher(dividedCipherText, 10);
-        String cipherTextString = Base64.encodeToString(receivedCipherText, Base64.DEFAULT);
-
-        outputTextBox.setText(Arrays.toString(cipherText));
-        encryptedTextBox.setText(Arrays.toString(receivedCipherText));
-
-
-        //Decryption part
-        String decryptText = performDecrypt(key.getBytes(StandardCharsets.UTF_8), receivedCipherText);
-
-        //Some checks if equal ba, note that the ciphers don't necessarily have to be equal....I think
-        boolean senderReceiverCiphersMatch = receivedCipherText.equals(cipherText) ? true : false;
-        boolean senderReceiverStringsMatch = decryptText.equals(plainText);
-
-
+    //Call this for encrypting purposes -- Sender device
+    public EncryptionProcessor(String inputText, String senderID, String receiverID){
+        this.key = generateKey(senderID, receiverID);
+        this.cipherText = performEncrypt(this.key.getBytes(StandardCharsets.UTF_8), inputText);
+        this.packetTotal = (int)Math.ceil((double)this.cipherText.length / 40);
+        this.dividedCipherText = splitCipherForPacket(this.cipherText, this.packetTotal);
     }
 
+    //Call for decrypting -- Receiver device
+    public EncryptionProcessor(byte[][] receivedCipherText, String senderID, String receiverID){
+        this.key = generateKey(senderID, receiverID);
+        byte[] receivedCipherTextConcat = concatenatedCipher(receivedCipherText);
+        this.decodedText = performDecrypt(this.key.getBytes(StandardCharsets.UTF_8), receivedCipherTextConcat);
+    }
 
+    public byte[] getCipherText() {
+        return cipherText;
+    }
+
+    public byte[][] getDividedCipherText() {
+        return dividedCipherText;
+    }
+
+    public String getDecodedText(){
+        return this.decodedText;
+    }
+
+    public int getPacketTotal(){
+        return this.packetTotal;
+    }
+
+    private String generateKey(String senderID, String receiverID) {
+        StringBuilder sID, rID;
+        sID = new StringBuilder(senderID);
+        rID = new StringBuilder(receiverID);
+        return sID.replace(0, 2, "").toString() + rID.replace(0, 2, "").toString();
+    }
 
     private byte[] performEncrypt(byte[] key, String plainText)
     {
@@ -73,7 +80,7 @@ public class EncryptionProcessor {
         }
         catch (CryptoException ce)
         {
-            Toast.makeText(this, "Unexpected Encrypt exception has occurred.", Toast.LENGTH_SHORT).show();
+            //     Toast.makeText(this , "Unexpected Encrypt exception has occurred.", Toast.LENGTH_SHORT).show();
         }
         return rv;
     }
@@ -94,7 +101,7 @@ public class EncryptionProcessor {
         }
         catch (CryptoException ce)
         {
-            Toast.makeText(this, "Unexpected Decrypt exception has occurred.", Toast.LENGTH_SHORT).show();
+            //    Toast.makeText(this, "Unexpected Decrypt exception has occurred.", Toast.LENGTH_SHORT).show();
         }
         return new String(rv).trim();
     }
@@ -111,14 +118,15 @@ public class EncryptionProcessor {
                 fromIndex = toIndex;
                 toIndex = fromIndex + 40;
             }
-            //can probably dispose of cipherTextOriginalBlock here to clean memory pero idk how that works and dont care AHAHAH
         }
         else {
             finalCipherBlock[0] = cipherTextOriginalBlock;
         }
         return finalCipherBlock;
     }
-    private byte[] concatenatedCipher(byte[][] receivedCipher, int maxAllowablePackets){
+
+
+    private byte[] concatenatedCipher(byte[][] receivedCipher){
         if (receivedCipher.length > 1){
             int numOfPackets, numOfElements, padding = 0;
             numOfPackets = receivedCipher.length;
@@ -137,6 +145,4 @@ public class EncryptionProcessor {
         }
         return receivedCipher[0];
     }
-
-   */
 }

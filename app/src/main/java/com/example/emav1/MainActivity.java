@@ -102,7 +102,9 @@ public class MainActivity extends AppCompatActivity{
             String num = getUserSID().trim();
             //assign stream with the value of arg0, which is the value passed from the arduino.
             byte[] tempArg0 = new byte[60];
-            System.arraycopy(arg0, 0, tempArg0, 0, 60);
+            for(int i = 0; i < arg0.length; i++){
+                tempArg0[i] = arg0[i];
+            }
 
             data = new String(tempArg0, StandardCharsets.UTF_8);
             // Extract Sender ID from the packet.

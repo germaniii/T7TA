@@ -14,6 +14,7 @@ import androidx.annotation.RequiresApi;
 import androidx.fragment.app.Fragment;
 
 import android.os.CountDownTimer;
+import android.os.Handler;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -45,6 +46,7 @@ public class FragmentTextMessage extends Fragment {
 
     String SMP, SID, RID, MESSAGE;
     String MESSAGE_FINAL_2, HK2;
+    String textPacket;
     boolean isDisabled = false;
 
     static int repTimer = 0; // max of 2
@@ -52,6 +54,50 @@ public class FragmentTextMessage extends Fragment {
 
     Context context;
     HashProcessor hashProcessor = new HashProcessor();
+
+    /*final Handler handler = new Handler();
+
+    Runnable sendTextMessage = new Runnable() {
+        @Override
+        public void run() {
+            for(int i = 0; i < 10; i++){
+                if(){
+
+                }
+            }
+            handler.postDelayed(this, 0);  // 1 second delay
+        }
+    };
+
+    Runnable sendPacket = new Runnable() {
+        @Override
+        public void run() {
+            MainActivity.serialPort.write(textPacket.getBytes());
+            if (repTimer == 4){
+                isDisabled = false;
+                repTimer = 0;
+                Toast.makeText(context, "Successfully sent message to "
+                        + RID, Toast.LENGTH_SHORT).show();
+                handler.removeCallbacks(this);
+
+                //if message is longer than 44 characters, add a function here to send the next packet.
+            }else if(repTimer < 3){
+                repTimer++;
+                handler.postDelayed(this, 1000);
+            }else if (repTimer == 3){
+                // if needed, add a notification part here
+                isDisabled = false;
+                repTimer = 0;
+                Toast.makeText(context, "Failed to send message to " + RID, Toast.LENGTH_SHORT).show();
+            }else{
+                repTimer = 0;
+                isDisabled = false;
+                handler.removeCallbacks(this);
+            }
+        }
+    };
+    handler.post(runnable);
+     */
 
     /*
     This is the only thing you need to touch in this class.
@@ -88,7 +134,9 @@ public class FragmentTextMessage extends Fragment {
 
                         String textMessage = SMP+RID+SID+MESSAGE_FINAL;
                         HK = hashProcessor.getHash(textMessage);
-                        String textPacket = textMessage + HK;
+                        textPacket = textMessage + HK;
+                        MESSAGE_FINAL_2 = MESSAGE_FINAL;
+                        HK2 = HK;
 
                         //if message entered is more than 40 characters, splice. <--- Optional
                         /*
@@ -100,8 +148,6 @@ public class FragmentTextMessage extends Fragment {
                         }
                         */
 
-                        MESSAGE_FINAL_2 = MESSAGE_FINAL;
-                        HK2 = HK;
 
 
                         //Should use the serial port from MainActivity to reference the registered serialPort Arduino
@@ -114,6 +160,8 @@ public class FragmentTextMessage extends Fragment {
                         isDisabled = true;
 
                         //Start repitition Counter
+
+                        //handler.postRunnable
                         countDownTimer.start();
                     }else{
                         Toast.makeText(context, "A message is still sending, please try again later.", Toast.LENGTH_SHORT).show();
@@ -169,9 +217,6 @@ public class FragmentTextMessage extends Fragment {
         }
     }
 
-
-
-
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
@@ -202,6 +247,7 @@ public class FragmentTextMessage extends Fragment {
         // Send Button On Click Listener
         sendButton.setOnClickListener(new View.OnClickListener()
         {
+            @RequiresApi(api = Build.VERSION_CODES.KITKAT)
             @Override
             public void onClick(View v)
             {
@@ -263,6 +309,7 @@ public class FragmentTextMessage extends Fragment {
             }
         });
     }
+
 
 
 }
