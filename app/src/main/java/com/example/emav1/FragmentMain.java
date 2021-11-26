@@ -53,7 +53,7 @@ public class FragmentMain extends Fragment  implements InboxListAdapter.ItemClic
 
 
         date = Calendar.getInstance().getTime();
-        dateFormat = new SimpleDateFormat("mm-dd-yyyy | hh:mm:ss.SSS");
+        dateFormat = new SimpleDateFormat("MM-dd-yyyy | hh:mm:ss.SSS");
 
         // data to populate the RecyclerView with
         messageID = new ArrayList<>();
@@ -77,7 +77,7 @@ public class FragmentMain extends Fragment  implements InboxListAdapter.ItemClic
         if(!dataBaseHelper.readAllDataContactsTable().moveToFirst()){
             AlertDialog.Builder builder = new AlertDialog.Builder(context);
             builder.setTitle("User Set-up")
-                    .setMessage("\nPlease input your name and the last 4 digits of your phone number.");
+                    .setMessage("\nPlease input your name and the your phone number (09xx-xxx-xxxx).");
             // I'm using fragment here so I'm using getView() to provide ViewGroup
             // but you can provide here any other instance of ViewGroup from your Fragment / Activity
             View viewInflated = LayoutInflater.from(context).inflate(R.layout.dialog_usercontact, (ViewGroup) getActivity().findViewById(android.R.id.content), false);
@@ -91,7 +91,7 @@ public class FragmentMain extends Fragment  implements InboxListAdapter.ItemClic
             builder.setPositiveButton("Confirm", new DialogInterface.OnClickListener() {
                 @Override
                 public void onClick(DialogInterface dialog, int which) {
-                    if(uName.getText().toString() == "" || uNumber.getText().toString() == ""){
+                    if(uName.getText().toString().equals("") || uNumber.getText().toString().equals("") || uNumber.getText().toString().length() < 11){
                         Toast.makeText(context, "Please fill up all fields!", Toast.LENGTH_SHORT).show();
                     }else{
                         String strDate = null;

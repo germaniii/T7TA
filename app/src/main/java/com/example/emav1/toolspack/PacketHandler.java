@@ -15,11 +15,22 @@ public class PacketHandler {
 
     byte[][] receivedData;
 
+    public PacketHandler(){
+    }
+
+    public void setSID(String sSID){
+        this.SID = formatID(sSID);
+    }
+
+    public byte[] getSIDBytes(){
+        return this.SID;
+    }
+
     //constructor for sending operations, call for assembling packets post-encryption
     //args: SID and RID     = must be 4B each
     //      messageCipher   = must be 60B
     //      packetHash      = must be 11B
-    public PacketHandler(String SID, String RID, byte[][] messageCipher, byte[][] packetHash){
+    public void setSendParameters(String SID, String RID, byte[][] messageCipher, byte[][] packetHash){
         this.SID = formatID(SID);
         this.RID = formatID(RID);
         this.messageCipher = messageCipher;
@@ -28,7 +39,7 @@ public class PacketHandler {
     }
     //constructor for receiving operations, call for disassembling packets pre-decryption
     //args: receivedData = must be 60B, input stream from ArduinoNano
-    public PacketHandler(byte[][] receivedData){
+    public void setRecvParameters(byte[][] receivedData){
         this.receivedData = receivedData;
         this.numOfPackets = receivedData.length;
         this.SID = new byte[4];
@@ -83,7 +94,7 @@ public class PacketHandler {
     }
 
     //============================ GETTERS
-    private String getID(byte[] inputByte){
+    public String getID(byte[] inputByte){
         int intInput = ByteBuffer.wrap(inputByte).getInt();
         String input = String.valueOf(intInput);
         String padding = "";
@@ -105,6 +116,10 @@ public class PacketHandler {
 
     public String toString(boolean forSending){
         return "<<SID: [" + getID(this.SID) + "], RID: [" + getID(this.RID) + "]>>";
+    }
+
+    public int getNumOfPackets(){
+        return this.numOfPackets;
     }
 }
 

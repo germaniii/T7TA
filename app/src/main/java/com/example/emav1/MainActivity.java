@@ -38,9 +38,12 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.example.emav1.toolspack.HashProcessor;
+import com.example.emav1.toolspack.PacketHandler;
 import com.felhr.usbserial.UsbSerialDevice;
 import com.felhr.usbserial.UsbSerialInterface;
 
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
@@ -68,6 +71,9 @@ public class MainActivity extends AppCompatActivity{
 
     // Serial Receiver Variables
     private String data;
+    byte[] tempArg0;
+    String num;
+    byte[] senderBytes;
 
     private final Uri notificationSound = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
     private MediaPlayer mp, beaconmp;
@@ -78,7 +84,9 @@ public class MainActivity extends AppCompatActivity{
     boolean isFlashingSend = false;
     boolean isFlashingRecv = false;
 
+
     HashProcessor hashProcessor = new HashProcessor();
+    PacketHandler packetHandler = new PacketHandler();
 
 
     /*
@@ -86,37 +94,30 @@ public class MainActivity extends AppCompatActivity{
     Mao rani ang hilabti if mag manipulate mo sa data nga ma receive from the EMA device.
 
     This is where all the data passed to and from the EMA device is processed.
-
-    To implement:
-        - Twofish Algorithm
-        - JH
-
-   Finished:
-        - Check if signal is emergency, and play the emergency sound in R.raw
      */
     UsbSerialInterface.UsbReadCallback mCallback = new UsbSerialInterface.UsbReadCallback() { //Defining a Callback which triggers whenever data is read.
 
         @RequiresApi(api = Build.VERSION_CODES.KITKAT)
         @Override
         public void onReceivedData(byte[] arg0) {
-            String num = getUserSID().trim();
             //assign stream with the value of arg0, which is the value passed from the arduino.
-            byte[] tempArg0 = new byte[60];
+            tempArg0 = new byte[60];
             for(int i = 0; i < arg0.length; i++){
                 tempArg0[i] = arg0[i];
             }
-
             data = new String(tempArg0, StandardCharsets.UTF_8);
             // Extract Sender ID from the packet.
+            num = getUserSID().trim();
+            packetHandler.setSID(num);
+            tvAppend(textView, "\nUSER SID:" + packetHandler.getSenderID());
             tvAppend(textView, "\nIN: " + data + "\nInLen: " + data.length());
 
             // Check if stream is not empty.
             if(arg0.length > 0) {
                 // Control Code 1, Send SID to Arduino Device
                 if (arg0[0] == 1) {
-                    serialPort.write(num.getBytes());
-                    tvAppend(textView, "OutStream : " + num + "\n");
-
+                    serialPort.write(packetHandler.getSIDBytes());
+                    tvAppend(textView, "OutStream : " + packetHandler.getSenderID() + "\n");
                 }else if (data.charAt(0) == '0') {
                         if(data.length() == 60) {
                             // Prevent multiple instances of the infinite sound
@@ -157,7 +158,7 @@ public class MainActivity extends AppCompatActivity{
                                 tvAppend(textView, "\nInStream : " + data);
                             }
                         }
-                    } else if (data.charAt(0) == '3') {
+                    } else if (data.charAt(0) == '2') {
                         if(data.length() == 60) {
                             if (checkHashfromPacket()) {
                                 FragmentTextMessage.isReceivedConfirmationByte = true;
@@ -167,8 +168,7 @@ public class MainActivity extends AppCompatActivity{
                             }else
                                 Toast.makeText(MainActivity.this, "Wrong Hash", Toast.LENGTH_SHORT).show();
                         }
-                    } else if (data.charAt(0) == '2') {
-
+                    } else if (data.charAt(0) == '3') {
                         if(data.length() == 60) {
                             getSenderfromPacket();
                             getMessagefromPacket();
@@ -199,6 +199,7 @@ public class MainActivity extends AppCompatActivity{
 
                                 //Storing to Messages Table Database
                                 storeMessage(sender, message);
+                                tvAppend(textView, sender);
 
                                 final Handler handler = new Handler(Looper.getMainLooper());
                                 handler.postDelayed(new Runnable() {
@@ -206,7 +207,8 @@ public class MainActivity extends AppCompatActivity{
                                     public void run() {
                                         //Do something after 100ms
                                         //Confirmation packet segment
-                                        String confirmMessage = "3" + sender + getUserSID() + "30000" + "00000" + "00000" + // Data
+
+                                        String confirmMessage = "2" + sender + getUserSID() + "30000" + "00000" + "00000" + // Data
                                                 "00000" + "00000" + "00000" + "00000" + "00000"; // + "12345678911"
 
                                         String confirmHash = hashProcessor.getHash(confirmMessage);
@@ -290,7 +292,7 @@ public class MainActivity extends AppCompatActivity{
                             Toast.makeText(MainActivity.this, "Beacon Mode ON", Toast.LENGTH_SHORT).show();
                             isDisabled = false;
                             beaconSendTimer.start();
-                            storeMessage(getUserSID(), "URGENT BEACON SIGNAL SENT!");
+                            storeMessage(sender, "URGENT BEACON SIGNAL SENT!");
                         }
                     }
                 } catch (Exception e) {
@@ -317,15 +319,23 @@ public class MainActivity extends AppCompatActivity{
         @Override
         public void onFinish() {
 
-            String string = "0" + "0000" + getUserSID() + "00000" + "00000" + "00000" + // Data
-                    "00000" + "00000" + "00000" + "00000" + "00000"; // + "123456" + "78911"
+            byte[] sendBeaconBytes = new byte[60];
+            packetHandler.setSID(getUserSID().trim());
+
+            System.arraycopy("00000".getBytes(), 0, sendBeaconBytes, 0, 5);
+            System.arraycopy(packetHandler.getSIDBytes(), 0, sendBeaconBytes, 5, 4);
+            System.arraycopy("0000000000000000000000000000000000000000".getBytes(), 0, sendBeaconBytes, 9, 40);
+
+            String string = "0" + "0000" + new String(packetHandler.getSIDBytes(), StandardCharsets.UTF_8)+ "00000" + "00000" + "00000" + // Data
+                  "00000" + "00000" + "00000" + "00000" + "00000"; // + "123456" + "78911"
 
             String beaconHash = hashProcessor.getHash(string);
-
             String beaconMessage = string + beaconHash;
 
-            serialPort.write(beaconMessage.getBytes());
-            tvAppend(textView, "\nINFO:\n" + beaconMessage + "\nHash: " + beaconHash +"\nHashLen: " + beaconHash.length() + "\nMessageLen: " + string.length() + "\nPacketLen: " + beaconMessage.length());
+            System.arraycopy(beaconHash.getBytes(), 0, sendBeaconBytes, 49, 11);
+
+            serialPort.write(sendBeaconBytes);
+            tvAppend(textView, "\nINFO:\n" + beaconMessage + "\nSID: " + packetHandler.getSenderID() + "\nMessageLen: " + string.length() + "\nPacketLen: " + new String(sendBeaconBytes, StandardCharsets.UTF_8).length());
             beaconSendTimer.cancel();
             beaconSendTimer.start();
         }
@@ -357,7 +367,6 @@ public class MainActivity extends AppCompatActivity{
         filter.addAction(UsbManager.ACTION_USB_DEVICE_DETACHED);
         registerReceiver(broadcastReceiver, filter);
         textView.setMovementMethod(new ScrollingMovementMethod());
-
 
         mp = MediaPlayer.create(MainActivity.this, notificationSound);
         beaconmp = MediaPlayer.create(MainActivity.this, R.raw.emergency_alarm);
@@ -631,10 +640,13 @@ public class MainActivity extends AppCompatActivity{
     }
 
     private void getSenderfromPacket(){
+        senderBytes = new byte[4];
         sender = "";
         for(int i = 0; i < 4; i++){
-            sender = sender.concat(String.valueOf(data.charAt(i+5))).trim();
+            senderBytes[i] = tempArg0[i+5];
         }
+
+        sender = packetHandler.getID(senderBytes);
 
     }
 

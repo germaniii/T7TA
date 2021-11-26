@@ -40,10 +40,10 @@ public class DataBaseHelper extends SQLiteOpenHelper {
     public void onCreate(SQLiteDatabase db) {
         String createContactsTableStatement = "CREATE TABLE " + CONTACTS_TABLE + "(CONTACT_ID INTEGER PRIMARY KEY AUTOINCREMENT, " +
                                                                                     CONTACT_NAME + " VARCHAR(255), " +
-                                                                                    CONTACT_NUMBER + " VARCHAR(4) UNIQUE, " +
+                                                                                    CONTACT_NUMBER + " VARCHAR(11) UNIQUE, " +
                                                                                     CONTACT_KEY + " VARCHAR(255));";
         String createMessageTableStatement = "CREATE TABLE " + MESSAGES_TABLE + "(MESSAGE_ID INTEGER PRIMARY KEY AUTOINCREMENT, " +
-                                                                                    SENDER_ID + " VARCHAR(4), " +
+                                                                                    SENDER_ID + " VARCHAR(11), " +
                                                                                     MESSAGE + " TEXT, " +
                                                                                     RECEIVED + " VARCHAR(255), " +
                                                                                     SENT + " VARCHAR(255), " +

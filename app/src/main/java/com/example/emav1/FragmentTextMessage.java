@@ -116,12 +116,15 @@ public class FragmentTextMessage extends Fragment {
                     Toast.makeText(context, "Please Fill Up All Fields!", Toast.LENGTH_SHORT).show();
                 }else {
                     if(!isDisabled) {
-                        SMP = "2";
+                        SMP = "3";
                         getSID();
                         getRID();
                         String MESSAGE = message.getText().toString().trim();
                         String MESSAGE_FINAL = MESSAGE;
                         String HK;
+
+                        //text = String.valueOf(Integer.parseInt(text.substring(0,text.length())) + 1);
+                        // To increment SMP
 
                         //   New format:
                         //   | SMP - 1 | RID - 4 | SID - 4 | DATA - 40 | HK - 11 |

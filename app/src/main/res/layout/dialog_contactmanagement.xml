@@ -27,7 +27,7 @@
         android:layout_marginBottom="4dp"
         android:hint="Number"
         android:inputType="number"
-        android:maxLength="4" />
+        android:maxLength="11" />
 
     <EditText
         android:id="@+id/dialog_key"

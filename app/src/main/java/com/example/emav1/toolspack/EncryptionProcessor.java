@@ -7,6 +7,7 @@ import org.bouncycastle.crypto.paddings.PaddedBufferedBlockCipher;
 import org.bouncycastle.crypto.params.KeyParameter;
 
 import java.nio.charset.StandardCharsets;
+import java.security.spec.EncodedKeySpec;
 import java.util.Arrays;
 
 
@@ -21,11 +22,15 @@ public class EncryptionProcessor {
     private String decodedText;
 
     //Variables for all operations
-    private final String key;
+    private String key;
     int packetTotal;
 
+    public EncryptionProcessor(){
+        //none
+    }
+
     //Call this for encrypting purposes -- Sender device
-    public EncryptionProcessor(String inputText, String senderID, String receiverID){
+    public void sendingEncryptionProcessor(String inputText, String senderID, String receiverID){
         this.key = generateKey(senderID, receiverID);
         this.cipherText = performEncrypt(this.key.getBytes(StandardCharsets.UTF_8), inputText);
         this.packetTotal = (int)Math.ceil((double)this.cipherText.length / 40);
@@ -33,7 +38,7 @@ public class EncryptionProcessor {
     }
 
     //Call for decrypting -- Receiver device
-    public EncryptionProcessor(byte[][] receivedCipherText, String senderID, String receiverID){
+    public void receivingEncryptionProcessor(byte[][] receivedCipherText, String senderID, String receiverID){
         this.key = generateKey(senderID, receiverID);
         byte[] receivedCipherTextConcat = concatenatedCipher(receivedCipherText);
         this.decodedText = performDecrypt(this.key.getBytes(StandardCharsets.UTF_8), receivedCipherTextConcat);
