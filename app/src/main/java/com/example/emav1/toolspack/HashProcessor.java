@@ -258,7 +258,7 @@ public class HashProcessor {
 
     @RequiresApi(api = Build.VERSION_CODES.KITKAT)
     public String getHash(String message){
-        databitlen = 392; // 49bytes = 392 bits
+        databitlen = 392; // 49bytes ( + SMP,SID,RID) = 392 bits
         byte[] hashval = new byte[256]; // fixed 256 size
 
         Hash(message.getBytes(), databitlen, hashval); // Perform Hash Function

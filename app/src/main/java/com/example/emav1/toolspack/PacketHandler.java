@@ -21,9 +21,15 @@ public class PacketHandler {
     public void setSID(String sSID){
         this.SID = formatID(sSID);
     }
+    public void setRID(String sRID){
+        this.RID = formatID(sRID);
+    }
 
     public byte[] getSIDBytes(){
         return this.SID;
+    }
+    public byte[] getRIDBytes(){
+        return this.RID;
     }
 
     //constructor for sending operations, call for assembling packets post-encryption
@@ -120,6 +126,10 @@ public class PacketHandler {
 
     public int getNumOfPackets(){
         return this.numOfPackets;
+    }
+
+    public byte[][] getMessageCipher(){
+        return this.messageCipher;
     }
 }
 

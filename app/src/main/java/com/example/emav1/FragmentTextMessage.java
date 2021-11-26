@@ -2,6 +2,7 @@ package com.example.emav1;
 
 import android.content.Context;
 import android.database.Cursor;
+import android.hardware.camera2.TotalCaptureResult;
 import android.hardware.usb.UsbDevice;
 import android.hardware.usb.UsbDeviceConnection;
 import android.hardware.usb.UsbManager;
@@ -25,9 +26,12 @@ import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.example.emav1.toolspack.EncryptionProcessor;
 import com.example.emav1.toolspack.HashProcessor;
+import com.example.emav1.toolspack.PacketHandler;
 import com.felhr.usbserial.UsbSerialDevice;
 
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 
 public class FragmentTextMessage extends Fragment {
@@ -52,8 +56,16 @@ public class FragmentTextMessage extends Fragment {
     static int repTimer = 0; // max of 2
     static boolean isReceivedConfirmationByte = false;
 
+    byte[][] dividedCipherText;
+    byte[][] hash;
+    byte[][] toSendPacket;
+
     Context context;
     HashProcessor hashProcessor = new HashProcessor();
+    PacketHandler packetHandler = new PacketHandler();
+    EncryptionProcessor encryptionProcessor = new EncryptionProcessor();
+    EncryptionProcessor decryptionProcessor = new EncryptionProcessor();
+    int packetNumber;
 
     /*final Handler handler = new Handler();
 
@@ -136,27 +148,55 @@ public class FragmentTextMessage extends Fragment {
                         }
 
                         String textMessage = SMP+RID+SID+MESSAGE_FINAL;
-                        HK = hashProcessor.getHash(textMessage);
-                        textPacket = textMessage + HK;
-                        MESSAGE_FINAL_2 = MESSAGE_FINAL;
-                        HK2 = HK;
+                        encryptionProcessor.sendingEncryptionProcessor(MESSAGE, SID, RID);
+                        dividedCipherText = encryptionProcessor.getDividedCipherText();
+                        hash = new byte[encryptionProcessor.getPacketTotal()][11];
+                        toSendPacket = new byte[encryptionProcessor.getPacketTotal()][60];
+                        packetHandler.setSID(SID);
+                        packetHandler.setRID(RID);
 
-                        //if message entered is more than 40 characters, splice. <--- Optional
-                        /*
-                        if(string.length() > 40){
-                            int numberOfPackets = string.length()/44;
-                            for(int i = 0; i < numberOfPackets; i++){
-                                //this code will loop until all packets are sent.
-                            }
+
+                        /*byte[] sendBytes = new byte[60];
+                        packetHandler.getSenderID();
+                        System.arraycopy("00000".getBytes(), 0, sendBeaconBytes, 0, 5);
+                        System.arraycopy(packetHandler.getSIDBytes(), 0, sendBeaconBytes, 5, 4);
+                        System.arraycopy("0000000000000000000000000000000000000000".getBytes(), 0, sendBeaconBytes, 9, 40);
+
+                        String string = "0" + "0000" + new String(packetHandler.getSIDBytes(), StandardCharsets.UTF_8)+ "00000" + "00000" + "00000" + // Data
+                                "00000" + "00000" + "00000" + "00000" + "00000"; // + "123456" + "78911"
+
+                        String beaconHash = hashProcessor.getHash(string);
+                        String beaconMessage = string + beaconHash;
+
+                        System.arraycopy(beaconHash.getBytes(), 0, sendBeaconBytes, 49, 11);
+
+                         */
+
+
+                        for(int i = 0; i < encryptionProcessor.getPacketTotal(); i++){
+                            byte[] tempPacket = new byte[49];
+                            System.arraycopy(String.valueOf(i+3).getBytes(), 0, tempPacket, 0,1);
+                            System.arraycopy(packetHandler.getSIDBytes(), 0, tempPacket, 1, 4);
+                            System.arraycopy(packetHandler.getRIDBytes(), 0, tempPacket, 5, 4);
+                            System.arraycopy(dividedCipherText[i], 0, tempPacket, 9, 40);
+                            hash[i] = hashProcessor.getHash(new String(tempPacket, StandardCharsets.UTF_8)).getBytes();
                         }
-                        */
+
+                        packetHandler.setSendParameters(SID, RID, dividedCipherText, hash);
+
+                        toSendPacket = packetHandler.getPacketsForSending();
+                        packetNumber = packetHandler.getNumOfPackets();
+
+                        tvAppend(textView, "\n\n***Sending***" +
+                                "\nSID : " + packetHandler.getSenderID() +
+                                "\nRID : " + packetHandler.getReceiverID() +
+                                "\nEncryptedMessage: " +
+                                "\nHash : ---" );
 
 
-
+                        countDownTimer.start();
                         //Should use the serial port from MainActivity to reference the registered serialPort Arduino
-                        MainActivity.serialPort.write((textPacket).getBytes());
-                        tvAppend(textView, "ML:" + textPacket.length() +
-                                "\n" + textPacket + "\n");
+                        //MainActivity.serialPort.write((textPacket).getBytes());
                         Toast.makeText(context, "Transmitted", Toast.LENGTH_SHORT).show();
 
                         // prevent multiple send touches
@@ -165,7 +205,6 @@ public class FragmentTextMessage extends Fragment {
                         //Start repitition Counter
 
                         //handler.postRunnable
-                        countDownTimer.start();
                     }else{
                         Toast.makeText(context, "A message is still sending, please try again later.", Toast.LENGTH_SHORT).show();
                     }
@@ -177,20 +216,34 @@ public class FragmentTextMessage extends Fragment {
                 Toast.makeText(context, "Synchronizing EMA Device, Please Wait", Toast.LENGTH_SHORT).show();
         }catch (Exception e){
             //Toast.makeText(context, "Please Connect EMA Device", Toast.LENGTH_SHORT).show();
+            tvAppend(textView, e.toString());
         }
     }
 
-     CountDownTimer countDownTimer = new CountDownTimer(3000, 1000) {
+     CountDownTimer countDownTimer = new CountDownTimer(1000, 1000) {
         @Override
         public void onTick(long l) {
-            if(isReceivedConfirmationByte) // this will stop the counting
+            if (isReceivedConfirmationByte)// this will stop the counting
                 repTimer = 4;
+
         }
 
         @Override
         public void onFinish() {
-            MainActivity.serialPort.write((SMP + RID + SID + MESSAGE_FINAL_2 + HK2).getBytes());
-            countDownRepeater();
+            if(packetNumber < packetHandler.getNumOfPackets()){
+                Toast.makeText(context, "Sent Packet [" + (packetNumber + 1) + " / " + toSendPacket.length +"]", Toast.LENGTH_SHORT).show();
+                MainActivity.serialPort.write(toSendPacket[packetNumber]);
+                packetNumber++;
+                countDownTimer.cancel();
+                countDownTimer.start();
+            }else{
+                packetNumber = 0;
+                countDownTimer.cancel();
+            }
+            if(packetNumber == packetHandler.getNumOfPackets()) {
+                countDownRepeater();
+                packetNumber = 0;
+            }
         }
     };
 
@@ -199,6 +252,7 @@ public class FragmentTextMessage extends Fragment {
             countDownTimer.cancel();
             isDisabled = false;
             repTimer = 0;
+            packetNumber = 0;
             Toast.makeText(context, "Successfully sent message to "
                     + RID, Toast.LENGTH_SHORT).show();
 
