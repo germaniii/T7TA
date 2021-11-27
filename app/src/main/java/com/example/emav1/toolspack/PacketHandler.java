@@ -1,6 +1,11 @@
 package com.example.emav1.toolspack;
 
+import android.os.Build;
+
+import androidx.annotation.RequiresApi;
+
 import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
 
 public class PacketHandler {
 
@@ -14,6 +19,9 @@ public class PacketHandler {
     byte[][] packetHash;
 
     byte[][] receivedData;
+
+    HashProcessor hashProcessor = new HashProcessor();
+    byte[] noHashPacket = new byte[49];
 
     public PacketHandler(){
     }
@@ -36,12 +44,11 @@ public class PacketHandler {
     //args: SID and RID     = must be 4B each
     //      messageCipher   = must be 60B
     //      packetHash      = must be 11B
-    public void setSendParameters(String SID, String RID, byte[][] messageCipher, byte[][] packetHash){
+    public void setSendParameters(String SID, String RID/*, byte[][] packetHash*/){
         this.SID = formatID(SID);
         this.RID = formatID(RID);
-        this.messageCipher = messageCipher;
-        this.packetHash = packetHash;
-        this.numOfPackets= messageCipher.length;
+        //this.messageCipher = messageCipher;
+        //this.packetHash = packetHash;
     }
     //constructor for receiving operations, call for disassembling packets pre-decryption
     //args: receivedData = must be 60B, input stream from ArduinoNano
@@ -62,13 +69,17 @@ public class PacketHandler {
     //      for (i = 0 ; o < numOfPackets ; i++)
     //          SendToArduinoFunction(getPacketsForSending[i]);
     //
+    @RequiresApi(api = Build.VERSION_CODES.KITKAT)
     public byte[][] getPacketsForSending(){
         byte[] SMP = new byte[numOfPackets];
-        byte SMPvar = 0x00;
+        byte SMPvar = 0x33;
         byte[][] packetsForSending = new byte[this.numOfPackets][60];
+        this.packetHash = new byte[this.numOfPackets][11];
 
-        for (int i = 0 ; i < this.numOfPackets - 1 ; i++, SMPvar++)
+        for (int i = 0 ; i < this.numOfPackets - 1 ; i++) {
             SMP[i] = SMPvar;
+            SMPvar+=0x01;
+        }
 
         SMP[numOfPackets - 1] = packetEOF;
         for (int i = 0 ; i < this.numOfPackets ; i++){
@@ -77,6 +88,8 @@ public class PacketHandler {
             System.arraycopy(this.SID, 0, packetsForSending[i], 1, 4);
             System.arraycopy(this.RID, 0, packetsForSending[i], 5, 4);
             System.arraycopy(this.messageCipher[i], 0, packetsForSending[i], 9, 40);
+            System.arraycopy(packetsForSending[i], 0, this.noHashPacket, 0, 49);
+            this.packetHash[i] = hashProcessor.getHash(new String(this.noHashPacket, StandardCharsets.UTF_8)).getBytes();
             System.arraycopy(this.packetHash[i], 0, packetsForSending[i], 49, 11);
         }
         return packetsForSending;

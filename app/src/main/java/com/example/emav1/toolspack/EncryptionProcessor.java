@@ -1,5 +1,9 @@
 package com.example.emav1.toolspack;
 
+import android.os.Build;
+
+import androidx.annotation.RequiresApi;
+
 import org.bouncycastle.crypto.CryptoException;
 import org.bouncycastle.crypto.engines.TwofishEngine;
 import org.bouncycastle.crypto.modes.CBCBlockCipher;
@@ -30,18 +34,17 @@ public class EncryptionProcessor {
     }
 
     //Call this for encrypting purposes -- Sender device
+    @RequiresApi(api = Build.VERSION_CODES.KITKAT)
     public void sendingEncryptionProcessor(String inputText, String senderID, String receiverID){
         this.key = generateKey(senderID, receiverID);
         this.cipherText = performEncrypt(this.key.getBytes(StandardCharsets.UTF_8), inputText);
-        this.packetTotal = (int)Math.ceil((double)this.cipherText.length / 40);
-        this.dividedCipherText = splitCipherForPacket(this.cipherText, this.packetTotal);
     }
 
     //Call for decrypting -- Receiver device
-    public void receivingEncryptionProcessor(byte[][] receivedCipherText, String senderID, String receiverID){
+    @RequiresApi(api = Build.VERSION_CODES.KITKAT)
+    public void receivingEncryptionProcessor(byte[] receivedCipherText, String senderID, String receiverID){
         this.key = generateKey(senderID, receiverID);
-        byte[] receivedCipherTextConcat = concatenatedCipher(receivedCipherText);
-        this.decodedText = performDecrypt(this.key.getBytes(StandardCharsets.UTF_8), receivedCipherTextConcat);
+        this.decodedText = performDecrypt(this.key.getBytes(StandardCharsets.UTF_8), receivedCipherText);
     }
 
     public byte[] getCipherText() {
@@ -117,8 +120,23 @@ public class EncryptionProcessor {
         if (numOfPackets > 1) {
             int fromIndex = 0;
             int toIndex = fromIndex + 40;
+            int numofpadding=0;
+            int numofnonzero=0;
 
             for (int i = 0; i < numOfPackets; i++) {
+                if(i == numOfPackets-1){
+                    for(int j = 0; j < cipherTextOriginalBlock.length; j++){
+                        if(cipherTextOriginalBlock[j] == 0)
+                            numofpadding+=1;
+                        else
+                            numofnonzero+=1;
+                    }
+
+                    for(int j = 0; j<numofpadding; j++){
+                        cipherTextOriginalBlock[j+numofnonzero] = 0x2E;
+                    }
+
+                }
                 finalCipherBlock[i] = Arrays.copyOfRange(cipherTextOriginalBlock, fromIndex, toIndex); //since 40b per packet
                 fromIndex = toIndex;
                 toIndex = fromIndex + 40;
@@ -130,24 +148,4 @@ public class EncryptionProcessor {
         return finalCipherBlock;
     }
 
-
-    private byte[] concatenatedCipher(byte[][] receivedCipher){
-        if (receivedCipher.length > 1){
-            int numOfPackets, numOfElements, padding = 0;
-            numOfPackets = receivedCipher.length;
-            numOfElements = numOfPackets * 40;
-
-            byte[] paddedCipher = new byte[numOfElements];
-            int lastIndexPos = 0;
-            for (int i = 0; i < numOfPackets ; i++){
-                System.arraycopy(receivedCipher[i], 0, paddedCipher, lastIndexPos, 40);
-                lastIndexPos += 40;
-            }
-            for (int i = paddedCipher.length-1; i > 1 && paddedCipher[i] == 0 ; i--, padding++);
-            byte[] removedZeroPadding = new byte[numOfElements - padding];
-            System.arraycopy(paddedCipher, 0, removedZeroPadding, 0, numOfElements - padding);
-            return removedZeroPadding;
-        }
-        return receivedCipher[0];
-    }
 }
