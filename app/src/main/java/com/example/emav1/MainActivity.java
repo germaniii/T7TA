@@ -191,7 +191,6 @@ public class MainActivity extends AppCompatActivity{
                                     // ... store to messages table in database encrypted
                                     // if(regular message)
 
-
                                     byte[] cipherInBase64 = new byte[43];
                                     System.arraycopy(tempArg0,9,cipherInBase64,0,43);
                                     String base64CipherinString = new String(cipherInBase64, StandardCharsets.UTF_8);
@@ -228,16 +227,19 @@ public class MainActivity extends AppCompatActivity{
                                                 System.arraycopy(SMP.getBytes(), 0, sendConfirmBytes, 0, 1);
                                                 System.arraycopy(packetHandler.getRIDBytes(), 0, sendConfirmBytes, 1, 4);
                                                 System.arraycopy(packetHandler.getSIDBytes(), 0, sendConfirmBytes, 5, 4);
-                                                System.arraycopy("0000000000000000000000000000000000000000".getBytes(), 0, sendConfirmBytes, 9, 40);
+                                                System.arraycopy("0000000000000000000000000000000000000000000".getBytes(), 0, sendConfirmBytes, 9, 40);
 
                                                 String string = new String(sendConfirmBytes, StandardCharsets.UTF_8);
                                                 String hash = hashProcessor.getHash(string);
                                                 string += hash;
-                                                System.arraycopy(hash.getBytes(), 0, sendConfirmBytes, 49, 11);
+                                                System.arraycopy(hash.getBytes(), 0, sendConfirmBytes, 52, 8);
+
+                                                serialPort.write(sendConfirmBytes);
+
                                                 tvAppend(textView, "\n\nConfirmPacket : " + string + "\nPacketLen: " +  "\nHash: " + hash);
 
                                             }
-                                        }, 1000);
+                                        }, 500);
 
 
                                         // THis line is for debugging purposes
@@ -401,12 +403,12 @@ public class MainActivity extends AppCompatActivity{
             System.arraycopy("0000000000000000000000000000000000000000".getBytes(), 0, sendBeaconBytes, 9, 40);
 
             String string = "0" + "0000" + new String(packetHandler.getSIDBytes(), StandardCharsets.UTF_8) + "00000" + "00000" + "00000" + // Data
-                  "00000" + "00000" + "00000" + "00000" + "00000"; // + "123456" + "78911"
+                  "00000" + "00000" + "00000" + "00000" + "00000" + "000"; // + "123456" + "78911"
 
             String beaconHash = hashProcessor.getHash(string);
             String beaconMessage = string + beaconHash;
 
-            System.arraycopy(beaconHash.getBytes(), 0, sendBeaconBytes, 49, 11);
+            System.arraycopy(beaconHash.getBytes(), 0, sendBeaconBytes, 52, 8);
 
             serialPort.write(sendBeaconBytes);
             tvAppend(textView, "\nINFO:\n" + beaconMessage + "\nSID: " + packetHandler.getSenderID() + "\nMessageLen: " + string.length() + "\nPacketLen: " + new String(sendBeaconBytes, StandardCharsets.UTF_8).length());
@@ -738,7 +740,7 @@ public class MainActivity extends AppCompatActivity{
     private void getMessagefromPacket(){
         message = "";
 
-        for(int i = 0; i < 40; i++){
+        for(int i = 0; i < 43; i++){
                 message = message.concat(String.valueOf(data.charAt(i+9)));
         }
 
@@ -751,12 +753,12 @@ public class MainActivity extends AppCompatActivity{
         hashFromPacket = "";
         computedHash = "";
 
-        for(int i = 0; i < 49; i++){
+        for(int i = 0; i < 52; i++){
             noHashPart = noHashPart.concat(String.valueOf(data.charAt(i)));
         }
 
-        for(int i = 0; i < 11; i++){
-            hashFromPacket = hashFromPacket.concat(String.valueOf(data.charAt(i+49)));
+        for(int i = 0; i < 8; i++){
+            hashFromPacket = hashFromPacket.concat(String.valueOf(data.charAt(i+52)));
         }
 
         computedHash = hashProcessor.getHash(noHashPart);

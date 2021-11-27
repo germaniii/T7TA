@@ -162,7 +162,7 @@ public class FragmentTextMessage extends Fragment {
                         for (byte i = 0; i < totalpackets; i++) {
                             encryptionProcessor.sendingEncryptionProcessor(messageArray[i], SID, RID);
                             cipherText = encryptionProcessor.getCipherText();
-                            String cipherbase64 = Base64.encodeToString(encryptionProcessor.getCipherText(), Base64.NO_WRAP | Base64.NO_PADDING | Base64.URL_SAFE | Base64.NO_CLOSE);
+                            String cipherbase64 = Base64.encodeToString(cipherText, Base64.NO_WRAP | Base64.NO_PADDING | Base64.URL_SAFE | Base64.NO_CLOSE);
                             tvAppend(textView, "\nBase64Cipher: " + cipherbase64 +
                                     "\nBase64CipherLen: " + cipherbase64.length());
 
@@ -175,12 +175,13 @@ public class FragmentTextMessage extends Fragment {
                             System.arraycopy(cipherbase64.getBytes(), 0, sendTextBytes[i], 9, 43);
 
                             String string = new String(sendTextBytes[i], StandardCharsets.UTF_8);
-                            hash = hashProcessor.getHash(string).substring(0,8);
+                            hash = hashProcessor.getHash(string);
                             string += hash;
 
                             System.arraycopy(hash.getBytes(), 0, sendTextBytes[0], 52, 8);
 
                             //MainActivity.serialPort.write(sendTextBytes[0]);
+                            packetNumber=0;
                             tvAppend(textView, "\n\nPacket: " + string + "\nPacketLen: " + (SMP.getBytes().length + packetHandler.getRIDBytes().length + packetHandler.getSIDBytes().length + cipherbase64.length() + hash.getBytes().length) + "\nCipher: " + new String(cipherText, StandardCharsets.UTF_8) + "\nCipherLen: " + cipherText.length + "\nHash: " + hash);
                             SMP = String.valueOf(Integer.parseInt(SMP) + 1);
                         }
@@ -221,8 +222,10 @@ public class FragmentTextMessage extends Fragment {
         public void onFinish() {
             //try {
                 if (packetNumber < totalpackets) {
-                    MainActivity.serialPort.write(new String(sendTextBytes[packetNumber], StandardCharsets.UTF_8).getBytes(StandardCharsets.UTF_8));
-                    Toast.makeText(context, "Sent Packet " + (packetNumber + 1) + "/" + sendTextBytes.length +" try " + (repTimer+1), Toast.LENGTH_SHORT).show();
+                    MainActivity.serialPort.write(sendTextBytes[packetNumber]);
+                    Toast.makeText(context, "\nSent Packet Length: " + sendTextBytes[packetNumber].length, Toast.LENGTH_SHORT).show();
+                    //tvAppend(textView,"\nSent Packet " + packetNumber + ": " + new String(sendTextBytes[packetNumber],StandardCharsets.UTF_8) + "\nSent Packet Length: " + sendTextBytes.length);
+                    //Toast.makeText(context, "Sent Packet " + (packetNumber + 1) + "/" + sendTextBytes.length +" try " + (repTimer+1), Toast.LENGTH_SHORT).show();
                     packetNumber++;
                     resendTimer.cancel();
                     resendTimer.start();
