@@ -31,6 +31,7 @@ import android.os.CountDownTimer;
 import android.os.Handler;
 import android.os.Looper;
 import android.text.method.ScrollingMovementMethod;
+import android.util.Base64;
 import android.util.Log;
 import android.view.View;
 import android.widget.ImageButton;
@@ -190,6 +191,18 @@ public class MainActivity extends AppCompatActivity{
                                     // ... store to messages table in database encrypted
                                     // if(regular message)
 
+
+                                    byte[] cipherInBase64 = new byte[43];
+                                    System.arraycopy(tempArg0,9,cipherInBase64,0,43);
+                                    String base64CipherinString = new String(cipherInBase64, StandardCharsets.UTF_8);
+                                    byte[] encryptedData = Base64.decode(base64CipherinString, Base64.NO_WRAP | Base64.NO_PADDING | Base64.URL_SAFE | Base64.NO_CLOSE);
+
+                                    encryptionProcessor.receivingEncryptionProcessor(encryptedData, sender, num);
+                                    decodedData = encryptionProcessor.getDecodedText();
+                                    storeMessage(sender, message);
+                                    tvAppend(textView, "\nReceived Single Packet Text Message");
+
+
                                     if(packetNumber == 0){
                                         isReceivingTextPacket = true;
                                         tvAppend(textView, "\nReceiving Packets");
@@ -201,24 +214,6 @@ public class MainActivity extends AppCompatActivity{
                                         tvAppend(textView, "\nNot Stop Byte");
 
                                     if(isPacketsComplete) {
-                                        if(packetNumber == 2){
-                                            byte[] encryptedData = new byte[32];
-                                            System.arraycopy(tempRecvPacket,0,encryptedData,0,32);
-
-                                            encryptionProcessor.receivingEncryptionProcessor(encryptedData, sender, num);
-                                            decodedData = encryptionProcessor.getDecodedText();
-                                            storeMessage(sender, message);
-                                            tvAppend(textView, "\nReceived Single Packet Text Message");
-                                        }else{
-                                            byte[] encryptedData = new byte[240];
-                                            System.arraycopy(tempRecvPacket,0,encryptedData,0,tempRecvPacket.length);
-                                            encryptionProcessor.receivingEncryptionProcessor(encryptedData,sender,num);
-                                            decodedData = encryptionProcessor.getDecodedText();
-                                            storeMessage(sender, message);
-                                            tvAppend(textView, "\nReceived Multi Packet Text Message");
-                                        }
-
-
                                         final Handler handler = new Handler(Looper.getMainLooper());
                                         handler.postDelayed(new Runnable() {
                                             @Override
@@ -239,7 +234,7 @@ public class MainActivity extends AppCompatActivity{
                                                 String hash = hashProcessor.getHash(string);
                                                 string += hash;
                                                 System.arraycopy(hash.getBytes(), 0, sendConfirmBytes, 49, 11);
-                                                tvAppend(textView, "\n\nPacket : " + string + "\nPacketLen: " +  "\nHash: " + hash);
+                                                tvAppend(textView, "\n\nConfirmPacket : " + string + "\nPacketLen: " +  "\nHash: " + hash);
 
                                             }
                                         }, 1000);
@@ -256,9 +251,7 @@ public class MainActivity extends AppCompatActivity{
                                         isAbletoNotify = true;
 
                                     }else{
-                                        System.arraycopy(tempArg0, 9, tempRecvPacket, 40 *packetNumber, 40);
                                         packetNumber += 1;
-
                                     }
                                     if(isAbletoNotify) {
                                         // DO THIS AFTER CONFIRMING

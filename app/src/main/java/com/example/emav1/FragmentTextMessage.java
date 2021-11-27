@@ -16,6 +16,7 @@ import androidx.fragment.app.Fragment;
 
 import android.os.CountDownTimer;
 import android.os.Handler;
+import android.util.Base64;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -60,6 +61,7 @@ public class FragmentTextMessage extends Fragment {
 
     byte[] cipherText;
     String hash;
+    String[] messageArray;
 
     Context context;
     HashProcessor hashProcessor = new HashProcessor();
@@ -125,162 +127,80 @@ public class FragmentTextMessage extends Fragment {
     @RequiresApi(api = Build.VERSION_CODES.KITKAT)
     public void onClickSendButton(View view) {
         try {
-            if (sendButton.isEnabled()){
+            if (sendButton.isEnabled()) {
                 if ((message.getText().length() == 0) || number.getSelectedItem() == "") {
                     Toast.makeText(context, "Please Fill Up All Fields!", Toast.LENGTH_SHORT).show();
-                }else {
-                    if(!isDisabled) {
+                } else {
+                    if (!isDisabled) {
                         SMP = "3";
                         getSID();
                         getRID();
                         String MESSAGE = message.getText().toString().trim();
                         String MESSAGE_FINAL = MESSAGE;
+
+                        //if message entered is less than 31 characters, add whitespace characters to fill up the packet.
+                        for (int i = 0; i < (31 - MESSAGE.length() % 31); i++)
+                            MESSAGE_FINAL = MESSAGE_FINAL.concat(".");
+                        totalpackets = (int) Math.ceil((double) MESSAGE_FINAL.length() / 31);
+                        messageArray = new String[totalpackets];
+
+                        for (int i = 0; i < totalpackets; i++) {
+                            messageArray[i] = MESSAGE_FINAL.substring((i * 31), ((i * 31) + 31));
+                            tvAppend(textView, "\nPacket " + i + ": " + messageArray[i]);
+                        }
+                        packetHandler.setSendParameters(SID, RID);
+                        sendTextBytes = new byte[totalpackets][60];
+
                         //text = String.valueOf(Integer.parseInt(text.substring(0,text.length())) + 1);
                         // To increment SMP
 
                         //   New format:
                         //   | SMP - 1 | RID - 4 | SID - 4 | DATA - 40 | HK - 11 |
+                        //   as of 11/27/2021 -- increase data
+                        //  | SMP - 1 | RID - 4 | SID - 4 | DATA - 43 | HK - 8 |
 
-                        //if message entered is less than 40 characters, add whitespace characters to fill up the packet.
-                        if (MESSAGE.length() < 32) {
-                            for (int i = 0; i < (31 - MESSAGE.length()); i++)
-                                MESSAGE_FINAL = MESSAGE_FINAL.concat(".");
-                            totalpackets = 1;
-
-                            encryptionProcessor.sendingEncryptionProcessor(MESSAGE_FINAL,SID,RID);
+                        for (byte i = 0; i < totalpackets; i++) {
+                            encryptionProcessor.sendingEncryptionProcessor(messageArray[i], SID, RID);
                             cipherText = encryptionProcessor.getCipherText();
-                            packetHandler.setSendParameters(SID,RID);
-                            sendTextBytes = new byte[1][60];
-                            SMP = "8";
+                            String cipherbase64 = Base64.encodeToString(encryptionProcessor.getCipherText(), Base64.NO_WRAP | Base64.NO_PADDING | Base64.URL_SAFE | Base64.NO_CLOSE);
+                            tvAppend(textView, "\nBase64Cipher: " + cipherbase64 +
+                                    "\nBase64CipherLen: " + cipherbase64.length());
 
-                            System.arraycopy(SMP.getBytes(), 0, sendTextBytes[0], 0, 1);
-                            System.arraycopy(packetHandler.getRIDBytes(), 0, sendTextBytes[0], 1, 4);
-                            System.arraycopy(packetHandler.getSIDBytes(), 0, sendTextBytes[0], 5, 4);
-                            System.arraycopy(cipherText, 0, sendTextBytes[0], 9, 32);
-                            System.arraycopy("........".getBytes(), 0, sendTextBytes[0], 41, 8);
+                            if (totalpackets == 1 || (i == totalpackets-1))
+                                SMP = "8";
 
-                            String string = new String(sendTextBytes[0], StandardCharsets.UTF_8);
-                            hash = hashProcessor.getHash(string);
+                            System.arraycopy(SMP.getBytes(StandardCharsets.UTF_8), 0, sendTextBytes[i], 0, 1);
+                            System.arraycopy(packetHandler.getRIDBytes(), 0, sendTextBytes[i], 1, 4);
+                            System.arraycopy(packetHandler.getSIDBytes(), 0, sendTextBytes[i], 5, 4);
+                            System.arraycopy(cipherbase64.getBytes(), 0, sendTextBytes[i], 9, 43);
+
+                            String string = new String(sendTextBytes[i], StandardCharsets.UTF_8);
+                            hash = hashProcessor.getHash(string).substring(0,8);
                             string += hash;
 
-                            System.arraycopy(hash.getBytes(), 0, sendTextBytes[0], 49, 11);
+                            System.arraycopy(hash.getBytes(), 0, sendTextBytes[0], 52, 8);
 
-                            MainActivity.serialPort.write(sendTextBytes[0]);
-                            tvAppend(textView, "\n\nPacket: " + string + "\nPacketLen: " + (SMP.getBytes().length+packetHandler.getRIDBytes().length+packetHandler.getSIDBytes().length+cipherText.length+hash.getBytes().length) + "\nCipher: " + new String(cipherText, StandardCharsets.UTF_8) + "\nCipherLen: " + cipherText.length+ "\nHash: " + hash);
-                            SMP = String.valueOf(SMP) + 1;
-                        }else if(MESSAGE.length() < 80){
-                            for (int i = 0; i < (79 - MESSAGE.length()); i++)
-                                MESSAGE_FINAL = MESSAGE_FINAL.concat(".");
-                            packetNumber = 0;
-                            totalpackets = 2;
-                            sendTextBytes = new byte[totalpackets][60];
-
-                            encryptionProcessor.sendingEncryptionProcessor(MESSAGE_FINAL,SID,RID);
-                            cipherText = encryptionProcessor.getCipherText();
-                            packetHandler.setSendParameters(SID,RID);
-
-                            for(byte i = 0; i < totalpackets; i++) {
-                                if(i == (totalpackets-1))
-                                    SMP = "8";
-                                System.arraycopy(SMP.getBytes(), 0, sendTextBytes[i], 0, 1);
-                                System.arraycopy(packetHandler.getRIDBytes(), 0, sendTextBytes[i], 1, 4);
-                                System.arraycopy(packetHandler.getSIDBytes(), 0, sendTextBytes[i], 5, 4);
-                                System.arraycopy(cipherText, i*40, sendTextBytes[i], 9, 40);
-
-                                String string = new String(sendTextBytes[i], StandardCharsets.UTF_8);
-                                hash = hashProcessor.getHash(string);
-                                string += hash;
-                                System.arraycopy(hash.getBytes(), 0, sendTextBytes[i], 49, 11);
-
-                                tvAppend(textView, "\n\nPacket " + i + ": " + string + "\nPacketLen: " + (SMP.getBytes().length+packetHandler.getRIDBytes().length+packetHandler.getSIDBytes().length+cipherText.length+hash.getBytes().length) + "\nCipher: " + new String(cipherText, StandardCharsets.UTF_8) + "\nCipherLen: " + cipherText.length + "\nHash: " + hash);
-                                SMP = String.valueOf(SMP) + 1;
-                            }
-                            isDisabled = true;
-                            resendTimer.start();
-
-                        }else if(MESSAGE.length() <= 160){
-                            for (int i = 0; i < (160 - MESSAGE.length()); i++)
-                                MESSAGE_FINAL = MESSAGE_FINAL.concat(".");
-                            packetNumber = 0;
-                            totalpackets = 4;
-                            sendTextBytes = new byte[totalpackets][60];
-
-                            encryptionProcessor.sendingEncryptionProcessor(MESSAGE_FINAL,SID,RID);
-                            cipherText = encryptionProcessor.getCipherText();
-                            packetHandler.setSendParameters(SID,RID);
-
-                            for(int i = 0; i < totalpackets; i++) {
-                                if(i == (totalpackets-1))
-                                    SMP = "8";
-
-                                System.arraycopy(SMP.getBytes(), 0, sendTextBytes[i], 0, 1);
-                                System.arraycopy(packetHandler.getRIDBytes(), 0, sendTextBytes[i], 1, 4);
-                                System.arraycopy(packetHandler.getSIDBytes(), 0, sendTextBytes[i], 5, 4);
-                                System.arraycopy(cipherText, i*40, sendTextBytes[i], 9, 40);
-
-                                String string = new String(sendTextBytes[i], StandardCharsets.UTF_8);
-                                hash = hashProcessor.getHash(string);
-                                string += hash;
-
-                                System.arraycopy(hash.getBytes(), 0, sendTextBytes[i], 49, 11);
-                                tvAppend(textView, "\n\nPacket " + i + ": " + string + "\nPacketLen: " + (SMP.getBytes().length+packetHandler.getRIDBytes().length+packetHandler.getSIDBytes().length+cipherText.length+hash.getBytes().length) + "\nCipher: " + new String(cipherText, StandardCharsets.UTF_8) + "\nCipherLen: " + cipherText.length + "\nHash: " + hash);
-                                SMP = String.valueOf(SMP) + 1;
-                            }
-                            isDisabled = true;
-                            resendTimer.start();
-                        } else if(MESSAGE.length() < 240){
-                            for (int i = 0; i < (239 - MESSAGE.length()); i++)
-                                MESSAGE_FINAL = MESSAGE_FINAL.concat(".");
-                            packetNumber = 0;
-                            totalpackets = 240/40;
-                            sendTextBytes = new byte[totalpackets][60];
-
-                            encryptionProcessor.sendingEncryptionProcessor(MESSAGE_FINAL,SID,RID);
-                            cipherText = encryptionProcessor.getCipherText();
-                            packetHandler.setSendParameters(SID,RID);
-
-                            for(int i = 0; i < totalpackets; i++) {
-                                if(i == (totalpackets-1))
-                                    SMP = "8";
-                                else
-                                    SMP = String.valueOf(SMP) + 1;
-                                System.arraycopy(SMP, 0, sendTextBytes[i], 0, 1);
-                                System.arraycopy(packetHandler.getRIDBytes(), 0, sendTextBytes[i], 1, 4);
-                                System.arraycopy(packetHandler.getSIDBytes(), 0, sendTextBytes[i], 5, 4);
-                                System.arraycopy(cipherText, i*40, sendTextBytes[i], 9, 40);
-
-                                String string = new String(sendTextBytes[i], StandardCharsets.UTF_8);
-                                hash = hashProcessor.getHash(string);
-                                string += hash;
-
-                                System.arraycopy(hash.getBytes(), 0, sendTextBytes[i], 49, 11);
-                                tvAppend(textView, "\n\nPacket " + i + ": " + string + "\nPacketLen: " + (SMP.getBytes().length+packetHandler.getRIDBytes().length+packetHandler.getSIDBytes().length+cipherText.length+hash.getBytes().length) + "\nCipher: " + new String(cipherText, StandardCharsets.UTF_8) + "\nCipherLen: " + cipherText.length + "\nHash: " + hash);
-                            }
-                            isDisabled = true;
-                            resendTimer.start();
-
+                            //MainActivity.serialPort.write(sendTextBytes[0]);
+                            tvAppend(textView, "\n\nPacket: " + string + "\nPacketLen: " + (SMP.getBytes().length + packetHandler.getRIDBytes().length + packetHandler.getSIDBytes().length + cipherbase64.length() + hash.getBytes().length) + "\nCipher: " + new String(cipherText, StandardCharsets.UTF_8) + "\nCipherLen: " + cipherText.length + "\nHash: " + hash);
+                            SMP = String.valueOf(Integer.parseInt(SMP) + 1);
                         }
+                        isDisabled = true;
+                        resendTimer.start();
 
-                        //Should use the serial port from MainActivity to reference the registered serialPort Arduino
-                        //MainActivity.serialPort.write((textPacket).getBytes());
-                        // prevent multiple send touches
-
-                        //Start repitition Counter
-
-                        //handler.postRunnable
-                    }else{
+                    } else {
                         Toast.makeText(context, "A message is still sending, please try again later.", Toast.LENGTH_SHORT).show();
                     }
 
                     //Countdown timer to wait for variable change (confirmation byte received.)
                     // Max repetition would be 3? times
                 }
-            }else
+            } else
                 Toast.makeText(context, "Synchronizing EMA Device, Please Wait", Toast.LENGTH_SHORT).show();
         }catch (Exception e){
             Toast.makeText(context, "Please Connect EMA Device", Toast.LENGTH_SHORT).show();
-            tvAppend(textView, "\n" + e.toString());
-
+            isDisabled = false;
+            resendTimer.cancel();
+            packetNumber = 0;
         }
     }
 
@@ -296,12 +216,13 @@ public class FragmentTextMessage extends Fragment {
 
         }
 
+        @RequiresApi(api = Build.VERSION_CODES.KITKAT)
         @Override
         public void onFinish() {
-            try {
+            //try {
                 if (packetNumber < totalpackets) {
+                    MainActivity.serialPort.write(new String(sendTextBytes[packetNumber], StandardCharsets.UTF_8).getBytes(StandardCharsets.UTF_8));
                     Toast.makeText(context, "Sent Packet " + (packetNumber + 1) + "/" + sendTextBytes.length +" try " + (repTimer+1), Toast.LENGTH_SHORT).show();
-                    MainActivity.serialPort.write(sendTextBytes[packetNumber]);
                     packetNumber++;
                     resendTimer.cancel();
                     resendTimer.start();
@@ -313,9 +234,13 @@ public class FragmentTextMessage extends Fragment {
                     countDownRepeater();
                     packetNumber = 0;
                 }
-            }catch (Exception e){
+            /*}catch (Exception e){
                 Toast.makeText(context, "Please connect EMA device!", Toast.LENGTH_SHORT).show();
+                packetNumber = 0;
+                resendTimer.cancel();
             }
+
+             */
         }
     };
 
