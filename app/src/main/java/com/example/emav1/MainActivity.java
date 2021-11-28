@@ -340,6 +340,7 @@ public class MainActivity extends AppCompatActivity{
     };
 
     // This function handles what happens when the beacon mode button is clicked.
+    @RequiresApi(api = Build.VERSION_CODES.KITKAT)
     public void onClickBeaconMode(View view){
             if (isRinging) {
                 beaconReceiveTimer.cancel();
@@ -670,6 +671,7 @@ public class MainActivity extends AppCompatActivity{
     }
 
     // This will be called in FragmentTextMessage and mCallback to store messages to database.
+    @RequiresApi(api = Build.VERSION_CODES.KITKAT)
     private void storeMessage(String ID, String MESSAGE){
         String Received = FragmentMain.dateFormat.format(FragmentMain.date);
         String Sent = "-";

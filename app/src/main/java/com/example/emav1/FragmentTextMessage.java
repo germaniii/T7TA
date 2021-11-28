@@ -2,6 +2,7 @@ package com.example.emav1;
 
 import android.content.Context;
 import android.database.Cursor;
+import android.graphics.Color;
 import android.hardware.camera2.TotalCaptureResult;
 import android.hardware.usb.UsbDevice;
 import android.hardware.usb.UsbDeviceConnection;
@@ -220,7 +221,7 @@ public class FragmentTextMessage extends Fragment {
         @RequiresApi(api = Build.VERSION_CODES.KITKAT)
         @Override
         public void onFinish() {
-            //try {
+            try {
                 if (packetNumber < totalpackets) {
                     MainActivity.serialPort.write(sendTextBytes[packetNumber]);
                     Toast.makeText(context, "Sent Packet " + (packetNumber + 1) + "/" + sendTextBytes.length +" try " + (repTimer+1), Toast.LENGTH_SHORT).show();
@@ -235,13 +236,13 @@ public class FragmentTextMessage extends Fragment {
                     countDownRepeater();
                     packetNumber = 0;
                 }
-            /*}catch (Exception e){
+            }catch (Exception e){
                 Toast.makeText(context, "Please connect EMA device!", Toast.LENGTH_SHORT).show();
                 packetNumber = 0;
                 resendTimer.cancel();
             }
 
-             */
+
         }
     };
 
@@ -279,6 +280,7 @@ public class FragmentTextMessage extends Fragment {
         return inflater.inflate(R.layout.fragment_text_message, container, false);
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.KITKAT)
     @Override
     public void onViewCreated(@NonNull View view, @Nullable @org.jetbrains.annotations.Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
@@ -300,15 +302,7 @@ public class FragmentTextMessage extends Fragment {
         number.setAdapter(adapter);
 
         // Send Button On Click Listener
-        sendButton.setOnClickListener(new View.OnClickListener()
-        {
-            @RequiresApi(api = Build.VERSION_CODES.KITKAT)
-            @Override
-            public void onClick(View v)
-            {
-                onClickSendButton(v);
-            }
-        });
+        sendButton.setOnClickListener(v -> onClickSendButton(v));
 
     }
 
@@ -357,12 +351,7 @@ public class FragmentTextMessage extends Fragment {
         final TextView ftv = tv;
         final CharSequence ftext = text;
 
-        getActivity().runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                ftv.append(ftext);
-            }
-        });
+        getActivity().runOnUiThread(() -> ftv.append(ftext));
     }
 
 
