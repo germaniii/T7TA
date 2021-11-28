@@ -139,6 +139,10 @@ public class FragmentTextMessage extends Fragment {
                         String MESSAGE = message.getText().toString().trim();
                         String MESSAGE_FINAL = MESSAGE;
 
+                        String Received = "-";
+                        String Sent =FragmentMain.dateFormat.format(FragmentMain.date);
+                        dataBaseHelper.addOneMessage(getUserSID(), MESSAGE_FINAL,Received,Sent);
+
                         //if message entered is less than 31 characters, add whitespace characters to fill up the packet.
                         for (int i = 0; i < (31 - MESSAGE.length() % 31); i++)
                             MESSAGE_FINAL = MESSAGE_FINAL.concat(".");
@@ -333,7 +337,6 @@ public class FragmentTextMessage extends Fragment {
         }
     }
 
-
     void storeDBtoArrays(){
         Cursor cursor = dataBaseHelper.readAllDataContactsTable();
         if(cursor.getCount() <= 1){
@@ -354,6 +357,22 @@ public class FragmentTextMessage extends Fragment {
         getActivity().runOnUiThread(() -> ftv.append(ftext));
     }
 
+    String getUserSID(){
+        String SID = null;
+        Cursor cursor;
+        cursor = dataBaseHelper.readUserSID();
+
+        if (cursor.getCount() == 0) {
+            Toast.makeText(context, "No User SID!", Toast.LENGTH_SHORT).show();
+        } else {
+            if(cursor.moveToFirst()){
+                SID = cursor.getString(0);     //CONTACT NUM
+                while(cursor.moveToNext())
+                    SID = cursor.getString(0);     //CONTACT NUM
+            }
+        }
+        return SID;
+    }
 
 
 }
