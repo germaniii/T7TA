@@ -178,7 +178,7 @@ public class FragmentTextMessage extends Fragment {
                             hash = hashProcessor.getHash(string);
                             string += hash;
 
-                            System.arraycopy(hash.getBytes(), 0, sendTextBytes[0], 52, 8);
+                            System.arraycopy(hash.getBytes(), 0, sendTextBytes[i], 52, 8);
 
                             //MainActivity.serialPort.write(sendTextBytes[0]);
                             packetNumber=0;
@@ -205,7 +205,7 @@ public class FragmentTextMessage extends Fragment {
         }
     }
 
-     CountDownTimer resendTimer = new CountDownTimer(2000, 1000) {
+     CountDownTimer resendTimer = new CountDownTimer(3000, 1000) {
         @Override
         public void onTick(long l) {
             if (isReceivedConfirmationByte) {// this will stop the counting
@@ -223,9 +223,7 @@ public class FragmentTextMessage extends Fragment {
             //try {
                 if (packetNumber < totalpackets) {
                     MainActivity.serialPort.write(sendTextBytes[packetNumber]);
-                    Toast.makeText(context, "\nSent Packet Length: " + sendTextBytes[packetNumber].length, Toast.LENGTH_SHORT).show();
-                    //tvAppend(textView,"\nSent Packet " + packetNumber + ": " + new String(sendTextBytes[packetNumber],StandardCharsets.UTF_8) + "\nSent Packet Length: " + sendTextBytes.length);
-                    //Toast.makeText(context, "Sent Packet " + (packetNumber + 1) + "/" + sendTextBytes.length +" try " + (repTimer+1), Toast.LENGTH_SHORT).show();
+                    Toast.makeText(context, "Sent Packet " + (packetNumber + 1) + "/" + sendTextBytes.length +" try " + (repTimer+1), Toast.LENGTH_SHORT).show();
                     packetNumber++;
                     resendTimer.cancel();
                     resendTimer.start();

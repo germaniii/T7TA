@@ -175,7 +175,7 @@ public class MainActivity extends AppCompatActivity{
                             if (checkHashfromPacket()) {
                                 FragmentTextMessage.isReceivedConfirmationByte = true;
                                 FragmentTextMessage.repTimer = 4;
-                                tvAppend(textView, "Received Confirmation Byte" + data);
+                                tvAppend(textView, "\nReceived Confirmation Byte" + data);
                                 //add one message to
                             }else
                                 Toast.makeText(MainActivity.this, "Wrong Hash", Toast.LENGTH_SHORT).show();
@@ -198,7 +198,7 @@ public class MainActivity extends AppCompatActivity{
 
                                     encryptionProcessor.receivingEncryptionProcessor(encryptedData, sender, num);
                                     decodedData = encryptionProcessor.getDecodedText();
-                                    storeMessage(sender, message);
+                                    storeMessage(sender, decodedData);
                                     tvAppend(textView, "\nReceived Single Packet Text Message");
 
 
@@ -258,7 +258,7 @@ public class MainActivity extends AppCompatActivity{
                                     if(isAbletoNotify) {
                                         // DO THIS AFTER CONFIRMING
                                         // Notify User of Received Packet
-                                        mp.start(); // Play sound
+                                        //mp.start(); // Play sound
                                         // Create an explicit intent for an Activity in your app
                                         Intent intent = new Intent(String.valueOf(MainActivity.this));
                                         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
@@ -722,7 +722,7 @@ public class MainActivity extends AppCompatActivity{
         System.arraycopy(tempArg0, 5, senderBytes, 0,4);
 
         sender = packetHandler.getID(senderBytes);
-        tvAppend(textView, "SenderFromPacket: " + sender);
+        tvAppend(textView, "\nSenderFromPacket: " + sender);
 
     }
 
@@ -733,7 +733,7 @@ public class MainActivity extends AppCompatActivity{
         System.arraycopy(tempArg0, 1, receiverBytes, 0,4);
 
         receiver = packetHandler.getID(receiverBytes);
-        tvAppend(textView, "ReceiverFromPacket: " + receiver);
+        tvAppend(textView, "\nReceiverFromPacket: " + receiver);
 
     }
 
@@ -749,19 +749,16 @@ public class MainActivity extends AppCompatActivity{
     @RequiresApi(api = Build.VERSION_CODES.KITKAT)
     private boolean checkHashfromPacket(){
         boolean isHashMatched;
+        byte[] hashFromPacketBytes = new byte[8];
+        byte[] noHashPartFromPacketBytes = new byte[52];
         noHashPart = "";
         hashFromPacket = "";
         computedHash = "";
 
-        for(int i = 0; i < 52; i++){
-            noHashPart = noHashPart.concat(String.valueOf(data.charAt(i)));
-        }
-
-        for(int i = 0; i < 8; i++){
-            hashFromPacket = hashFromPacket.concat(String.valueOf(data.charAt(i+52)));
-        }
-
-        computedHash = hashProcessor.getHash(noHashPart);
+        System.arraycopy(tempArg0,52,hashFromPacketBytes,0,8);
+        System.arraycopy(tempArg0,0,noHashPartFromPacketBytes,0,52);
+        hashFromPacket = new String(hashFromPacketBytes);
+        computedHash = hashProcessor.getHash(new String(noHashPartFromPacketBytes,StandardCharsets.UTF_8));
         tvAppend(textView, "\nComputed: " + computedHash + "\nFromPkt:" + hashFromPacket);
 
         if(hashFromPacket.equals(computedHash))
