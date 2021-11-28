@@ -19,6 +19,8 @@ import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.Toast;
 
+import com.example.emav1.toolspack.EncryptionProcessor;
+
 import java.util.ArrayList;
 
 public class FragmentContactList extends Fragment implements ContactListAdapter.ItemClickListener{
@@ -27,13 +29,14 @@ public class FragmentContactList extends Fragment implements ContactListAdapter.
     ImageButton addContact;
     Toast toast_send;
 
-    private static ArrayList<String> contactNames, contactNum, contactKey, contactID;
+    private static ArrayList<String> contactNames, contactNum, contactID;
 
-    private EditText editName, editNumber, editKey;
+    private EditText editName, editNumber;
     private RecyclerView recyclerView;
 
     static ContactListAdapter contactListAdapter;
     DataBaseHelper dataBaseHelper;
+    EncryptionProcessor encryptionProcessor = new EncryptionProcessor();
 
     Context context;
 
@@ -56,7 +59,6 @@ public class FragmentContactList extends Fragment implements ContactListAdapter.
         contactID = new ArrayList<>();
         contactNames = new ArrayList<>();
         contactNum = new ArrayList<>();
-        contactKey = new ArrayList<>();
 
         dataBaseHelper = new DataBaseHelper(context);
         storeDBtoArrays();
@@ -90,7 +92,6 @@ public class FragmentContactList extends Fragment implements ContactListAdapter.
                 contactID.add(cursor.getString(0));     //ID
                 contactNames.add(cursor.getString(1));  //Names
                 contactNum.add(cursor.getString(2));    //Number
-                contactKey.add(cursor.getString(3));    //Cipher Key
             }
         }
     }
@@ -104,27 +105,24 @@ public class FragmentContactList extends Fragment implements ContactListAdapter.
         //final EditText input = (EditText) viewInflated.findViewById(R.id.input);
         editName = (EditText) viewInflated.findViewById(R.id.dialog_name);
         editNumber = (EditText) viewInflated.findViewById(R.id.dialog_number);
-        editKey = (EditText) viewInflated.findViewById(R.id.dialog_key);
         builder.setView(viewInflated);
 
         // Set up the buttons
         builder.setPositiveButton("Add", new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
-                if(editName.getText().toString().equals("") || editNumber.getText().toString().equals("") || editKey.getText().toString().equals("")){
+                if(editName.getText().toString().equals("") || editNumber.getText().toString().equals("")){
                     Toast.makeText(context, "Please fill up all fields!", Toast.LENGTH_SHORT).show();
                 }else{
                     contactNames.add(editName.getText().toString());
                     contactNum.add(editNumber.getText().toString());
-                    contactKey.add(editKey.getText().toString());
                     dataBaseHelper.addOneContact(editName.getText().toString().trim(), editNumber.getText().toString(),
-                            editKey.getText().toString().trim());
+                            encryptionProcessor.generateKey(editNumber.getText().toString(), getUserSID()));
 
                     //refill the contact Array lists so that the Contact ID will be filled with the new information
                     contactID.clear();
                     contactNames.clear();
                     contactNum.clear();
-                    contactKey.clear();
                     storeDBtoArrays();
 
                     //Redisplay the list
@@ -154,10 +152,8 @@ public class FragmentContactList extends Fragment implements ContactListAdapter.
         //final EditText input = (EditText) viewInflated.findViewById(R.id.input);
         editName = (EditText) viewInflated.findViewById(R.id.dialog_name);
         editNumber = (EditText) viewInflated.findViewById(R.id.dialog_number);
-        editKey = (EditText) viewInflated.findViewById(R.id.dialog_key);
         editName.setText(contactNames.get(position));
         editNumber.setText(contactNum.get(position));
-        editKey.setText(contactKey.get(position));
         // Specify the type of input expected; this, for example, sets the input as a password, and will mask the text
         builder.setView(viewInflated);
         // Set up the buttons
@@ -165,15 +161,14 @@ public class FragmentContactList extends Fragment implements ContactListAdapter.
                 @Override
                 public void onClick(DialogInterface dialog, int which) {
                     try {
-                        if (editName.getText().toString() == "" || editNumber.getText().toString() == "" || editKey.getText().toString() == "") {
+                        if (editName.getText().toString() == "" || editNumber.getText().toString() == "") {
                             toast_send = Toast.makeText(context, "Please fill up all fields!", Toast.LENGTH_SHORT);
                             toast_send.show();
                         } else {
                             dataBaseHelper.updateContact(contactID.get(position), editName.getText().toString(), editNumber.getText().toString(),
-                                    editKey.getText().toString());
+                                    encryptionProcessor.generateKey(editNumber.getText().toString(),getUserSID()));
                             contactNames.set(position, editName.getText().toString());
                             contactNum.set(position, editNumber.getText().toString());
-                            contactKey.set(position, editKey.getText().toString());
                             contactListAdapter.notifyDataSetChanged();
                             Toast.makeText(context, "Please Reconnect the EMA device", Toast.LENGTH_SHORT).show();
                         }
@@ -228,4 +223,20 @@ public class FragmentContactList extends Fragment implements ContactListAdapter.
         builder.show();
     }
 
+    String getUserSID(){
+        String SID = null;
+        Cursor cursor;
+        cursor = dataBaseHelper.readUserSID();
+
+        if (cursor.getCount() == 0) {
+            Toast.makeText(context, "No User SID!", Toast.LENGTH_SHORT).show();
+        } else {
+            if(cursor.moveToFirst()){
+                SID = cursor.getString(0);     //CONTACT NUM
+                while(cursor.moveToNext())
+                    SID = cursor.getString(0);     //CONTACT NUM
+            }
+        }
+        return SID;
+    }
 }

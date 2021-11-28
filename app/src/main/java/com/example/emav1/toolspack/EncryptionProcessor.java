@@ -63,7 +63,7 @@ public class EncryptionProcessor {
         return this.packetTotal;
     }
 
-    private String generateKey(String senderID, String receiverID) {
+    public String generateKey(String senderID, String receiverID) {
         StringBuilder sID, rID;
         sID = new StringBuilder(senderID);
         rID = new StringBuilder(receiverID);

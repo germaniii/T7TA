@@ -77,6 +77,8 @@ public class MainActivity extends AppCompatActivity{
     byte[] tempArg0;
     String num;
     byte[] senderBytes, receiverBytes, sendConfirmBytes;
+    String[] messagePacketArray = new String[10];
+    String combinedPacketArray = "";
 
     private final Uri notificationSound = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
     private MediaPlayer mp, beaconmp;
@@ -200,6 +202,7 @@ public class MainActivity extends AppCompatActivity{
                                     decodedData = encryptionProcessor.getDecodedText();
                                     storeMessage(sender, decodedData);
                                     tvAppend(textView, "\nReceived Single Packet Text Message");
+                                    messagePacketArray[packetNumber] = decodedData;
 
 
                                     if(packetNumber == 0){
@@ -256,6 +259,12 @@ public class MainActivity extends AppCompatActivity{
                                         packetNumber += 1;
                                     }
                                     if(isAbletoNotify) {
+
+                                        if(packetNumber>1) {
+                                            for (String s : messagePacketArray) {
+                                                combinedPacketArray.concat(s);
+                                            }
+                                        }
                                         // DO THIS AFTER CONFIRMING
                                         // Notify User of Received Packet
                                         //mp.start(); // Play sound
@@ -268,7 +277,7 @@ public class MainActivity extends AppCompatActivity{
                                         NotificationCompat.Builder builder = new NotificationCompat.Builder(MainActivity.this, "EMAMessageNotif")
                                                 .setSmallIcon(android.R.color.transparent)
                                                 .setContentTitle("Message from User: " + sender)
-                                                .setContentText("Message: " + message)
+                                                .setContentText("Message: " + combinedPacketArray)
                                                 .setPriority(NotificationCompat.PRIORITY_DEFAULT)
                                                 // Set the intent that will fire when the user taps the notification
                                                 .setContentIntent(pendingIntent)
@@ -280,6 +289,8 @@ public class MainActivity extends AppCompatActivity{
 
                                         isPacketsComplete = false;
                                         isAbletoNotify = false;
+                                        combinedPacketArray = "";
+                                        messagePacketArray = new String[10];
 
                                    /* if(){
                                         tempRecvPacket[1] = tempArg0;

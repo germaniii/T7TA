@@ -142,7 +142,8 @@ public class FragmentMain extends Fragment  implements InboxListAdapter.ItemClic
                         messageNames.add("Unknown");
                     }
                 }
-
+                //Decrypt Text and send to array
+                cursor.getString(2);
                 messageText.add(cursor.getString(2));    //Message
                 messageReceived.add(cursor.getString(3));    //Date and Time Received
                 messageSent.add(cursor.getString(4));    //Date and Time Sent
