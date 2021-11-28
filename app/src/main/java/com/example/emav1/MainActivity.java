@@ -94,8 +94,6 @@ public class MainActivity extends AppCompatActivity{
     PacketHandler packetHandler = new PacketHandler();
     EncryptionProcessor encryptionProcessor = new EncryptionProcessor();
 
-    byte[] tempRecvPacket = new byte[240];
-
     boolean isReceivingTextPacket = false;
     boolean isAbletoNotify = false;
     boolean isPacketsComplete = false;

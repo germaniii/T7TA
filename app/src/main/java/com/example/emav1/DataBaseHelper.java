@@ -124,7 +124,7 @@ public class DataBaseHelper extends SQLiteOpenHelper {
 
     // This function retrieves the contact name by using the contact number (SID) as search key
     Cursor readContactName(String senderID){
-        String query = "SELECT CONTACT_NAME FROM " + CONTACTS_TABLE + " WHERE " + CONTACT_NUMBER + " = " + senderID;
+        String query = "SELECT CONTACT_NAME FROM " + CONTACTS_TABLE + " WHERE " + CONTACT_NUMBER + " = \'" + senderID + "\'";
         SQLiteDatabase db = this.getWritableDatabase();
 
         Cursor cursor = null;
