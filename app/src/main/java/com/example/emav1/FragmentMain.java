@@ -11,16 +11,20 @@ import android.os.Bundle;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.annotation.RequiresApi;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import android.util.Base64;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import com.example.emav1.toolspack.EncryptionProcessor;
 
 import java.util.ArrayList;
 import java.util.Date;
@@ -47,6 +51,7 @@ public class FragmentMain extends Fragment  implements InboxListAdapter.ItemClic
         return inflater.inflate(R.layout.fragment_main, container, false);
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.KITKAT)
     @Override
     public void onViewCreated(@NonNull View view, @Nullable @org.jetbrains.annotations.Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
@@ -89,6 +94,7 @@ public class FragmentMain extends Fragment  implements InboxListAdapter.ItemClic
 
             // Set up the buttons
             builder.setPositiveButton("Confirm", new DialogInterface.OnClickListener() {
+                @RequiresApi(api = Build.VERSION_CODES.KITKAT)
                 @Override
                 public void onClick(DialogInterface dialog, int which) {
                     if(uName.getText().toString().equals("") || uNumber.getText().toString().equals("") || uNumber.getText().toString().length() < 11){
@@ -117,12 +123,15 @@ public class FragmentMain extends Fragment  implements InboxListAdapter.ItemClic
     }
 
     // This function is used to update the inboxlist whenever the DB changes.
+    @RequiresApi(api = Build.VERSION_CODES.KITKAT)
     public static void storeDBtoArrays(){
         Cursor cursor = dataBaseHelper.readAllDataMessagesTable();
+        EncryptionProcessor encryptionProcessor = new EncryptionProcessor();
         Cursor num;
         if(cursor.getCount() == 0){
             //do nothing
         }else{
+            int i = 0;
             while (cursor.moveToNext()){
                 messageID.add(cursor.getString(0));     //ID
                 messageNum.add(cursor.getString(1));    //Number
@@ -142,11 +151,20 @@ public class FragmentMain extends Fragment  implements InboxListAdapter.ItemClic
                         messageNames.add("Unknown");
                     }
                 }
-                //Decrypt Text and send to array
-                cursor.getString(2);
-                messageText.add(cursor.getString(2));    //Message
+
+                if(cursor.getString(2).equals("URGENT BEACON SIGNAL SENT!") || cursor.getString(2).equals("URGENT BEACON SIGNAL RECEIVED!") || cursor.getString(1).equals(getUserSID())) {
+                    messageText.add(cursor.getString(2));    //Message
+                }else{
+                    // Decrypt Text and send to array
+                    byte[] encryptedData = Base64.decode(cursor.getString(2), Base64.NO_WRAP | Base64.NO_PADDING | Base64.URL_SAFE | Base64.NO_CLOSE);
+                    encryptionProcessor.receivingEncryptionProcessor(encryptedData, cursor.getString(1), getUserSID());
+                    String decodedData = encryptionProcessor.getDecodedText();
+                    //Store part 2
+                    messageText.add(decodedData);    //Message
+                }
                 messageReceived.add(cursor.getString(3));    //Date and Time Received
                 messageSent.add(cursor.getString(4));    //Date and Time Sent
+                i++;
             }
 
         }
@@ -193,6 +211,40 @@ public class FragmentMain extends Fragment  implements InboxListAdapter.ItemClic
         });
 
         builder.show();
+    }
+
+
+    String getDecryptionKey(String number){
+        String SID = null;
+        Cursor cursor;
+        cursor = dataBaseHelper.readContactKey(number);
+
+        if (cursor.getCount() == 0) {
+            Toast.makeText(context, "No User SID!", Toast.LENGTH_SHORT).show();
+        } else {
+            if(cursor.moveToFirst()){
+                SID = cursor.getString(0);     //CONTACT NUM
+                while(cursor.moveToNext())
+                    SID = cursor.getString(0);     //CONTACT NUM
+            }
+        }
+        return SID;
+    }
+
+    static String getUserSID(){
+        String SID = null;
+        Cursor cursor;
+        cursor = dataBaseHelper.readUserSID();
+
+        if (cursor.getCount() == 0) {
+        } else {
+            if(cursor.moveToFirst()){
+                SID = cursor.getString(0);     //CONTACT NUM
+                while(cursor.moveToNext())
+                    SID = cursor.getString(0);     //CONTACT NUM
+            }
+        }
+        return SID;
     }
 
 }

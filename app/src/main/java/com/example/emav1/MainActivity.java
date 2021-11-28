@@ -197,10 +197,9 @@ public class MainActivity extends AppCompatActivity{
                                     System.arraycopy(tempArg0,9,cipherInBase64,0,43);
                                     String base64CipherinString = new String(cipherInBase64, StandardCharsets.UTF_8);
                                     byte[] encryptedData = Base64.decode(base64CipherinString, Base64.NO_WRAP | Base64.NO_PADDING | Base64.URL_SAFE | Base64.NO_CLOSE);
-
                                     encryptionProcessor.receivingEncryptionProcessor(encryptedData, sender, num);
                                     decodedData = encryptionProcessor.getDecodedText();
-                                    storeMessage(sender, decodedData);
+                                    storeMessage(sender, base64CipherinString);
                                     tvAppend(textView, "\nReceived Single Packet Text Message");
                                     messagePacketArray[packetNumber] = decodedData;
 
@@ -379,7 +378,7 @@ public class MainActivity extends AppCompatActivity{
                             Toast.makeText(MainActivity.this, "Beacon Mode ON", Toast.LENGTH_SHORT).show();
                             isDisabled = false;
                             beaconSendTimer.start();
-                            storeMessage(sender, "URGENT BEACON SIGNAL SENT!");
+                            storeMessage(getUserSID(), "URGENT BEACON SIGNAL SENT!");
                         }
                     }
                 } catch (Exception e) {
