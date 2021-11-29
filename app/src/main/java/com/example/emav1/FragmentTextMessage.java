@@ -145,7 +145,7 @@ public class FragmentTextMessage extends Fragment {
 
                         //if message entered is less than 31 characters, add whitespace characters to fill up the packet.
                         for (int i = 0; i < (31 - MESSAGE.length() % 31); i++)
-                            MESSAGE_FINAL = MESSAGE_FINAL.concat(".");
+                            MESSAGE_FINAL = MESSAGE_FINAL.concat(" ");
                         totalpackets = (int) Math.ceil((double) MESSAGE_FINAL.length() / 31);
                         messageArray = new String[totalpackets];
 
@@ -210,7 +210,7 @@ public class FragmentTextMessage extends Fragment {
         }
     }
 
-     CountDownTimer resendTimer = new CountDownTimer(3000, 1000) {
+     CountDownTimer resendTimer = new CountDownTimer(2000, 1000) {
         @Override
         public void onTick(long l) {
             if (isReceivedConfirmationByte) {// this will stop the counting
@@ -373,6 +373,5 @@ public class FragmentTextMessage extends Fragment {
         }
         return SID;
     }
-
 
 }

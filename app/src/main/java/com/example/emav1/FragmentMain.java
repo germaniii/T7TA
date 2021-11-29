@@ -35,7 +35,7 @@ public class FragmentMain extends Fragment  implements InboxListAdapter.ItemClic
 
     static InboxListAdapter inboxListAdapter;
     static ArrayList<String> messageID, messageNames,messageNum,messageText,messageReceived, messageSent;
-    RecyclerView recyclerView;
+    private RecyclerView recyclerView;
     TextView dialog_name, dialog_num, dialog_mess, dialog_date;
     EditText uName, uNumber;
     static Date date;
@@ -73,7 +73,10 @@ public class FragmentMain extends Fragment  implements InboxListAdapter.ItemClic
 
         // set up the RecyclerView
         recyclerView = getActivity().findViewById(R.id.main_inboxList);
-        recyclerView.setLayoutManager(new LinearLayoutManager(context));
+        LinearLayoutManager linearLayoutManager = new LinearLayoutManager(context);
+        linearLayoutManager.setReverseLayout(true);
+        linearLayoutManager.setStackFromEnd(true);
+        recyclerView.setLayoutManager(linearLayoutManager);
         inboxListAdapter = new InboxListAdapter(context, messageNames, messageNum, messageText, messageReceived, messageSent);
         inboxListAdapter.setClickListener(this);
         recyclerView.setAdapter(inboxListAdapter);
@@ -151,6 +154,7 @@ public class FragmentMain extends Fragment  implements InboxListAdapter.ItemClic
                         messageNames.add("Unknown");
                     }
                 }
+                num.close();
 
                 if(cursor.getString(2).equals("URGENT BEACON SIGNAL SENT!") || cursor.getString(2).equals("URGENT BEACON SIGNAL RECEIVED!") || cursor.getString(1).equals(getUserSID())) {
                     messageText.add(cursor.getString(2));    //Message
@@ -168,7 +172,7 @@ public class FragmentMain extends Fragment  implements InboxListAdapter.ItemClic
             }
 
         }
-
+        cursor.close();
     }
 
     //ON ITEM CLICK FROM RECYCLER VIEW

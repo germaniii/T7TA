@@ -98,6 +98,7 @@ public class MainActivity extends AppCompatActivity{
     boolean isAbletoNotify = false;
     boolean isPacketsComplete = false;
     int packetNumber = 0;
+    int beaconsignalcounter = 0;
 
 
     /*
@@ -160,6 +161,8 @@ public class MainActivity extends AppCompatActivity{
                                 notificationManager.notify(1, builder.build());
 
                                 storeMessage(sender, "URGENT BEACON SIGNAL RECEIVED!");
+                                beaconsignalcounter += 1;
+                                tvAppend(textView, "Beacon signal Received: " + beaconsignalcounter);
 
                                 //Flashing Timer
                                 beaconReceiveTimer.start();
@@ -239,7 +242,7 @@ public class MainActivity extends AppCompatActivity{
                                                 tvAppend(textView, "\n\nConfirmPacket : " + string + "\nPacketLen: " +  "\nHash: " + hash);
 
                                             }
-                                        }, 500);
+                                        }, 1000);
 
 
                                         // THis line is for debugging purposes
@@ -255,10 +258,12 @@ public class MainActivity extends AppCompatActivity{
                                     }else{
                                         packetNumber += 1;
                                     }
+
                                     if(isAbletoNotify) {
 
                                         if(packetNumber>1) {
                                             for (String s : messagePacketArray) {
+                                                if(s!=null)
                                                 combinedPacketArray.concat(s);
                                             }
                                         }
@@ -288,12 +293,6 @@ public class MainActivity extends AppCompatActivity{
                                         isAbletoNotify = false;
                                         combinedPacketArray = "";
                                         messagePacketArray = new String[10];
-
-                                   /* if(){
-                                        tempRecvPacket[1] = tempArg0;
-                                    }
-
-                                    */
                                     }
                                 } else {
                                     tvAppend(textView, "\nHashFromPacket : " + hashFromPacket + "\nComputedHash = " + computedHash);
