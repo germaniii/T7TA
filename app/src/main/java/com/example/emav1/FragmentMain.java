@@ -232,6 +232,7 @@ public class FragmentMain extends Fragment  implements InboxListAdapter.ItemClic
                     SID = cursor.getString(0);     //CONTACT NUM
             }
         }
+        cursor.close();
         return SID;
     }
 
@@ -248,6 +249,7 @@ public class FragmentMain extends Fragment  implements InboxListAdapter.ItemClic
                     SID = cursor.getString(0);     //CONTACT NUM
             }
         }
+        cursor.close();
         return SID;
     }
 

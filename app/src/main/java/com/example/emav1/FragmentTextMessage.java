@@ -322,6 +322,8 @@ public class FragmentTextMessage extends Fragment {
                     tvAppend(textView, SID+"\n");
             }
         }
+
+        cursor.close();
     }
 
     // This function retrieves the RID of the contact that is selected.
@@ -335,6 +337,8 @@ public class FragmentTextMessage extends Fragment {
             }
                     tvAppend(textView, "\nName:" + number.getSelectedItem().toString() + RID);
         }
+
+        cursor.close();
     }
 
     void storeDBtoArrays(){
@@ -348,6 +352,8 @@ public class FragmentTextMessage extends Fragment {
                 }
             }
         }
+
+        cursor.close();
     }
 
     private void tvAppend(TextView tv, CharSequence text) {
@@ -371,6 +377,8 @@ public class FragmentTextMessage extends Fragment {
                     SID = cursor.getString(0);     //CONTACT NUM
             }
         }
+
+        cursor.close();
         return SID;
     }
 

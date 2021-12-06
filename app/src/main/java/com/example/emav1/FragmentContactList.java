@@ -94,6 +94,7 @@ public class FragmentContactList extends Fragment implements ContactListAdapter.
                 contactNum.add(cursor.getString(2));    //Number
             }
         }
+        cursor.close();
     }
 
     public void onClickAddContact(View view){
@@ -237,6 +238,7 @@ public class FragmentContactList extends Fragment implements ContactListAdapter.
                     SID = cursor.getString(0);     //CONTACT NUM
             }
         }
+        cursor.close();
         return SID;
     }
 }

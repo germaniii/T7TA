@@ -664,6 +664,8 @@ public class MainActivity extends AppCompatActivity{
                         SID = cursor.getString(0);     //CONTACT NUM
             }
         }
+
+        cursor.close();
         return SID;
     }
 
