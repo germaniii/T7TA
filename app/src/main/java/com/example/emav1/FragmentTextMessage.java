@@ -50,7 +50,7 @@ public class FragmentTextMessage extends Fragment {
     ArrayList<String> spinnerContacts;
     DataBaseHelper dataBaseHelper;
 
-    String SMP;
+    byte[] smp = new byte[1];
     byte[][] sendTextBytes;
     String SID, RID, MESSAGE;
     String MESSAGE_FINAL_2, HK2;
@@ -133,7 +133,7 @@ public class FragmentTextMessage extends Fragment {
                     Toast.makeText(context, "Please Fill Up All Fields!", Toast.LENGTH_SHORT).show();
                 } else {
                     if (!isDisabled) {
-                        SMP = "3";
+                        smp[0] = 0x04;
                         getSID();
                         getRID();
                         String MESSAGE = message.getText().toString().trim();
@@ -172,9 +172,9 @@ public class FragmentTextMessage extends Fragment {
                                     "\nBase64CipherLen: " + cipherbase64.length());
 
                             if (totalpackets == 1 || (i == totalpackets-1))
-                                SMP = "8";
+                                smp[0] = 0x7F;
 
-                            System.arraycopy(SMP.getBytes(StandardCharsets.UTF_8), 0, sendTextBytes[i], 0, 1);
+                            System.arraycopy(smp, 0, sendTextBytes[i], 0, 1);
                             System.arraycopy(packetHandler.getRIDBytes(), 0, sendTextBytes[i], 1, 4);
                             System.arraycopy(packetHandler.getSIDBytes(), 0, sendTextBytes[i], 5, 4);
                             System.arraycopy(cipherbase64.getBytes(), 0, sendTextBytes[i], 9, 43);
@@ -187,8 +187,8 @@ public class FragmentTextMessage extends Fragment {
 
                             //MainActivity.serialPort.write(sendTextBytes[0]);
                             packetNumber=0;
-                            tvAppend(textView, "\n\nPacket: " + string + "\nPacketLen: " + (SMP.getBytes().length + packetHandler.getRIDBytes().length + packetHandler.getSIDBytes().length + cipherbase64.length() + hash.getBytes().length) + "\nCipher: " + new String(cipherText, StandardCharsets.UTF_8) + "\nCipherLen: " + cipherText.length + "\nHash: " + hash);
-                            SMP = String.valueOf(Integer.parseInt(SMP) + 1);
+                            tvAppend(textView, "\n\nSENDING PACKET\n" + "\nPacket: " + string + "\nPacketLen: " + (smp.length + packetHandler.getRIDBytes().length + packetHandler.getSIDBytes().length + cipherbase64.length() + hash.getBytes().length) + "\nCipher: " + new String(cipherText, StandardCharsets.UTF_8) + "\nCipherLen: " + cipherText.length + "\nHash: " + hash);
+                            smp[0]+=1;
                         }
                         isDisabled = true;
                         resendTimer.start();
@@ -217,6 +217,7 @@ public class FragmentTextMessage extends Fragment {
                 repTimer = 4;
                 packetNumber = 0;
                 isReceivedConfirmationByte = false;
+                countDownRepeater();
                 resendTimer.cancel();
             }
 

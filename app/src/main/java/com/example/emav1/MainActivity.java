@@ -130,7 +130,7 @@ public class MainActivity extends AppCompatActivity{
                 if (arg0[0] == 1) {
                     serialPort.write(packetHandler.getSIDBytes());
                     tvAppend(textView, "OutStream : " + packetHandler.getSenderID() + "\n");
-                }else if (data.charAt(0) == '0') {
+                }else if (arg0[0] == 0x02) {
                         if(data.length() == 60) {
                             // Prevent multiple instances of the infinite sound
                             if (!isRinging) {
@@ -173,7 +173,7 @@ public class MainActivity extends AppCompatActivity{
                             }else
                                 tvAppend(textView, "\nNon-Matching Hashes");
                         }
-                    } else if (data.charAt(0) == '2') {
+                    } else if (arg0[0] >= 0x03) {
                         if(data.length() == 60) {
                             if (checkHashfromPacket()) {
                                 FragmentTextMessage.isReceivedConfirmationByte = true;
@@ -183,7 +183,7 @@ public class MainActivity extends AppCompatActivity{
                             }else
                                 Toast.makeText(MainActivity.this, "Wrong Hash", Toast.LENGTH_SHORT).show();
                         }
-                    } else if (data.charAt(0) >= '3') {
+                    } else if (arg0[0] >= 0x04) {
                         if(data.length() == 60) {
                             getSenderfromPacket();
                             getReceiverfromPacket();
@@ -225,11 +225,12 @@ public class MainActivity extends AppCompatActivity{
                                                 packetHandler.setSID(sender);
                                                 packetHandler.setRID(num);
                                                 sendConfirmBytes = new byte[60];
+                                                byte[] smp = new byte[1];
 
-                                                String SMP = "2";
-                                                System.arraycopy(SMP.getBytes(), 0, sendConfirmBytes, 0, 1);
-                                                System.arraycopy(packetHandler.getRIDBytes(), 0, sendConfirmBytes, 1, 4);
-                                                System.arraycopy(packetHandler.getSIDBytes(), 0, sendConfirmBytes, 5, 4);
+                                                smp[0] = 0x03;
+                                                System.arraycopy(smp, 0, sendConfirmBytes, 0, 1);
+                                                System.arraycopy(packetHandler.getSIDBytes(), 0, sendConfirmBytes, 1, 4);
+                                                System.arraycopy(packetHandler.getRIDBytes(), 0, sendConfirmBytes, 5, 4);
                                                 System.arraycopy("0000000000000000000000000000000000000000000".getBytes(), 0, sendConfirmBytes, 9, 40);
 
                                                 String string = new String(sendConfirmBytes, StandardCharsets.UTF_8);
@@ -402,11 +403,13 @@ public class MainActivity extends AppCompatActivity{
         @RequiresApi(api = Build.VERSION_CODES.KITKAT)
         @Override
         public void onFinish() {
-
             byte[] sendBeaconBytes = new byte[60];
             packetHandler.setSID(getUserSID().trim());
+            byte[] smp = new byte[1];
+            smp[0] = 0x02;
 
-            System.arraycopy("00000".getBytes(), 0, sendBeaconBytes, 0, 5);
+            System.arraycopy(smp, 0, sendBeaconBytes, 0, 1);
+            System.arraycopy("0000".getBytes(), 0, sendBeaconBytes, 0, 5);
             System.arraycopy(packetHandler.getSIDBytes(), 0, sendBeaconBytes, 5, 4);
             System.arraycopy("0000000000000000000000000000000000000000".getBytes(), 0, sendBeaconBytes, 9, 40);
 
