@@ -210,7 +210,7 @@ public class FragmentTextMessage extends Fragment {
         }
     }
 
-     CountDownTimer resendTimer = new CountDownTimer(2000, 1000) {
+     CountDownTimer resendTimer = new CountDownTimer(3000, 1000) {
         @Override
         public void onTick(long l) {
             if (isReceivedConfirmationByte) {// this will stop the counting

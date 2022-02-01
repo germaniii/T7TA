@@ -173,7 +173,7 @@ public class MainActivity extends AppCompatActivity{
                             }else
                                 tvAppend(textView, "\nNon-Matching Hashes");
                         }
-                    } else if (arg0[0] >= 0x03) {
+                    } else if (arg0[0] == 0x03) {
                         if(data.length() == 60) {
                             if (checkHashfromPacket()) {
                                 FragmentTextMessage.isReceivedConfirmationByte = true;
@@ -210,7 +210,7 @@ public class MainActivity extends AppCompatActivity{
                                         tvAppend(textView, "\nReceiving Packets");
                                     }
 
-                                    if(data.charAt(0) == '8'){
+                                    if(arg0[0] == 0x7F){
                                             isPacketsComplete = true;
                                     }else
                                         tvAppend(textView, "\nNot Stop Byte");
@@ -409,11 +409,11 @@ public class MainActivity extends AppCompatActivity{
             smp[0] = 0x02;
 
             System.arraycopy(smp, 0, sendBeaconBytes, 0, 1);
-            System.arraycopy("0000".getBytes(), 0, sendBeaconBytes, 0, 5);
+            System.arraycopy("0000".getBytes(), 0, sendBeaconBytes, 1, 4);
             System.arraycopy(packetHandler.getSIDBytes(), 0, sendBeaconBytes, 5, 4);
             System.arraycopy("0000000000000000000000000000000000000000".getBytes(), 0, sendBeaconBytes, 9, 40);
 
-            String string = "0" + "0000" + new String(packetHandler.getSIDBytes(), StandardCharsets.UTF_8) + "00000" + "00000" + "00000" + // Data
+            String string = new String(smp, StandardCharsets.UTF_8) + "0000" + new String(packetHandler.getSIDBytes(), StandardCharsets.UTF_8) + "00000" + "00000" + "00000" + // Data
                   "00000" + "00000" + "00000" + "00000" + "00000" + "000"; // + "123456" + "78911"
 
             String beaconHash = hashProcessor.getHash(string);
