@@ -266,7 +266,7 @@ public class HashProcessor {
         String convertedtoUTF8 = new String(hashval, StandardCharsets.UTF_8); // Convert hashval to string in UTF-8
         String convertedtoString = Base64.encodeToString(convertedtoUTF8.getBytes(), Base64.DEFAULT);
 
-        return convertedtoString.substring(0,11);
+        return convertedtoString.substring(0,8);
 
     }
 

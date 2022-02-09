@@ -31,6 +31,7 @@ import android.os.CountDownTimer;
 import android.os.Handler;
 import android.os.Looper;
 import android.text.method.ScrollingMovementMethod;
+import android.util.Base64;
 import android.util.Log;
 import android.view.View;
 import android.widget.ImageButton;
@@ -76,6 +77,8 @@ public class MainActivity extends AppCompatActivity{
     byte[] tempArg0;
     String num;
     byte[] senderBytes, receiverBytes, sendConfirmBytes;
+    String[] messagePacketArray = new String[10];
+    String combinedPacketArray = "";
 
     private final Uri notificationSound = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
     private MediaPlayer mp, beaconmp;
@@ -91,12 +94,11 @@ public class MainActivity extends AppCompatActivity{
     PacketHandler packetHandler = new PacketHandler();
     EncryptionProcessor encryptionProcessor = new EncryptionProcessor();
 
-    byte[] tempRecvPacket = new byte[240];
-
     boolean isReceivingTextPacket = false;
     boolean isAbletoNotify = false;
     boolean isPacketsComplete = false;
     int packetNumber = 0;
+    int beaconsignalcounter = 0;
 
 
     /*
@@ -128,7 +130,7 @@ public class MainActivity extends AppCompatActivity{
                 if (arg0[0] == 1) {
                     serialPort.write(packetHandler.getSIDBytes());
                     tvAppend(textView, "OutStream : " + packetHandler.getSenderID() + "\n");
-                }else if (data.charAt(0) == '0') {
+                }else if (arg0[0] == 0x02) {
                         if(data.length() == 60) {
                             // Prevent multiple instances of the infinite sound
                             if (!isRinging) {
@@ -159,6 +161,8 @@ public class MainActivity extends AppCompatActivity{
                                 notificationManager.notify(1, builder.build());
 
                                 storeMessage(sender, "URGENT BEACON SIGNAL RECEIVED!");
+                                beaconsignalcounter += 1;
+                                tvAppend(textView, "Beacon signal Received: " + beaconsignalcounter);
 
                                 //Flashing Timer
                                 beaconReceiveTimer.start();
@@ -169,17 +173,17 @@ public class MainActivity extends AppCompatActivity{
                             }else
                                 tvAppend(textView, "\nNon-Matching Hashes");
                         }
-                    } else if (data.charAt(0) == '2') {
+                    } else if (arg0[0] == 0x03) {
                         if(data.length() == 60) {
                             if (checkHashfromPacket()) {
                                 FragmentTextMessage.isReceivedConfirmationByte = true;
                                 FragmentTextMessage.repTimer = 4;
-                                tvAppend(textView, "Received Confirmation Byte" + data);
+                                tvAppend(textView, "\nReceived Confirmation Byte" + data);
                                 //add one message to
                             }else
                                 Toast.makeText(MainActivity.this, "Wrong Hash", Toast.LENGTH_SHORT).show();
                         }
-                    } else if (data.charAt(0) >= '3') {
+                    } else if (arg0[0] >= 0x04) {
                         if(data.length() == 60) {
                             getSenderfromPacket();
                             getReceiverfromPacket();
@@ -190,35 +194,28 @@ public class MainActivity extends AppCompatActivity{
                                     // ... store to messages table in database encrypted
                                     // if(regular message)
 
+                                    byte[] cipherInBase64 = new byte[43];
+                                    System.arraycopy(tempArg0,9,cipherInBase64,0,43);
+                                    String base64CipherinString = new String(cipherInBase64, StandardCharsets.UTF_8);
+                                    byte[] encryptedData = Base64.decode(base64CipherinString, Base64.NO_WRAP | Base64.NO_PADDING | Base64.URL_SAFE | Base64.NO_CLOSE);
+                                    encryptionProcessor.receivingEncryptionProcessor(encryptedData, sender, num);
+                                    decodedData = encryptionProcessor.getDecodedText();
+                                    storeMessage(sender, base64CipherinString);
+                                    tvAppend(textView, "\nReceived Single Packet Text Message");
+                                    messagePacketArray[packetNumber] = decodedData;
+
+
                                     if(packetNumber == 0){
                                         isReceivingTextPacket = true;
                                         tvAppend(textView, "\nReceiving Packets");
                                     }
 
-                                    if(data.charAt(0) == '8'){
+                                    if(arg0[0] == 0x7F){
                                             isPacketsComplete = true;
                                     }else
                                         tvAppend(textView, "\nNot Stop Byte");
 
                                     if(isPacketsComplete) {
-                                        if(packetNumber == 2){
-                                            byte[] encryptedData = new byte[32];
-                                            System.arraycopy(tempRecvPacket,0,encryptedData,0,32);
-
-                                            encryptionProcessor.receivingEncryptionProcessor(encryptedData, sender, num);
-                                            decodedData = encryptionProcessor.getDecodedText();
-                                            storeMessage(sender, message);
-                                            tvAppend(textView, "\nReceived Single Packet Text Message");
-                                        }else{
-                                            byte[] encryptedData = new byte[240];
-                                            System.arraycopy(tempRecvPacket,0,encryptedData,0,tempRecvPacket.length);
-                                            encryptionProcessor.receivingEncryptionProcessor(encryptedData,sender,num);
-                                            decodedData = encryptionProcessor.getDecodedText();
-                                            storeMessage(sender, message);
-                                            tvAppend(textView, "\nReceived Multi Packet Text Message");
-                                        }
-
-
                                         final Handler handler = new Handler(Looper.getMainLooper());
                                         handler.postDelayed(new Runnable() {
                                             @Override
@@ -228,18 +225,22 @@ public class MainActivity extends AppCompatActivity{
                                                 packetHandler.setSID(sender);
                                                 packetHandler.setRID(num);
                                                 sendConfirmBytes = new byte[60];
+                                                byte[] smp = new byte[1];
 
-                                                String SMP = "2";
-                                                System.arraycopy(SMP.getBytes(), 0, sendConfirmBytes, 0, 1);
-                                                System.arraycopy(packetHandler.getRIDBytes(), 0, sendConfirmBytes, 1, 4);
-                                                System.arraycopy(packetHandler.getSIDBytes(), 0, sendConfirmBytes, 5, 4);
-                                                System.arraycopy("0000000000000000000000000000000000000000".getBytes(), 0, sendConfirmBytes, 9, 40);
+                                                smp[0] = 0x03;
+                                                System.arraycopy(smp, 0, sendConfirmBytes, 0, 1);
+                                                System.arraycopy(packetHandler.getSIDBytes(), 0, sendConfirmBytes, 1, 4);
+                                                System.arraycopy(packetHandler.getRIDBytes(), 0, sendConfirmBytes, 5, 4);
+                                                System.arraycopy("0000000000000000000000000000000000000000000".getBytes(), 0, sendConfirmBytes, 9, 40);
 
                                                 String string = new String(sendConfirmBytes, StandardCharsets.UTF_8);
                                                 String hash = hashProcessor.getHash(string);
                                                 string += hash;
-                                                System.arraycopy(hash.getBytes(), 0, sendConfirmBytes, 49, 11);
-                                                tvAppend(textView, "\n\nPacket : " + string + "\nPacketLen: " +  "\nHash: " + hash);
+                                                System.arraycopy(hash.getBytes(), 0, sendConfirmBytes, 52, 8);
+
+                                                serialPort.write(sendConfirmBytes);
+
+                                                tvAppend(textView, "\n\nConfirmPacket : " + string + "\nPacketLen: " +  "\nHash: " + hash);
 
                                             }
                                         }, 1000);
@@ -256,11 +257,17 @@ public class MainActivity extends AppCompatActivity{
                                         isAbletoNotify = true;
 
                                     }else{
-                                        System.arraycopy(tempArg0, 9, tempRecvPacket, 40 *packetNumber, 40);
                                         packetNumber += 1;
-
                                     }
+
                                     if(isAbletoNotify) {
+
+                                        if(packetNumber>1) {
+                                            String s = "";
+                                            for (int i = 0; i <packetNumber; i++) {
+                                                combinedPacketArray.concat(messagePacketArray[i]);
+                                            }
+                                        }
                                         // DO THIS AFTER CONFIRMING
                                         // Notify User of Received Packet
                                         mp.start(); // Play sound
@@ -273,7 +280,7 @@ public class MainActivity extends AppCompatActivity{
                                         NotificationCompat.Builder builder = new NotificationCompat.Builder(MainActivity.this, "EMAMessageNotif")
                                                 .setSmallIcon(android.R.color.transparent)
                                                 .setContentTitle("Message from User: " + sender)
-                                                .setContentText("Message: " + message)
+                                                .setContentText("Message: " + combinedPacketArray)
                                                 .setPriority(NotificationCompat.PRIORITY_DEFAULT)
                                                 // Set the intent that will fire when the user taps the notification
                                                 .setContentIntent(pendingIntent)
@@ -285,12 +292,8 @@ public class MainActivity extends AppCompatActivity{
 
                                         isPacketsComplete = false;
                                         isAbletoNotify = false;
-
-                                   /* if(){
-                                        tempRecvPacket[1] = tempArg0;
-                                    }
-
-                                    */
+                                        combinedPacketArray = "";
+                                        messagePacketArray = new String[10];
                                     }
                                 } else {
                                     tvAppend(textView, "\nHashFromPacket : " + hashFromPacket + "\nComputedHash = " + computedHash);
@@ -335,6 +338,7 @@ public class MainActivity extends AppCompatActivity{
     };
 
     // This function handles what happens when the beacon mode button is clicked.
+    @RequiresApi(api = Build.VERSION_CODES.KITKAT)
     public void onClickBeaconMode(View view){
             if (isRinging) {
                 beaconReceiveTimer.cancel();
@@ -373,7 +377,7 @@ public class MainActivity extends AppCompatActivity{
                             Toast.makeText(MainActivity.this, "Beacon Mode ON", Toast.LENGTH_SHORT).show();
                             isDisabled = false;
                             beaconSendTimer.start();
-                            storeMessage(sender, "URGENT BEACON SIGNAL SENT!");
+                            storeMessage(getUserSID(), "URGENT BEACON SIGNAL SENT!");
                         }
                     }
                 } catch (Exception e) {
@@ -383,7 +387,7 @@ public class MainActivity extends AppCompatActivity{
 
     }
 
-    CountDownTimer beaconSendTimer = new CountDownTimer(1000, 1000) {
+    CountDownTimer beaconSendTimer = new CountDownTimer(3000, 1000) {
 
         @Override
         public void onTick(long l) {
@@ -399,21 +403,23 @@ public class MainActivity extends AppCompatActivity{
         @RequiresApi(api = Build.VERSION_CODES.KITKAT)
         @Override
         public void onFinish() {
-
             byte[] sendBeaconBytes = new byte[60];
             packetHandler.setSID(getUserSID().trim());
+            byte[] smp = new byte[1];
+            smp[0] = 0x02;
 
-            System.arraycopy("00000".getBytes(), 0, sendBeaconBytes, 0, 5);
+            System.arraycopy(smp, 0, sendBeaconBytes, 0, 1);
+            System.arraycopy("0000".getBytes(), 0, sendBeaconBytes, 1, 4);
             System.arraycopy(packetHandler.getSIDBytes(), 0, sendBeaconBytes, 5, 4);
             System.arraycopy("0000000000000000000000000000000000000000".getBytes(), 0, sendBeaconBytes, 9, 40);
 
-            String string = "0" + "0000" + new String(packetHandler.getSIDBytes(), StandardCharsets.UTF_8) + "00000" + "00000" + "00000" + // Data
-                  "00000" + "00000" + "00000" + "00000" + "00000"; // + "123456" + "78911"
+            String string = new String(smp, StandardCharsets.UTF_8) + "0000" + new String(packetHandler.getSIDBytes(), StandardCharsets.UTF_8) + "00000" + "00000" + "00000" + // Data
+                  "00000" + "00000" + "00000" + "00000" + "00000" + "000"; // + "123456" + "78911"
 
             String beaconHash = hashProcessor.getHash(string);
             String beaconMessage = string + beaconHash;
 
-            System.arraycopy(beaconHash.getBytes(), 0, sendBeaconBytes, 49, 11);
+            System.arraycopy(beaconHash.getBytes(), 0, sendBeaconBytes, 52, 8);
 
             serialPort.write(sendBeaconBytes);
             tvAppend(textView, "\nINFO:\n" + beaconMessage + "\nSID: " + packetHandler.getSenderID() + "\nMessageLen: " + string.length() + "\nPacketLen: " + new String(sendBeaconBytes, StandardCharsets.UTF_8).length());
@@ -661,10 +667,13 @@ public class MainActivity extends AppCompatActivity{
                         SID = cursor.getString(0);     //CONTACT NUM
             }
         }
+
+        cursor.close();
         return SID;
     }
 
     // This will be called in FragmentTextMessage and mCallback to store messages to database.
+    @RequiresApi(api = Build.VERSION_CODES.KITKAT)
     private void storeMessage(String ID, String MESSAGE){
         String Received = FragmentMain.dateFormat.format(FragmentMain.date);
         String Sent = "-";
@@ -727,7 +736,7 @@ public class MainActivity extends AppCompatActivity{
         System.arraycopy(tempArg0, 5, senderBytes, 0,4);
 
         sender = packetHandler.getID(senderBytes);
-        tvAppend(textView, "SenderFromPacket: " + sender);
+        tvAppend(textView, "\nSenderFromPacket: " + sender);
 
     }
 
@@ -738,14 +747,14 @@ public class MainActivity extends AppCompatActivity{
         System.arraycopy(tempArg0, 1, receiverBytes, 0,4);
 
         receiver = packetHandler.getID(receiverBytes);
-        tvAppend(textView, "ReceiverFromPacket: " + receiver);
+        tvAppend(textView, "\nReceiverFromPacket: " + receiver);
 
     }
 
     private void getMessagefromPacket(){
         message = "";
 
-        for(int i = 0; i < 40; i++){
+        for(int i = 0; i < 43; i++){
                 message = message.concat(String.valueOf(data.charAt(i+9)));
         }
 
@@ -754,19 +763,16 @@ public class MainActivity extends AppCompatActivity{
     @RequiresApi(api = Build.VERSION_CODES.KITKAT)
     private boolean checkHashfromPacket(){
         boolean isHashMatched;
+        byte[] hashFromPacketBytes = new byte[8];
+        byte[] noHashPartFromPacketBytes = new byte[52];
         noHashPart = "";
         hashFromPacket = "";
         computedHash = "";
 
-        for(int i = 0; i < 49; i++){
-            noHashPart = noHashPart.concat(String.valueOf(data.charAt(i)));
-        }
-
-        for(int i = 0; i < 11; i++){
-            hashFromPacket = hashFromPacket.concat(String.valueOf(data.charAt(i+49)));
-        }
-
-        computedHash = hashProcessor.getHash(noHashPart);
+        System.arraycopy(tempArg0,52,hashFromPacketBytes,0,8);
+        System.arraycopy(tempArg0,0,noHashPartFromPacketBytes,0,52);
+        hashFromPacket = new String(hashFromPacketBytes);
+        computedHash = hashProcessor.getHash(new String(noHashPartFromPacketBytes,StandardCharsets.UTF_8));
         tvAppend(textView, "\nComputed: " + computedHash + "\nFromPkt:" + hashFromPacket);
 
         if(hashFromPacket.equals(computedHash))

@@ -5,6 +5,7 @@
       <map>
         <entry key="../../../../../../../layout/custom_preview.xml" value="0.35240572171651496" />
         <entry key="app/src/main/res/layout/activity_main.xml" value="0.1796875" />
+        <entry key="app/src/main/res/layout/contactlist_row.xml" value="0.18072916666666666" />
         <entry key="app/src/main/res/layout/dialog_contactmanagement.xml" value="0.1828125" />
         <entry key="app/src/main/res/layout/dialog_inboxmessage.xml" value="0.20625" />
         <entry key="app/src/main/res/layout/dialog_usercontact.xml" value="0.16875" />
