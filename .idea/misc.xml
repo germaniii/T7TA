@@ -11,7 +11,7 @@
         <entry key="app/src/main/res/layout/dialog_usercontact.xml" value="0.16875" />
         <entry key="app/src/main/res/layout/fragment_contact_list.xml" value="0.1828125" />
         <entry key="app/src/main/res/layout/fragment_main.xml" value="0.16927083333333334" />
-        <entry key="app/src/main/res/layout/fragment_text_message.xml" value="0.13043478260869565" />
+        <entry key="app/src/main/res/layout/fragment_text_message.xml" value="0.18" />
         <entry key="app/src/main/res/layout/inboxlist_row.xml" value="0.1828125" />
       </map>
     </option>

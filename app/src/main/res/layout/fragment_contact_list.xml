@@ -27,25 +27,33 @@
             app:srcCompat="@drawable/ico_contactslist"
             app:tint="@color/brown" />
 
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="vertical"
+            android:weightSum="6"
+            >
 
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/contactList_list"
             android:layout_width="match_parent"
-            android:layout_height="331dp"
+            android:layout_height="match_parent"
             android:layout_marginTop="15dp"
             android:background="@color/white"
             android:layout_marginLeft="25dp"
             android:layout_marginRight="25dp"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/contactList_ContactSign" />
+            app:layout_constraintTop_toBottomOf="@+id/contactList_ContactSign"
+            android:layout_weight="5"/>
 
         <ImageButton
             android:id="@+id/contactlist_addcontactbutton"
-            android:layout_width="35dp"
-            android:layout_height="35dp"
+            android:layout_width="50dp"
+            android:layout_height="50dp"
             android:layout_marginLeft="25dp"
             android:layout_marginTop="15dp"
+            android:layout_marginBottom="15dp"
             android:background="#00C8E6C9"
             android:onClick="onClickAddContact"
             android:scaleType="fitCenter"
@@ -53,7 +61,10 @@
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toStartOf="@+id/contactList_beaconButton"
             app:layout_constraintStart_toStartOf="parent"
-            app:srcCompat="@drawable/ico_addcontact" />
+            app:srcCompat="@drawable/ico_addcontact"
+            android:layout_weight="1"/>
+
+        </LinearLayout>
 
 
     </LinearLayout>

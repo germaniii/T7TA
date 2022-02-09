@@ -28,7 +28,7 @@
     <LinearLayout
         android:id="@+id/linearLayout2"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="match_parent"
         android:orientation="vertical"
         android:weightSum="100"
         android:paddingTop="15dp">
@@ -71,34 +71,45 @@
             </RelativeLayout>
         </LinearLayout>
 
-        <EditText
-            android:id="@+id/textMessage_message"
+        <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="300dp"
-            android:background="@color/white"
-            android:ems="10"
-            android:maxLength="239"
-            android:hint="Enter message..."
-            android:inputType="textMultiLine"
-            android:textColorHint="#979797"
-            android:textSize="14dp"
-            android:layout_marginRight="25dp"
-            android:layout_marginLeft="25dp"
-            android:layout_marginTop="15dp"/>
+            android:layout_height="match_parent"
+            android:orientation="vertical"
+            android:weightSum="5">
 
-        <ImageButton
-            android:id="@+id/textMessage_sendButton"
-            android:layout_width="35dp"
-            android:layout_height="35dp"
-            android:layout_gravity="right"
-            android:layout_marginTop="15dp"
-            android:layout_marginRight="25dp"
-            android:layout_weight="33"
-            android:background="#00C8E6C9"
-            android:onClick="onClickSendButton"
-            android:scaleType="fitCenter"
-            android:tint="@color/night_blue"
-            app:srcCompat="@drawable/ico_sendbutton" />
+            <EditText
+                android:id="@+id/textMessage_message"
+                android:layout_width="match_parent"
+                android:layout_height="fill_parent"
+                android:layout_marginLeft="25dp"
+                android:layout_marginTop="15dp"
+                android:layout_marginRight="25dp"
+                android:layout_marginBottom="15dp"
+                android:background="@color/white"
+                android:ems="10"
+                android:hint="Enter message..."
+                android:inputType="textMultiLine"
+                android:maxLength="239"
+                android:textColorHint="#979797"
+                android:textSize="14dp"
+                android:layout_weight="4"/>
+
+            <ImageButton
+                android:id="@+id/textMessage_sendButton"
+                android:layout_width="50dp"
+                android:layout_height="50dp"
+                android:layout_marginLeft="25dp"
+                android:layout_marginRight="25dp"
+                android:layout_marginBottom="15dp"
+                android:layout_gravity="right"
+                android:background="#00C8E6C9"
+                android:onClick="onClickSendButton"
+                android:scaleType="fitCenter"
+                app:srcCompat="@drawable/ico_sendbutton"
+                app:tint="@color/night_blue"
+                android:layout_weight="1"/>
+        </LinearLayout>
+
 
         </LinearLayout>
     </LinearLayout>
