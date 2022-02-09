@@ -121,15 +121,15 @@ public class MainActivity extends AppCompatActivity{
             // Extract Sender ID from the packet.
             num = getUserSID().trim();
             packetHandler.setSID(num);
-            tvAppend(textView, "\nUSER SID:" + packetHandler.getSenderID());
-            tvAppend(textView, "\nIN: " + data + "\nInLen: " + data.length());
+            //tvAppend(textView, "\nUSER SID:" + packetHandler.getSenderID());
+            //tvAppend(textView, "\nIN: " + data + "\nInLen: " + data.length());
 
             // Check if stream is not empty.
             if(arg0.length > 0) {
                 // Control Code 1, Send SID to Arduino Device
                 if (arg0[0] == 1) {
                     serialPort.write(packetHandler.getSIDBytes());
-                    tvAppend(textView, "OutStream : " + packetHandler.getSenderID() + "\n");
+                    //tvAppend(textView, "OutStream : " + packetHandler.getSenderID() + "\n");
                 }else if (arg0[0] == 0x02) {
                         if(data.length() == 60) {
                             // Prevent multiple instances of the infinite sound
@@ -139,7 +139,7 @@ public class MainActivity extends AppCompatActivity{
                                 isRinging = true;
                             }
                             if (checkHashfromPacket()) {
-                                tvAppend(textView, "\nMatching Hashes");
+                                //tvAppend(textView, "\nMatching Hashes");
                                 getSenderfromPacket();
                                 // Create an explicit intent for an Activity in your app
                                 Intent intent = new Intent(String.valueOf(MainActivity.this));
@@ -162,23 +162,24 @@ public class MainActivity extends AppCompatActivity{
 
                                 storeMessage(sender, "URGENT BEACON SIGNAL RECEIVED!");
                                 beaconsignalcounter += 1;
-                                tvAppend(textView, "Beacon signal Received: " + beaconsignalcounter);
+                               // tvAppend(textView, "Beacon signal Received: " + beaconsignalcounter);
 
                                 //Flashing Timer
                                 beaconReceiveTimer.start();
 
                                 // THis line is for debugging purposes
                                 // Shows what is the incoming message from the arduino
-                                tvAppend(textView, "\nInStream : " + data);
+                                //tvAppend(textView, "\nInStream : " + data);
                             }else
-                                tvAppend(textView, "\nNon-Matching Hashes");
+                                System.out.println("none");
+                            // tvAppend(textView, "\nNon-Matching Hashes");
                         }
                     } else if (arg0[0] == 0x03) {
                         if(data.length() == 60) {
                             if (checkHashfromPacket()) {
                                 FragmentTextMessage.isReceivedConfirmationByte = true;
                                 FragmentTextMessage.repTimer = 4;
-                                tvAppend(textView, "\nReceived Confirmation Byte" + data);
+                                //tvAppend(textView, "\nReceived Confirmation Byte" + data);
                                 //add one message to
                             }else
                                 Toast.makeText(MainActivity.this, "Wrong Hash", Toast.LENGTH_SHORT).show();
@@ -201,19 +202,19 @@ public class MainActivity extends AppCompatActivity{
                                     encryptionProcessor.receivingEncryptionProcessor(encryptedData, sender, num);
                                     decodedData = encryptionProcessor.getDecodedText();
                                     storeMessage(sender, base64CipherinString);
-                                    tvAppend(textView, "\nReceived Single Packet Text Message");
+                                    //tvAppend(textView, "\nReceived Single Packet Text Message");
                                     messagePacketArray[packetNumber] = decodedData;
 
 
                                     if(packetNumber == 0){
                                         isReceivingTextPacket = true;
-                                        tvAppend(textView, "\nReceiving Packets");
+                                        //tvAppend(textView, "\nReceiving Packets");
                                     }
 
                                     if(arg0[0] == 0x7F){
                                             isPacketsComplete = true;
                                     }else
-                                        tvAppend(textView, "\nNot Stop Byte");
+                                        //tvAppend(textView, "\nNot Stop Byte");
 
                                     if(isPacketsComplete) {
                                         final Handler handler = new Handler(Looper.getMainLooper());
@@ -240,7 +241,7 @@ public class MainActivity extends AppCompatActivity{
 
                                                 serialPort.write(sendConfirmBytes);
 
-                                                tvAppend(textView, "\n\nConfirmPacket : " + string + "\nPacketLen: " +  "\nHash: " + hash);
+                                                //tvAppend(textView, "\n\nConfirmPacket : " + string + "\nPacketLen: " +  "\nHash: " + hash);
 
                                             }
                                         }, 1000);
@@ -248,7 +249,7 @@ public class MainActivity extends AppCompatActivity{
 
                                         // THis line is for debugging purposes
                                         // Shows what is the incoming message from the arduino
-                                        tvAppend(textView, "\nHashFromPacket : " + hashFromPacket + "\nComputedHash = " + computedHash);
+                                        //tvAppend(textView, "\nHashFromPacket : " + hashFromPacket + "\nComputedHash = " + computedHash);
 
                                         //Reset TextMessagePacket
                                         isPacketsComplete = false;
@@ -296,10 +297,11 @@ public class MainActivity extends AppCompatActivity{
                                         messagePacketArray = new String[10];
                                     }
                                 } else {
-                                    tvAppend(textView, "\nHashFromPacket : " + hashFromPacket + "\nComputedHash = " + computedHash);
+                                    //tvAppend(textView, "\nHashFromPacket : " + hashFromPacket + "\nComputedHash = " + computedHash);
                                 }
                             }else
-                                tvAppend(textView, "\nMismatch num\nnum From Packet : " + sender );
+                                System.out.println("none");
+                            //tvAppend(textView, "\nMismatch num\nnum From Packet : " + sender );
                         }
 
                     }
@@ -422,7 +424,7 @@ public class MainActivity extends AppCompatActivity{
             System.arraycopy(beaconHash.getBytes(), 0, sendBeaconBytes, 52, 8);
 
             serialPort.write(sendBeaconBytes);
-            tvAppend(textView, "\nINFO:\n" + beaconMessage + "\nSID: " + packetHandler.getSenderID() + "\nMessageLen: " + string.length() + "\nPacketLen: " + new String(sendBeaconBytes, StandardCharsets.UTF_8).length());
+            //tvAppend(textView, "\nINFO:\n" + beaconMessage + "\nSID: " + packetHandler.getSenderID() + "\nMessageLen: " + string.length() + "\nPacketLen: " + new String(sendBeaconBytes, StandardCharsets.UTF_8).length());
             beaconSendTimer.cancel();
             beaconSendTimer.start();
         }
@@ -439,12 +441,12 @@ public class MainActivity extends AppCompatActivity{
         createMessageNotificationChannel();
 
         usbManager = (UsbManager) getSystemService(USB_SERVICE);
-        textView = findViewById(R.id.main_serialMonitor);
+       // textView = findViewById(R.id.main_serialMonitor);
         beacon = findViewById(R.id.main_beaconButton);
         toTextMode = findViewById(R.id.toTextModeButton);
         toContactList = findViewById(R.id.toContactList);
         toReceiverMode = findViewById(R.id.toReceiverModeButton);
-        textView.setMovementMethod(new ScrollingMovementMethod());
+       // textView.setMovementMethod(new ScrollingMovementMethod());
 
         dataBaseHelper = new DataBaseHelper(this);
 
@@ -453,7 +455,7 @@ public class MainActivity extends AppCompatActivity{
         filter.addAction(UsbManager.ACTION_USB_DEVICE_ATTACHED);
         filter.addAction(UsbManager.ACTION_USB_DEVICE_DETACHED);
         registerReceiver(broadcastReceiver, filter);
-        textView.setMovementMethod(new ScrollingMovementMethod());
+//        textView.setMovementMethod(new ScrollingMovementMethod());
 
         mp = MediaPlayer.create(MainActivity.this, notificationSound);
         beaconmp = MediaPlayer.create(MainActivity.this, R.raw.emergency_alarm);
@@ -563,12 +565,14 @@ public class MainActivity extends AppCompatActivity{
         }
     }
 
-    private void tvAppend(TextView tv, CharSequence text) {
+    /*private void tvAppend(TextView tv, CharSequence text) {
         final TextView ftv = tv;
         final CharSequence ftext = text;
 
         runOnUiThread(() -> ftv.append(ftext));
     }
+
+     */
 
 
     /*
@@ -736,7 +740,7 @@ public class MainActivity extends AppCompatActivity{
         System.arraycopy(tempArg0, 5, senderBytes, 0,4);
 
         sender = packetHandler.getID(senderBytes);
-        tvAppend(textView, "\nSenderFromPacket: " + sender);
+        //tvAppend(textView, "\nSenderFromPacket: " + sender);
 
     }
 
@@ -747,7 +751,7 @@ public class MainActivity extends AppCompatActivity{
         System.arraycopy(tempArg0, 1, receiverBytes, 0,4);
 
         receiver = packetHandler.getID(receiverBytes);
-        tvAppend(textView, "\nReceiverFromPacket: " + receiver);
+        //tvAppend(textView, "\nReceiverFromPacket: " + receiver);
 
     }
 
@@ -773,7 +777,7 @@ public class MainActivity extends AppCompatActivity{
         System.arraycopy(tempArg0,0,noHashPartFromPacketBytes,0,52);
         hashFromPacket = new String(hashFromPacketBytes);
         computedHash = hashProcessor.getHash(new String(noHashPartFromPacketBytes,StandardCharsets.UTF_8));
-        tvAppend(textView, "\nComputed: " + computedHash + "\nFromPkt:" + hashFromPacket);
+        //tvAppend(textView, "\nComputed: " + computedHash + "\nFromPkt:" + hashFromPacket);
 
         if(hashFromPacket.equals(computedHash))
             isHashMatched = true;

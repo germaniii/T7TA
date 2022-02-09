@@ -152,7 +152,7 @@ public class FragmentTextMessage extends Fragment {
 
                         for (int i = 0; i < totalpackets; i++) {
                             messageArray[i] = MESSAGE_FINAL.substring((i * 31), ((i * 31) + 31));
-                            tvAppend(textView, "\nPacket " + i + ": " + messageArray[i]);
+                            //tvAppend(textView, "\nPacket " + i + ": " + messageArray[i]);
                         }
                         packetHandler.setSendParameters(SID, RID);
                         sendTextBytes = new byte[totalpackets][60];
@@ -169,8 +169,8 @@ public class FragmentTextMessage extends Fragment {
                             encryptionProcessor.sendingEncryptionProcessor(messageArray[i], SID, RID);
                             cipherText = encryptionProcessor.getCipherText();
                             String cipherbase64 = Base64.encodeToString(cipherText, Base64.NO_WRAP | Base64.NO_PADDING | Base64.URL_SAFE | Base64.NO_CLOSE);
-                            tvAppend(textView, "\nBase64Cipher: " + cipherbase64 +
-                                    "\nBase64CipherLen: " + cipherbase64.length());
+                            //tvAppend(textView, "\nBase64Cipher: " + cipherbase64 +
+                            //         "\nBase64CipherLen: " + cipherbase64.length());
 
                             if (totalpackets == 1 || (i == totalpackets-1))
                                 smp[0] = 0x7F;
@@ -188,7 +188,7 @@ public class FragmentTextMessage extends Fragment {
 
                             //MainActivity.serialPort.write(sendTextBytes[0]);
                             packetNumber=0;
-                            tvAppend(textView, "\n\nSENDING PACKET\n" + "\nPacket: " + string + "\nPacketLen: " + (smp.length + packetHandler.getRIDBytes().length + packetHandler.getSIDBytes().length + cipherbase64.length() + hash.getBytes().length) + "\nCipher: " + new String(cipherText, StandardCharsets.UTF_8) + "\nCipherLen: " + cipherText.length + "\nHash: " + hash);
+                            //tvAppend(textView, "\n\nSENDING PACKET\n" + "\nPacket: " + string + "\nPacketLen: " + (smp.length + packetHandler.getRIDBytes().length + packetHandler.getSIDBytes().length + cipherbase64.length() + hash.getBytes().length) + "\nCipher: " + new String(cipherText, StandardCharsets.UTF_8) + "\nCipherLen: " + cipherText.length + "\nHash: " + hash);
                             smp[0]+=1;
                         }
                         resendTimer.start();
@@ -292,7 +292,7 @@ public class FragmentTextMessage extends Fragment {
         super.onViewCreated(view, savedInstanceState);
         this.context = getActivity();
 
-        textView = getActivity().findViewById(R.id.main_serialMonitor);
+        //textView = getActivity().findViewById(R.id.main_serialMonitor);
         sendButton = getActivity().findViewById(R.id.textMessage_sendButton);
         message = getActivity().findViewById(R.id.textMessage_message);
 
@@ -321,7 +321,7 @@ public class FragmentTextMessage extends Fragment {
         }else{
             if(cursor.moveToFirst()){
                     SID = cursor.getString(0);  //Names
-                    tvAppend(textView, SID+"\n");
+                //tvAppend(textView, SID+"\n");
             }
         }
 
@@ -337,7 +337,7 @@ public class FragmentTextMessage extends Fragment {
             if(cursor.moveToFirst()){
                     RID = cursor.getString(0);  //Names
             }
-                    tvAppend(textView, "\nName:" + number.getSelectedItem().toString() + RID);
+            //tvAppend(textView, "\nName:" + number.getSelectedItem().toString() + RID);
         }
 
         cursor.close();
@@ -358,12 +358,14 @@ public class FragmentTextMessage extends Fragment {
         cursor.close();
     }
 
-    private void tvAppend(TextView tv, CharSequence text) {
+    /*private void tvAppend(TextView tv, CharSequence text) {
         final TextView ftv = tv;
         final CharSequence ftext = text;
 
         getActivity().runOnUiThread(() -> ftv.append(ftext));
     }
+
+     */
 
     String getUserSID(){
         String SID = null;
