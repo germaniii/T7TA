@@ -263,14 +263,14 @@ public class MainActivity extends AppCompatActivity{
                                     if(isAbletoNotify) {
 
                                         if(packetNumber>1) {
-                                            for (String s : messagePacketArray) {
-                                                if(s!=null)
-                                                combinedPacketArray.concat(s);
+                                            String s = "";
+                                            for (int i = 0; i <packetNumber; i++) {
+                                                combinedPacketArray.concat(messagePacketArray[i]);
                                             }
                                         }
                                         // DO THIS AFTER CONFIRMING
                                         // Notify User of Received Packet
-                                        //mp.start(); // Play sound
+                                        mp.start(); // Play sound
                                         // Create an explicit intent for an Activity in your app
                                         Intent intent = new Intent(String.valueOf(MainActivity.this));
                                         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
@@ -387,7 +387,7 @@ public class MainActivity extends AppCompatActivity{
 
     }
 
-    CountDownTimer beaconSendTimer = new CountDownTimer(1000, 1000) {
+    CountDownTimer beaconSendTimer = new CountDownTimer(3000, 1000) {
 
         @Override
         public void onTick(long l) {

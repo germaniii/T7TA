@@ -133,6 +133,7 @@ public class FragmentTextMessage extends Fragment {
                     Toast.makeText(context, "Please Fill Up All Fields!", Toast.LENGTH_SHORT).show();
                 } else {
                     if (!isDisabled) {
+                        isDisabled = true;
                         smp[0] = 0x04;
                         getSID();
                         getRID();
@@ -190,7 +191,6 @@ public class FragmentTextMessage extends Fragment {
                             tvAppend(textView, "\n\nSENDING PACKET\n" + "\nPacket: " + string + "\nPacketLen: " + (smp.length + packetHandler.getRIDBytes().length + packetHandler.getSIDBytes().length + cipherbase64.length() + hash.getBytes().length) + "\nCipher: " + new String(cipherText, StandardCharsets.UTF_8) + "\nCipherLen: " + cipherText.length + "\nHash: " + hash);
                             smp[0]+=1;
                         }
-                        isDisabled = true;
                         resendTimer.start();
 
                     } else {
@@ -219,6 +219,7 @@ public class FragmentTextMessage extends Fragment {
                 isReceivedConfirmationByte = false;
                 countDownRepeater();
                 resendTimer.cancel();
+                isDisabled = false;
             }
 
         }
