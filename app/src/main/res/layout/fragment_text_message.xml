@@ -80,19 +80,19 @@
             <EditText
                 android:id="@+id/textMessage_message"
                 android:layout_width="match_parent"
-                android:layout_height="fill_parent"
+                android:layout_height="match_parent"
                 android:layout_marginLeft="25dp"
                 android:layout_marginTop="15dp"
                 android:layout_marginRight="25dp"
                 android:layout_marginBottom="15dp"
+                android:layout_weight="4"
                 android:background="@color/white"
                 android:ems="10"
                 android:hint="Enter message..."
                 android:inputType="textMultiLine"
                 android:maxLength="239"
                 android:textColorHint="#979797"
-                android:textSize="14dp"
-                android:layout_weight="4"/>
+                android:textSize="14dp" />
 
             <ImageButton
                 android:id="@+id/textMessage_sendButton"

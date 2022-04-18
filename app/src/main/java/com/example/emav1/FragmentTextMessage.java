@@ -141,7 +141,7 @@ public class FragmentTextMessage extends Fragment {
                         String MESSAGE_FINAL = MESSAGE;
 
                         String Received = "-";
-                        String Sent =FragmentMain.dateFormat.format(FragmentMain.date);
+                        String Sent = FragmentMain.dateFormat.format(FragmentMain.date);
                         dataBaseHelper.addOneMessage(getUserSID(), MESSAGE_FINAL,Received,Sent);
 
                         //if message entered is less than 31 characters, add whitespace characters to fill up the packet.
