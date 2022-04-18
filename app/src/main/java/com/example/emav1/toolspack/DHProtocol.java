@@ -46,9 +46,9 @@ public class DHProtocol {
             case 'B':
                 return new BigDecimal(this.g ^ this.b).remainder(p);
             case 'K': //"Key" For the Sender-side key
-                return bigDecimalExponent(this.B, new BigDecimal(this.a)).remainder(p);
+                return this.B.pow(this.a).remainder(p);
             case 'O': // "Other" For the Receiver-side key
-                return bigDecimalExponent(this.A, new BigDecimal(this.b)).remainder(p);
+                return this.A.pow(this.b).remainder(p);
             default:
                 return BigDecimal.ZERO;
         }
