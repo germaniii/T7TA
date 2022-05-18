@@ -28,9 +28,7 @@ import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.example.emav1.toolspack.EncryptionProcessor;
-import com.example.emav1.toolspack.HashProcessor;
-import com.example.emav1.toolspack.PacketHandler;
+import com.example.emav1.toolspack.*;
 import com.felhr.usbserial.UsbSerialDevice;
 
 import java.nio.charset.StandardCharsets;

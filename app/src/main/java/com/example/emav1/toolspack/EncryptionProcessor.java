@@ -29,6 +29,8 @@ public class EncryptionProcessor {
     private String key;
     int packetTotal;
 
+    //
+
     public EncryptionProcessor(){
         //none
     }
@@ -36,14 +38,14 @@ public class EncryptionProcessor {
     //Call this for encrypting purposes -- Sender device
     @RequiresApi(api = Build.VERSION_CODES.KITKAT)
     public void sendingEncryptionProcessor(String inputText, String senderID, String receiverID){
-        this.key = generateKey(senderID, receiverID);
+        this.key = generateKey(senderID, receiverID, true);
         this.cipherText = performEncrypt(this.key.getBytes(StandardCharsets.UTF_8), inputText);
     }
 
     //Call for decrypting -- Receiver device
     @RequiresApi(api = Build.VERSION_CODES.KITKAT)
     public void receivingEncryptionProcessor(byte[] receivedCipherText, String senderID, String receiverID){
-        this.key = generateKey(senderID, receiverID);
+        this.key = generateKey(senderID, receiverID, false);
         this.decodedText = performDecrypt(this.key.getBytes(StandardCharsets.UTF_8), receivedCipherText);
     }
 
@@ -63,11 +65,35 @@ public class EncryptionProcessor {
         return this.packetTotal;
     }
 
-    public String generateKey(String senderID, String receiverID) {
+    public String generateKey(String senderID, String receiverID, boolean isSending) {
+        /*
         StringBuilder sID, rID;
         sID = new StringBuilder(senderID);
         rID = new StringBuilder(receiverID);
         return sID.replace(0, 2, "").toString() + rID.replace(0, 2, "").toString();
+         */
+        int person1, person2;
+
+        if(isSending){
+            person1 = Integer.parseInt(senderID.substring(2,5));
+            person2 = Integer.parseInt(receiverID.substring(7,10));
+        }else{
+            person1 = Integer.parseInt(receiverID.substring(7,10));
+            person2 = Integer.parseInt(senderID.substring(2,5));
+        }
+
+        DHProtocol dhalgo = new DHProtocol(person1, person2);
+        dhalgo.generateSecrets();
+
+        String key = dhalgo.getKey().toString();
+        key.replace('0','1');
+        if(key.length() < 64){
+            for(int i = key.length(); i < 64; i++)
+                key += "1";
+        }
+
+        return dhalgo.getKey().toString().substring(0,64);
+
     }
 
     private byte[] performEncrypt(byte[] key, String plainText)
