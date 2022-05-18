@@ -1,6 +1,7 @@
 package com.example.emav1.toolspack;
 
 import android.os.Build;
+import android.util.Log;
 
 import androidx.annotation.RequiresApi;
 
@@ -66,14 +67,14 @@ public class EncryptionProcessor {
     }
 
     public String generateKey(String senderID, String receiverID, boolean isSending) {
-        /*
+        /* This is the old keyGenerator
         StringBuilder sID, rID;
         sID = new StringBuilder(senderID);
         rID = new StringBuilder(receiverID);
         return sID.replace(0, 2, "").toString() + rID.replace(0, 2, "").toString();
          */
+        //Swapping for sending and receiving
         int person1, person2;
-
         if(isSending){
             person1 = Integer.parseInt(senderID.substring(2,5));
             person2 = Integer.parseInt(receiverID.substring(7,10));
@@ -85,14 +86,19 @@ public class EncryptionProcessor {
         DHProtocol dhalgo = new DHProtocol(person1, person2);
         dhalgo.generateSecrets();
 
-        String key = dhalgo.getKey().toString();
+        String key = dhalgo.getOtherKey().toString();
+        if(isSending)
+            key = dhalgo.getKey().toString();
+
         key.replace('0','1');
-        if(key.length() < 64){
-            for(int i = key.length(); i < 64; i++)
+        if(key.length() < 32){
+            for(int i = key.length(); i < 32; i++)
                 key += "1";
         }
+       // Log.d("ADebugTag", "getKey: " + dhalgo.getKey().toString().substring(0,32));
+       // Log.d("ADebugTag", "getOtherKey: " + dhalgo.getOtherKey().toString().substring(0,32));
 
-        return dhalgo.getKey().toString().substring(0,64);
+        return key.substring(0,32);
 
     }
 
