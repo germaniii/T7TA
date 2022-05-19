@@ -118,7 +118,7 @@ public class FragmentContactList extends Fragment implements ContactListAdapter.
                     contactNames.add(editName.getText().toString());
                     contactNum.add(editNumber.getText().toString());
                     dataBaseHelper.addOneContact(editName.getText().toString().trim(), editNumber.getText().toString(),
-                            encryptionProcessor.generateKey(editNumber.getText().toString(), getUserSID()));
+                            encryptionProcessor.generateKey(editNumber.getText().toString(), getUserSID(), true));
 
                     //refill the contact Array lists so that the Contact ID will be filled with the new information
                     contactID.clear();
@@ -167,7 +167,7 @@ public class FragmentContactList extends Fragment implements ContactListAdapter.
                             toast_send.show();
                         } else {
                             dataBaseHelper.updateContact(contactID.get(position), editName.getText().toString(), editNumber.getText().toString(),
-                                    encryptionProcessor.generateKey(editNumber.getText().toString(),getUserSID()));
+                                    encryptionProcessor.generateKey(editNumber.getText().toString(),getUserSID(), true));
                             contactNames.set(position, editName.getText().toString());
                             contactNum.set(position, editNumber.getText().toString());
                             contactListAdapter.notifyDataSetChanged();

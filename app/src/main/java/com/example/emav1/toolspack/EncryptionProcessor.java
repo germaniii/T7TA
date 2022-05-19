@@ -1,6 +1,7 @@
 package com.example.emav1.toolspack;
 
 import android.os.Build;
+import android.util.Log;
 
 import androidx.annotation.RequiresApi;
 
@@ -29,6 +30,8 @@ public class EncryptionProcessor {
     private String key;
     int packetTotal;
 
+    //
+
     public EncryptionProcessor(){
         //none
     }
@@ -36,14 +39,14 @@ public class EncryptionProcessor {
     //Call this for encrypting purposes -- Sender device
     @RequiresApi(api = Build.VERSION_CODES.KITKAT)
     public void sendingEncryptionProcessor(String inputText, String senderID, String receiverID){
-        this.key = generateKey(senderID, receiverID);
+        this.key = generateKey(senderID, receiverID, true);
         this.cipherText = performEncrypt(this.key.getBytes(StandardCharsets.UTF_8), inputText);
     }
 
     //Call for decrypting -- Receiver device
     @RequiresApi(api = Build.VERSION_CODES.KITKAT)
     public void receivingEncryptionProcessor(byte[] receivedCipherText, String senderID, String receiverID){
-        this.key = generateKey(senderID, receiverID);
+        this.key = generateKey(senderID, receiverID, false);
         this.decodedText = performDecrypt(this.key.getBytes(StandardCharsets.UTF_8), receivedCipherText);
     }
 
@@ -63,11 +66,40 @@ public class EncryptionProcessor {
         return this.packetTotal;
     }
 
-    public String generateKey(String senderID, String receiverID) {
+    public String generateKey(String senderID, String receiverID, boolean isSending) {
+        /* This is the old keyGenerator
         StringBuilder sID, rID;
         sID = new StringBuilder(senderID);
         rID = new StringBuilder(receiverID);
         return sID.replace(0, 2, "").toString() + rID.replace(0, 2, "").toString();
+         */
+        //Swapping for sending and receiving
+        int person1, person2;
+        if(isSending){
+            person1 = Integer.parseInt(senderID.substring(2,5));
+            person2 = Integer.parseInt(receiverID.substring(7,10));
+        }else{
+            person1 = Integer.parseInt(receiverID.substring(7,10));
+            person2 = Integer.parseInt(senderID.substring(2,5));
+        }
+
+        DHProtocol dhalgo = new DHProtocol(person1, person2);
+        dhalgo.generateSecrets();
+
+        String key = dhalgo.getOtherKey().toString();
+        if(isSending)
+            key = dhalgo.getKey().toString();
+
+        key.replace('0','1');
+        if(key.length() < 32){
+            for(int i = key.length(); i < 32; i++)
+                key += "1";
+        }
+       // Log.d("ADebugTag", "getKey: " + dhalgo.getKey().toString().substring(0,32));
+       // Log.d("ADebugTag", "getOtherKey: " + dhalgo.getOtherKey().toString().substring(0,32));
+
+        return key.substring(0,32);
+
     }
 
     private byte[] performEncrypt(byte[] key, String plainText)

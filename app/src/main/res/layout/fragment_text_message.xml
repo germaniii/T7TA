@@ -90,6 +90,7 @@
                 android:ems="10"
                 android:hint="Enter message..."
                 android:inputType="textMultiLine"
+                android:minLines="6"
                 android:maxLength="239"
                 android:textColorHint="#979797"
                 android:textSize="14dp" />
