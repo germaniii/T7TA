@@ -184,127 +184,128 @@ public class MainActivity extends AppCompatActivity{
                             }else
                                 Toast.makeText(MainActivity.this, "Wrong Hash", Toast.LENGTH_SHORT).show();
                         }
-                    } else if (arg0[0] >= 0x04) {
-                        if(data.length() == 60) {
-                            getSenderfromPacket();
-                            getReceiverfromPacket();
-                            getMessagefromPacket();
-                            if(receiver.equals(num)){
-                                if (checkHashfromPacket()) {
-                                    // ... decryption for display, and store it in a temporary string.
-                                    // ... store to messages table in database encrypted
-                                    // if(regular message)
+                    } else if (arg0[0] == 0x04) { // This is for A - B Handshake
 
-                                    byte[] cipherInBase64 = new byte[43];
-                                    System.arraycopy(tempArg0,9,cipherInBase64,0,43);
-                                    String base64CipherinString = new String(cipherInBase64, StandardCharsets.UTF_8);
-                                    byte[] encryptedData = Base64.decode(base64CipherinString, Base64.NO_WRAP | Base64.NO_PADDING | Base64.URL_SAFE | Base64.NO_CLOSE);
-                                    encryptionProcessor.receivingEncryptionProcessor(encryptedData, sender, num);
-                                    decodedData = encryptionProcessor.getDecodedText();
-                                    storeMessage(sender, base64CipherinString);
-                                    //tvAppend(textView, "\nReceived Single Packet Text Message");
-                                    messagePacketArray[packetNumber] = decodedData;
+                    } else if (arg0[0] >= 0x05) { // This is for Text Message Mode
+                    if(data.length() == 60) {
+                        getSenderfromPacket();
+                        getReceiverfromPacket();
+                        getMessagefromPacket();
+                        if(receiver.equals(num)){
+                            if (checkHashfromPacket()) {
+                                // ... decryption for display, and store it in a temporary string.
+                                // ... store to messages table in database encrypted
+                                // if(regular message)
 
-
-                                    if(packetNumber == 0){
-                                        isReceivingTextPacket = true;
-                                        //tvAppend(textView, "\nReceiving Packets");
-                                    }
-
-                                    if(arg0[0] == 0x7F){
-                                            isPacketsComplete = true;
-                                    }else
-                                        //tvAppend(textView, "\nNot Stop Byte");
-
-                                    if(isPacketsComplete) {
-                                        final Handler handler = new Handler(Looper.getMainLooper());
-                                        handler.postDelayed(new Runnable() {
-                                            @Override
-                                            public void run() {
-                                                //Do something after 100ms
-                                                //Confirmation packet segment
-                                                packetHandler.setSID(sender);
-                                                packetHandler.setRID(num);
-                                                sendConfirmBytes = new byte[60];
-                                                byte[] smp = new byte[1];
-
-                                                smp[0] = 0x03;
-                                                System.arraycopy(smp, 0, sendConfirmBytes, 0, 1);
-                                                System.arraycopy(packetHandler.getSIDBytes(), 0, sendConfirmBytes, 1, 4);
-                                                System.arraycopy(packetHandler.getRIDBytes(), 0, sendConfirmBytes, 5, 4);
-                                                System.arraycopy("0000000000000000000000000000000000000000000".getBytes(), 0, sendConfirmBytes, 9, 40);
-
-                                                String string = new String(sendConfirmBytes, StandardCharsets.UTF_8);
-                                                String hash = hashProcessor.getHash(string);
-                                                string += hash;
-                                                System.arraycopy(hash.getBytes(), 0, sendConfirmBytes, 52, 8);
-
-                                                serialPort.write(sendConfirmBytes);
-
-                                                //tvAppend(textView, "\n\nConfirmPacket : " + string + "\nPacketLen: " +  "\nHash: " + hash);
-
-                                            }
-                                        }, 1000);
+                                byte[] cipherInBase64 = new byte[43];
+                                System.arraycopy(tempArg0,9,cipherInBase64,0,43);
+                                String base64CipherinString = new String(cipherInBase64, StandardCharsets.UTF_8);
+                                byte[] encryptedData = Base64.decode(base64CipherinString, Base64.NO_WRAP | Base64.NO_PADDING | Base64.URL_SAFE | Base64.NO_CLOSE);
+                                encryptionProcessor.receivingEncryptionProcessor(encryptedData, sender, num);
+                                decodedData = encryptionProcessor.getDecodedText();
+                                storeMessage(sender, base64CipherinString);
+                                Log.d("ADebugTag","Received Single Packet Text Message");
+                                messagePacketArray[packetNumber] = decodedData;
 
 
-                                        // THis line is for debugging purposes
-                                        // Shows what is the incoming message from the arduino
-                                        //tvAppend(textView, "\nHashFromPacket : " + hashFromPacket + "\nComputedHash = " + computedHash);
-
-                                        //Reset TextMessagePacket
-                                        isPacketsComplete = false;
-                                        isReceivingTextPacket = false;
-                                        packetNumber = 0;
-                                        isAbletoNotify = true;
-
-                                    }else{
-                                        packetNumber += 1;
-                                    }
-
-                                    if(isAbletoNotify) {
-
-                                        if(packetNumber>1) {
-                                            String s = "";
-                                            for (int i = 0; i <packetNumber; i++) {
-                                                combinedPacketArray.concat(messagePacketArray[i]);
-                                            }
-                                        }
-                                        // DO THIS AFTER CONFIRMING
-                                        // Notify User of Received Packet
-                                        mp.start(); // Play sound
-                                        // Create an explicit intent for an Activity in your app
-                                        Intent intent = new Intent(String.valueOf(MainActivity.this));
-                                        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-                                        PendingIntent pendingIntent = PendingIntent.getActivity(MainActivity.this, 0, intent, 0);
-
-                                        // Notification Builder
-                                        NotificationCompat.Builder builder = new NotificationCompat.Builder(MainActivity.this, "EMAMessageNotif")
-                                                .setSmallIcon(android.R.color.transparent)
-                                                .setContentTitle("Message from User: " + sender)
-                                                .setContentText("Message: " + combinedPacketArray)
-                                                .setPriority(NotificationCompat.PRIORITY_DEFAULT)
-                                                // Set the intent that will fire when the user taps the notification
-                                                .setContentIntent(pendingIntent)
-                                                .setAutoCancel(true);
-
-                                        // Notification Show
-                                        NotificationManagerCompat notificationManager = NotificationManagerCompat.from(MainActivity.this);
-                                        notificationManager.notify(2, builder.build());
-
-                                        isPacketsComplete = false;
-                                        isAbletoNotify = false;
-                                        combinedPacketArray = "";
-                                        messagePacketArray = new String[10];
-                                    }
-                                } else {
-                                    //tvAppend(textView, "\nHashFromPacket : " + hashFromPacket + "\nComputedHash = " + computedHash);
+                                if(packetNumber == 0){
+                                    isReceivingTextPacket = true;
+                                    Log.d("ADebugTag","Receiving Packets");
                                 }
-                            }else
-                                System.out.println("none");
-                            //tvAppend(textView, "\nMismatch num\nnum From Packet : " + sender );
-                        }
+
+                                if(arg0[0] == 0x7F){
+                                    isPacketsComplete = true;
+                                }else
+                                    Log.d("ADebugTag","Not Stop Byte");
+
+                                if(isPacketsComplete) {
+                                    final Handler handler = new Handler(Looper.getMainLooper());
+                                    handler.postDelayed(new Runnable() {
+                                        @Override
+                                        public void run() {
+                                            //Do something after 100ms
+                                            //Confirmation packet segment
+                                            packetHandler.setSID(sender);
+                                            packetHandler.setRID(num);
+                                            sendConfirmBytes = new byte[60];
+                                            byte[] smp = new byte[1];
+
+                                            smp[0] = 0x03;
+                                            System.arraycopy(smp, 0, sendConfirmBytes, 0, 1);
+                                            System.arraycopy(packetHandler.getSIDBytes(), 0, sendConfirmBytes, 1, 4);
+                                            System.arraycopy(packetHandler.getRIDBytes(), 0, sendConfirmBytes, 5, 4);
+                                            System.arraycopy("0000000000000000000000000000000000000000000".getBytes(), 0, sendConfirmBytes, 9, 40);
+
+                                            String string = new String(sendConfirmBytes, StandardCharsets.UTF_8);
+                                            String hash = hashProcessor.getHash(string);
+                                            string += hash;
+                                            System.arraycopy(hash.getBytes(), 0, sendConfirmBytes, 52, 8);
+
+                                            serialPort.write(sendConfirmBytes);
+
+                                            Log.d("ADebugTag","ConfirmPacket : " + string + "\nPacketLen: " +  "\nHash: " + hash);
+
+                                        }
+                                    }, 1000);
+
+
+                                    // THis line is for debugging purposes
+                                    // Shows what is the incoming message from the arduino
+                                    //tvAppend(textView, "\nHashFromPacket : " + hashFromPacket + "\nComputedHash = " + computedHash);
+
+                                    //Reset TextMessagePacket
+                                    isPacketsComplete = false;
+                                    isReceivingTextPacket = false;
+                                    packetNumber = 0;
+                                    isAbletoNotify = true;
+
+                                }else{
+                                    packetNumber += 1;
+                                }
+
+                                if(isAbletoNotify) {
+
+                                    if(packetNumber>1) {
+                                        String s = "";
+                                        for (int i = 0; i <packetNumber; i++) {
+                                            combinedPacketArray.concat(messagePacketArray[i]);
+                                        }
+                                    }
+                                    // DO THIS AFTER CONFIRMING
+                                    // Notify User of Received Packet
+                                    mp.start(); // Play sound
+                                    // Create an explicit intent for an Activity in your app
+                                    Intent intent = new Intent(String.valueOf(MainActivity.this));
+                                    intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                                    PendingIntent pendingIntent = PendingIntent.getActivity(MainActivity.this, 0, intent, 0);
+
+                                    // Notification Builder
+                                    NotificationCompat.Builder builder = new NotificationCompat.Builder(MainActivity.this, "EMAMessageNotif")
+                                            .setSmallIcon(android.R.color.transparent)
+                                            .setContentTitle("Message from User: " + sender)
+                                            .setContentText("Message: " + combinedPacketArray)
+                                            .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+                                            // Set the intent that will fire when the user taps the notification
+                                            .setContentIntent(pendingIntent)
+                                            .setAutoCancel(true);
+
+                                    // Notification Show
+                                    NotificationManagerCompat notificationManager = NotificationManagerCompat.from(MainActivity.this);
+                                    notificationManager.notify(2, builder.build());
+
+                                    isPacketsComplete = false;
+                                    isAbletoNotify = false;
+                                    combinedPacketArray = "";
+                                    messagePacketArray = new String[10];
+                                }
+                            } else {
+                                Log.d("ADebugTag","HashFromPacket : " + hashFromPacket + "\nComputedHash = " + computedHash);
+                            }
+                        }else
+                            Log.d("ADebugTag","Mismatch num\nnum From Packet : " + sender );
 
                     }
+                }
             }
         }
     };

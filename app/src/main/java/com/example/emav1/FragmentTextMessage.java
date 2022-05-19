@@ -132,7 +132,7 @@ public class FragmentTextMessage extends Fragment {
                 } else {
                     if (!isDisabled) {
                         isDisabled = true;
-                        smp[0] = 0x04;
+                        smp[0] = 0x05;
                         getSID();
                         getRID();
                         String MESSAGE = message.getText().toString().trim();
