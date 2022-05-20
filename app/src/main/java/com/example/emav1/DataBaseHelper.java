@@ -23,6 +23,8 @@ public class DataBaseHelper extends SQLiteOpenHelper {
     public static final String SENDER_ID = "SENDER_ID";
     public static final String RECEIVED = "RECEIVED";
     public static final String SENT = "SENT";
+    public static final String PUBLICKEY = "PUBLICKEY";
+    public static final String PRIVATEKEY = "PRIVATEKEY";
     Context context;
 
     public static final String CONTACTS_TABLE = "CONTACTS_TABLE";
@@ -47,6 +49,8 @@ public class DataBaseHelper extends SQLiteOpenHelper {
                                                                                     MESSAGE + " TEXT, " +
                                                                                     RECEIVED + " VARCHAR(255), " +
                                                                                     SENT + " VARCHAR(255), " +
+                                                                                    PUBLICKEY + " TEXT, " +
+                                                                                    PRIVATEKEY + " TEXT, " +
                                                                                     "FOREIGN KEY(" + SENDER_ID + ") REFERENCES " + CONTACTS_TABLE + "(CONTACT_ID) ON UPDATE CASCADE ON DELETE CASCADE);";
 
         String enableForeignKey = "PRAGMA foreign_keys = ON;";
@@ -65,13 +69,12 @@ public class DataBaseHelper extends SQLiteOpenHelper {
     }
 
     //This function is used for Adding Contacts in the FragmentContactList.java class
-    public void addOneContact(String contactName, String contactNum, String contactKey){
+    public void addOneContact(String contactName, String contactNum){
         SQLiteDatabase db = this.getWritableDatabase();
         ContentValues cv = new ContentValues();
 
         cv.put(CONTACT_NAME, contactName);
         cv.put(CONTACT_NUMBER, contactNum);
-        cv.put(CONTACT_KEY, contactKey);
 
         long insert = db.insert(CONTACTS_TABLE, null, cv);
         if(insert == -1)
@@ -84,7 +87,7 @@ public class DataBaseHelper extends SQLiteOpenHelper {
     This function is used for Adding Messages in the FragmentMain.java class.
     You can call this, then call a notification function in the Main Activity.
      */
-    public void addOneMessage(String messageSenderID, String messageText, String messageReceived, String messageSent){
+    public void addOneMessage(String messageSenderID, String messageText, String messageReceived, String messageSent, String messagePublicKey, String messagePrivateKey){
         SQLiteDatabase db = this.getWritableDatabase();
         ContentValues cv = new ContentValues();
 
@@ -92,6 +95,8 @@ public class DataBaseHelper extends SQLiteOpenHelper {
         cv.put(MESSAGE, messageText);
         cv.put(RECEIVED, messageReceived);
         cv.put(SENT, messageSent);
+        cv.put(PUBLICKEY, messagePublicKey);
+        cv.put(PRIVATEKEY, messagePrivateKey);
 
         long insert = db.insert(MESSAGES_TABLE, null, cv);
     }

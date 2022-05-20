@@ -11,6 +11,8 @@ import org.bouncycastle.crypto.modes.CBCBlockCipher;
 import org.bouncycastle.crypto.paddings.PaddedBufferedBlockCipher;
 import org.bouncycastle.crypto.params.KeyParameter;
 
+import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
 import java.security.spec.EncodedKeySpec;
 import java.util.Arrays;
@@ -38,15 +40,23 @@ public class EncryptionProcessor {
 
     //Call this for encrypting purposes -- Sender device
     @RequiresApi(api = Build.VERSION_CODES.KITKAT)
-    public void sendingEncryptionProcessor(String inputText, String senderID, String receiverID){
-        this.key = generateKey(senderID, receiverID, true);
+    public void sendingEncryptionProcessor(String inputText, BigInteger PUBLICKEY, int PRIVATEKEY){
+        //this.key = generateKey(senderID, receiverID, true);
+        this.key = new DHProtocol(PUBLICKEY, PRIVATEKEY).getCipherKey().toString().substring(0,32);
+        Log.d("DHKeys", "Public Key : " + PUBLICKEY.toString());
+        Log.d("DHKeys", "Private Key : " + PRIVATEKEY);
+        Log.d("DHKeys", "Cipher Key : " + this.key);
         this.cipherText = performEncrypt(this.key.getBytes(StandardCharsets.UTF_8), inputText);
     }
 
     //Call for decrypting -- Receiver device
     @RequiresApi(api = Build.VERSION_CODES.KITKAT)
-    public void receivingEncryptionProcessor(byte[] receivedCipherText, String senderID, String receiverID){
-        this.key = generateKey(senderID, receiverID, false);
+    public void receivingEncryptionProcessor(byte[] receivedCipherText, BigInteger PUBLICKEY, int PRIVATEKEY){
+        //this.key = generateKey(senderID, receiverID, false);
+        this.key = new DHProtocol(PUBLICKEY, PRIVATEKEY).getCipherKey().toString().substring(0,32);
+        Log.d("DHKeys", "Public Key : " + PUBLICKEY.toString());
+        Log.d("DHKeys", "Private Key : " + PRIVATEKEY);
+        Log.d("DHKeys", "Cipher Key : " + this.key);
         this.decodedText = performDecrypt(this.key.getBytes(StandardCharsets.UTF_8), receivedCipherText);
     }
 
@@ -54,17 +64,11 @@ public class EncryptionProcessor {
         return cipherText;
     }
 
-    public byte[][] getDividedCipherText() {
-        return dividedCipherText;
-    }
 
     public String getDecodedText(){
         return this.decodedText;
     }
 
-    public int getPacketTotal(){
-        return this.packetTotal;
-    }
 
     public String generateKey(String senderID, String receiverID, boolean isSending) {
         /* This is the old keyGenerator
@@ -83,12 +87,8 @@ public class EncryptionProcessor {
             person2 = Integer.parseInt(senderID.substring(2,5));
         }
 
-        DHProtocol dhalgo = new DHProtocol(person1, person2);
-        dhalgo.generateSecrets();
-
-        String key = dhalgo.getOtherKey().toString();
         if(isSending)
-            key = dhalgo.getKey().toString();
+            //key = dhalgo.getKey().toString();
 
         key.replace('0','1');
         if(key.length() < 32){
