@@ -38,6 +38,7 @@ import android.widget.ImageButton;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.example.emav1.toolspack.DHProtocol;
 import com.example.emav1.toolspack.EncryptionProcessor;
 import com.example.emav1.toolspack.HashProcessor;
 import com.example.emav1.toolspack.PacketHandler;
@@ -46,10 +47,14 @@ import com.felhr.usbserial.UsbSerialInterface;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
+import java.util.BitSet;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Random;
 
 public class MainActivity extends AppCompatActivity{
 
@@ -66,18 +71,20 @@ public class MainActivity extends AppCompatActivity{
 
     FragmentManager fragmentManager;
     FragmentTransaction fragmentTransaction;
+    EncryptionProcessor encryptionProcessor = new EncryptionProcessor();
 
     //navbar switches
     boolean isReceiverMode;
     boolean isContactList;
     boolean isTextMessageMode;
+    static boolean isReadyToTransmitTextMessage = false;
 
     // Serial Receiver Variables
     private String data;
     byte[] tempArg0;
     String num;
     byte[] senderBytes, receiverBytes, sendConfirmBytes;
-    String[] messagePacketArray = new String[10];
+    String[] messagePacketArray = new String[122];
     String combinedPacketArray = "";
 
     private final Uri notificationSound = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
@@ -89,10 +96,11 @@ public class MainActivity extends AppCompatActivity{
     boolean isFlashingSend = false;
     boolean isFlashingRecv = false;
 
+    static BigInteger DHPublicKey;
+    public static int DHPrivateKey;
 
     HashProcessor hashProcessor = new HashProcessor();
     PacketHandler packetHandler = new PacketHandler();
-    EncryptionProcessor encryptionProcessor = new EncryptionProcessor();
 
     boolean isReceivingTextPacket = false;
     boolean isAbletoNotify = false;
@@ -160,7 +168,7 @@ public class MainActivity extends AppCompatActivity{
                                 NotificationManagerCompat notificationManager = NotificationManagerCompat.from(MainActivity.this);
                                 notificationManager.notify(1, builder.build());
 
-                                storeMessage(sender, "URGENT BEACON SIGNAL RECEIVED!");
+                                storeMessage(sender, "URGENT BEACON SIGNAL RECEIVED!", new BigInteger(String.valueOf(9)), DHPrivateKey);
                                 beaconsignalcounter += 1;
                                // tvAppend(textView, "Beacon signal Received: " + beaconsignalcounter);
 
@@ -179,14 +187,80 @@ public class MainActivity extends AppCompatActivity{
                             if (checkHashfromPacket()) {
                                 FragmentTextMessage.isReceivedConfirmationByte = true;
                                 FragmentTextMessage.repTimer = 4;
+                                String Received = "-";
+                                String Sent = FragmentMain.dateFormat.format(FragmentMain.date);
+                                String PUBLICKEY="";
+                                String PRIVATEKEY="";
+                                dataBaseHelper.addOneMessage(getUserSID(), FragmentTextMessage.MESSAGE ,Received,Sent, PUBLICKEY, PRIVATEKEY);
                                 //tvAppend(textView, "\nReceived Confirmation Byte" + data);
                                 //add one message to
                             }else
                                 Toast.makeText(MainActivity.this, "Wrong Hash", Toast.LENGTH_SHORT).show();
                         }
-                    } else if (arg0[0] == 0x04) { // This is for A - B Handshake
+                    } else if (arg0[0] == 0x04) { // This is Sending Handshake perspective from receiver
+                        getSenderfromPacket();
+                        getReceiverfromPacket();
+                        //getMessagefromPacket();
+                        if(receiver.equals(num)) {
+                            if (checkHashfromPacket()) {
+                                //DHPublicKey = new BigInteger(message.substring(0,40).replace("a", ""));
+                                DHPublicKey = getABfromPacket();
 
-                    } else if (arg0[0] >= 0x05) { // This is for Text Message Mode
+                                Log.d("DHKeys", "Received A : " + DHPublicKey);
+
+                                packetHandler.setSID(sender);
+                                packetHandler.setRID(num);
+                                byte[] sendHandShakeBytes = new byte[60];
+                                byte[] smp = new byte[1];
+
+                                smp[0] = 0x05;
+                                System.arraycopy(smp, 0, sendHandShakeBytes, 0, 1);
+                                System.arraycopy(packetHandler.getSIDBytes(), 0, sendHandShakeBytes, 1, 4);
+                                System.arraycopy(packetHandler.getRIDBytes(), 0, sendHandShakeBytes, 5, 4);
+
+                                /*String tempB = new DHProtocol(DHPrivateKey).getPublicKey().toString();
+                                Log.d("DHKeys", "Generated B : " + tempB);
+                                for (int i = tempB.length(); i < 40; i++)
+                                    tempB +=  "a";
+
+                                 */
+                                BigInteger B = new DHProtocol(DHPrivateKey).getPublicKey();
+                                byte[] tempB = B.toByteArray();
+                                Log.d("DHKeys", "BigInteger B Array : " + Arrays.toString(tempB));
+                                // PADDING FUNCTION
+                                byte[] paddedArr = new byte[40];
+                                Arrays.fill(paddedArr, (byte) 126);
+
+                                // COPY tempA to paddedArr
+                                System.arraycopy(tempB, 0, paddedArr, 0, tempB.length);
+                                Log.d("DHKeys", "BigInteger B Paddedd Array: "  + Arrays.toString(paddedArr));
+
+                                System.arraycopy(paddedArr, 0, sendHandShakeBytes, 9, 40);
+
+                                String sendHandshakeString = new String(sendHandShakeBytes, StandardCharsets.UTF_8);
+                                String hash = hashProcessor.getHash(sendHandshakeString);
+                                sendHandshakeString += hash;
+                                System.arraycopy(hash.getBytes(), 0, sendHandShakeBytes, 52, 8);
+
+                                serialPort.write(sendHandShakeBytes);
+                                Log.d("DHKeys", "Sent Handshake Reply");
+                            }
+                        }
+                    } else if (arg0[0] == 0x05) { // This is Receiving Handshake perspective from sender
+                        getSenderfromPacket();
+                        getReceiverfromPacket();
+                        //getMessagefromPacket();
+                        if(receiver.equals(num)) {
+                            if (checkHashfromPacket()) {
+                                //DHPublicKey = new BigInteger(message.substring(0,40).replace("a", ""));
+                                DHPublicKey = getABfromPacket();
+
+                                Log.d("DHKeys", "Received B : " + DHPublicKey);
+
+                                isReadyToTransmitTextMessage = true;
+                            }
+                        }
+                    } else if (arg0[0] >= 0x06) { // This is for Text Message Mode
                     if(data.length() == 60) {
                         getSenderfromPacket();
                         getReceiverfromPacket();
@@ -201,9 +275,11 @@ public class MainActivity extends AppCompatActivity{
                                 System.arraycopy(tempArg0,9,cipherInBase64,0,43);
                                 String base64CipherinString = new String(cipherInBase64, StandardCharsets.UTF_8);
                                 byte[] encryptedData = Base64.decode(base64CipherinString, Base64.NO_WRAP | Base64.NO_PADDING | Base64.URL_SAFE | Base64.NO_CLOSE);
-                                encryptionProcessor.receivingEncryptionProcessor(encryptedData, sender, num);
+                                Log.d("DHKeys","Paramter Public : " + DHPublicKey);
+                                encryptionProcessor.receivingEncryptionProcessor(encryptedData, DHPublicKey, DHPrivateKey);
+                                Log.d("DHKeys","Parameter Private : " + DHPrivateKey);
                                 decodedData = encryptionProcessor.getDecodedText();
-                                storeMessage(sender, base64CipherinString);
+                                storeMessage(sender, base64CipherinString, DHPublicKey, DHPrivateKey);
                                 Log.d("ADebugTag","Received Single Packet Text Message");
                                 messagePacketArray[packetNumber] = decodedData;
 
@@ -256,7 +332,6 @@ public class MainActivity extends AppCompatActivity{
                                     //Reset TextMessagePacket
                                     isPacketsComplete = false;
                                     isReceivingTextPacket = false;
-                                    packetNumber = 0;
                                     isAbletoNotify = true;
 
                                 }else{
@@ -265,11 +340,9 @@ public class MainActivity extends AppCompatActivity{
 
                                 if(isAbletoNotify) {
 
-                                    if(packetNumber>1) {
-                                        String s = "";
-                                        for (int i = 0; i <packetNumber; i++) {
-                                            combinedPacketArray.concat(messagePacketArray[i]);
-                                        }
+                                    String s = "";
+                                    for (int i = 0; i <packetNumber; i++) {
+                                        combinedPacketArray.concat(messagePacketArray[i]);
                                     }
                                     // DO THIS AFTER CONFIRMING
                                     // Notify User of Received Packet
@@ -296,7 +369,8 @@ public class MainActivity extends AppCompatActivity{
                                     isPacketsComplete = false;
                                     isAbletoNotify = false;
                                     combinedPacketArray = "";
-                                    messagePacketArray = new String[10];
+                                    packetNumber = 0;
+                                    messagePacketArray = new String[122];
                                 }
                             } else {
                                 Log.d("ADebugTag","HashFromPacket : " + hashFromPacket + "\nComputedHash = " + computedHash);
@@ -307,17 +381,6 @@ public class MainActivity extends AppCompatActivity{
                     }
                 }
             }
-        }
-    };
-
-    CountDownTimer textMessageReceiveTimer = new CountDownTimer(5000, 1000) {
-        @Override
-        public void onTick(long l) {
-        }
-
-        @Override
-        public void onFinish() {
-            packetNumber = 0;
         }
     };
 
@@ -380,7 +443,7 @@ public class MainActivity extends AppCompatActivity{
                             Toast.makeText(MainActivity.this, "Beacon Mode ON", Toast.LENGTH_SHORT).show();
                             isDisabled = false;
                             beaconSendTimer.start();
-                            storeMessage(getUserSID(), "URGENT BEACON SIGNAL SENT!");
+                            storeMessage(getUserSID(), "URGENT BEACON SIGNAL SENT!", new BigInteger(String.valueOf(69)), 69);
                         }
                     }
                 } catch (Exception e) {
@@ -457,6 +520,9 @@ public class MainActivity extends AppCompatActivity{
         filter.addAction(UsbManager.ACTION_USB_DEVICE_DETACHED);
         registerReceiver(broadcastReceiver, filter);
 //        textView.setMovementMethod(new ScrollingMovementMethod());
+
+        //DHPrivateKey = new Random().nextInt(56-41) + 41; // Randomly generated everytime the app is opened upto 40 Characters
+        DHPrivateKey = new Random().nextInt(140-41) + 41; // up to 40bytes
 
         mp = MediaPlayer.create(MainActivity.this, notificationSound);
         beaconmp = MediaPlayer.create(MainActivity.this, R.raw.emergency_alarm);
@@ -556,6 +622,18 @@ public class MainActivity extends AppCompatActivity{
             }
         }
         return keep;
+    }
+
+    @RequiresApi(api = Build.VERSION_CODES.KITKAT)
+    public BigInteger getABfromPacket(){
+        byte[] AB = new byte[40];
+        System.arraycopy(tempArg0,9,AB,0,40); //copy
+
+        int length = getBigIntLength(AB);
+        byte[] finalAB = trimPaddedBigInt(AB);
+
+        Log.d("DHKeys", "BigInteger Dispadded Converted : "  + Arrays.toString(finalAB));
+        return new BigInteger(finalAB);
     }
 
     public void arduinoDisconnected() {
@@ -679,11 +757,11 @@ public class MainActivity extends AppCompatActivity{
 
     // This will be called in FragmentTextMessage and mCallback to store messages to database.
     @RequiresApi(api = Build.VERSION_CODES.KITKAT)
-    private void storeMessage(String ID, String MESSAGE){
+    private void storeMessage(String ID, String MESSAGE, BigInteger PUBLICKEY, int PRIVATEKEY){
         String Received = FragmentMain.dateFormat.format(FragmentMain.date);
         String Sent = "-";
 
-        dataBaseHelper.addOneMessage(ID, MESSAGE, Received,Sent);
+        dataBaseHelper.addOneMessage(ID, MESSAGE, Received,Sent, PUBLICKEY.toString(), Integer.toString(PRIVATEKEY));
 
         //refill the contact Array lists so that the Contact ID will be filled with the new information
         FragmentMain.messageID.clear();
@@ -786,6 +864,27 @@ public class MainActivity extends AppCompatActivity{
             isHashMatched = false;
 
         return isHashMatched;
+    }
+
+    int getBigIntLength(byte[] arr){
+        int length = 0;
+        for(int i = 0; i<40; i++){
+            if(arr[i] == 126)
+                length++;
+        }
+
+        return length;
+    }
+
+    byte[] trimPaddedBigInt(byte[] bytes)
+    {
+        int i = bytes.length - 1;
+        while (i >= 0 && bytes[i] == 126)
+        {
+            --i;
+        }
+
+        return Arrays.copyOf(bytes, i + 1);
     }
 
 

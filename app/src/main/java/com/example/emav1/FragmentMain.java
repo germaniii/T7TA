@@ -4,6 +4,9 @@ import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.database.Cursor;
+
+import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import android.os.Build;
@@ -17,6 +20,7 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import android.util.Base64;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -58,7 +62,7 @@ public class FragmentMain extends Fragment  implements InboxListAdapter.ItemClic
 
 
         date = Calendar.getInstance().getTime();
-        dateFormat = new SimpleDateFormat("MM-dd-yyyy | hh:mm:ss.SSS");
+        dateFormat = new SimpleDateFormat("MM-dd-yyyy | hh:mm");
 
         // data to populate the RecyclerView with
         messageID = new ArrayList<>();
@@ -109,8 +113,8 @@ public class FragmentMain extends Fragment  implements InboxListAdapter.ItemClic
                         }
                         String uNameString = uName.getText().toString().trim();
                         uNameString += " (My Number)";
-                        dataBaseHelper.addOneContact(uNameString, uNumber.getText().toString(), "");
-                        dataBaseHelper.addOneMessage(uNumber.getText().toString(), "This is a test Message!", strDate, "");
+                        dataBaseHelper.addOneContact(uNameString, uNumber.getText().toString());
+                        dataBaseHelper.addOneMessage(uNumber.getText().toString(), "This is a test Message!", strDate, "", "","");
 
                         //refill the contact Array lists so that the Contact ID will be filled with the new information
                         storeDBtoArrays();
@@ -161,7 +165,10 @@ public class FragmentMain extends Fragment  implements InboxListAdapter.ItemClic
                 }else{
                     // Decrypt Text and send to array
                     byte[] encryptedData = Base64.decode(cursor.getString(2), Base64.NO_WRAP | Base64.NO_PADDING | Base64.URL_SAFE | Base64.NO_CLOSE);
-                    encryptionProcessor.receivingEncryptionProcessor(encryptedData, cursor.getString(1), getUserSID());
+                    //USE THE PUBLICKEY VARIABLE FROM THE MESSAGE
+                    encryptionProcessor.receivingEncryptionProcessor(encryptedData, new BigInteger(cursor.getString(5)), Integer.parseInt(cursor.getString(6)));
+                    Log.d("DHKeys", "Public Key from Database : " + cursor.getString(5));
+                    Log.d("DHKeys", "Private Key from Database : " + cursor.getString(6));
                     String decodedData = encryptionProcessor.getDecodedText();
                     //Store part 2
                     messageText.add(decodedData);    //Message

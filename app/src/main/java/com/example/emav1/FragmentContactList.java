@@ -117,8 +117,9 @@ public class FragmentContactList extends Fragment implements ContactListAdapter.
                 }else{
                     contactNames.add(editName.getText().toString());
                     contactNum.add(editNumber.getText().toString());
-                    dataBaseHelper.addOneContact(editName.getText().toString().trim(), editNumber.getText().toString(),
-                            encryptionProcessor.generateKey(editNumber.getText().toString(), getUserSID(), true));
+                    //dataBaseHelper.addOneContact(editName.getText().toString().trim(), editNumber.getText().toString(),
+                    //        encryptionProcessor.generateKey(editNumber.getText().toString(), getUserSID(), true));
+                    dataBaseHelper.addOneContact(editName.getText().toString().trim(), editNumber.getText().toString());
 
                     //refill the contact Array lists so that the Contact ID will be filled with the new information
                     contactID.clear();
