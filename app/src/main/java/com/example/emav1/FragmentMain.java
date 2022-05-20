@@ -171,7 +171,7 @@ public class FragmentMain extends Fragment  implements InboxListAdapter.ItemClic
                     Log.d("DHKeys", "Private Key from Database : " + cursor.getString(6));
                     String decodedData = encryptionProcessor.getDecodedText();
                     //Store part 2
-                    messageText.add(decodedData);    //Message
+                    messageText.add(decodedData.substring(9,decodedData.length()));    //Message
                 }
                 messageReceived.add(cursor.getString(3));    //Date and Time Received
                 messageSent.add(cursor.getString(4));    //Date and Time Sent

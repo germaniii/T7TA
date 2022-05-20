@@ -95,7 +95,7 @@ public class PacketHandler {
         return packetsForSending;
     }
 
-    private byte[] formatID(String ID){
+    public byte[] formatID(String ID){
         String reducedID = new StringBuilder(ID).replace(0, 2, "").toString();
         return ByteBuffer.allocate(4).putInt(Integer.parseInt(reducedID)).array();
     }

@@ -142,13 +142,13 @@ public class FragmentTextMessage extends Fragment {
                         String MESSAGE_FINAL = MESSAGE;
 
                         //if message entered is less than 31 characters, add whitespace characters to fill up the packet.
-                        for (int i = 0; i < (20 - MESSAGE.length() % 20); i++)
+                        for (int i = 0; i < (22 - MESSAGE.length() % 22); i++)
                             MESSAGE_FINAL = MESSAGE_FINAL.concat(" ");
-                        totalpackets = (int) Math.ceil((double) MESSAGE_FINAL.length() / 20);
+                        totalpackets = (int) Math.ceil((double) MESSAGE_FINAL.length() / 22);
                         messageArray = new String[totalpackets];
 
                         for (int i = 0; i < totalpackets; i++) {
-                            messageArray[i] = SID + MESSAGE_FINAL.substring((i * 20), ((i * 20) + 20));
+                            messageArray[i] = SID.substring(2,11) + MESSAGE_FINAL.substring((i * 22), ((i * 22) + 22));
                             //tvAppend(textView, "\nPacket " + i + ": " + messageArray[i]);
                         }
                         packetHandler.setSendParameters(SID, RID);
@@ -244,7 +244,7 @@ public class FragmentTextMessage extends Fragment {
 
                     System.arraycopy(smp, 0, sendTextBytes[i], 0, 1);
                     System.arraycopy(packetHandler.getRIDBytes(), 0, sendTextBytes[i], 1, 4);
-                    System.arraycopy(packetHandler.getSIDBytes(), 0, sendTextBytes[i], 5, 4);
+                    System.arraycopy("0000".getBytes(), 0, sendTextBytes[i], 5, 4);
                     System.arraycopy(cipherbase64.getBytes(), 0, sendTextBytes[i], 9, 43);
 
                     String string = new String(sendTextBytes[i], StandardCharsets.UTF_8);

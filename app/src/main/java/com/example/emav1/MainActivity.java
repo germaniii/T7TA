@@ -262,7 +262,7 @@ public class MainActivity extends AppCompatActivity{
                         }
                     } else if (arg0[0] >= 0x06) { // This is for Text Message Mode
                     if(data.length() == 60) {
-                        getSenderfromPacket();
+                        //getSenderfromPacket();
                         getReceiverfromPacket();
                         getMessagefromPacket();
                         if(receiver.equals(num)){
@@ -279,9 +279,11 @@ public class MainActivity extends AppCompatActivity{
                                 encryptionProcessor.receivingEncryptionProcessor(encryptedData, DHPublicKey, DHPrivateKey);
                                 Log.d("DHKeys","Parameter Private : " + DHPrivateKey);
                                 decodedData = encryptionProcessor.getDecodedText();
+                                sender = packetHandler.getID(packetHandler.formatID("09" + decodedData.substring(0,9)));
+
                                 storeMessage(sender, base64CipherinString, DHPublicKey, DHPrivateKey);
                                 Log.d("ADebugTag","Received Single Packet Text Message");
-                                messagePacketArray[packetNumber] = decodedData;
+                                messagePacketArray[packetNumber] = decodedData.subSequence(9,decodedData.length()).toString();
 
 
                                 if(packetNumber == 0){
