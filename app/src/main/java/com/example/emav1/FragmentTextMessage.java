@@ -15,9 +15,12 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 import androidx.fragment.app.Fragment;
+import androidx.lifecycle.LifecycleOwner;
+import androidx.lifecycle.Observer;
 
 import android.os.CountDownTimer;
 import android.os.Handler;
+import android.os.Looper;
 import android.util.Base64;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -201,8 +204,58 @@ public class FragmentTextMessage extends Fragment {
                         MainActivity.serialPort.write(sendHandShakeBytes);
                         Log.d("DHKeys", "Sent Handshake");
 
-                        //Check if Handshake received
-                        checkIfReadyToTransmit.start();
+                        MainActivity.isReadyToTransmitTextMessage.observe((LifecycleOwner) context,new Observer<Boolean>() {
+                            @Override
+                            public void onChanged(Boolean aBoolean) {
+                                if(aBoolean) {
+                                    final Handler handler = new Handler(Looper.getMainLooper());
+                                    handler.postDelayed(new Runnable() {
+                                        @Override
+                                        public void run() {
+                                            if(!MainActivity.isReadyToTransmitTextMessage.getValue()) {
+                                                Toast.makeText(context, "Failed to Receive Handshake, Please Send Again", Toast.LENGTH_SHORT).show();
+                                                MainActivity.isReadyToTransmitTextMessage.postValue(false); //Initilize with a value
+                                                isDisabled = false;
+                                            }
+                                        }
+                                    }, 5000);
+
+                                    Toast.makeText(context, "Successfully Received Handshake", Toast.LENGTH_SHORT).show();
+                                    smp[0] = 0x06;
+                                    for (byte i = 0; i < totalpackets; i++) {
+                                        Log.d("DHKeys", "Parameter Public : " + MainActivity.DHPublicKey);
+                                        Log.d("DHKeys", "Parameter Private : " + MainActivity.DHPrivateKey);
+                                        encryptionProcessor.sendingEncryptionProcessor(messageArray[i], MainActivity.DHPublicKey, MainActivity.DHPrivateKey);
+                                        cipherText = encryptionProcessor.getCipherText();
+                                        String cipherbase64 = Base64.encodeToString(cipherText, Base64.NO_WRAP | Base64.NO_PADDING | Base64.URL_SAFE | Base64.NO_CLOSE);
+                                        //tvAppend(textView, "\nBase64Cipher: " + cipherbase64 +
+                                        //         "\nBase64CipherLen: " + cipherbase64.length());
+
+                                        if (totalpackets == 1 || (i == totalpackets - 1))
+                                            smp[0] = 0x7F;
+
+                                        System.arraycopy(smp, 0, sendTextBytes[i], 0, 1);
+                                        System.arraycopy(packetHandler.getRIDBytes(), 0, sendTextBytes[i], 1, 4);
+                                        System.arraycopy("0000".getBytes(), 0, sendTextBytes[i], 5, 4);
+                                        System.arraycopy(cipherbase64.getBytes(), 0, sendTextBytes[i], 9, 43);
+
+                                        String string = new String(sendTextBytes[i], StandardCharsets.UTF_8);
+                                        String hash = hashProcessor.getHash(string);
+
+                                        System.arraycopy(hash.getBytes(), 0, sendTextBytes[i], 52, 8);
+
+                                        //MainActivity.serialPort.write(sendTextBytes[0]);
+                                        packetNumber = 0;
+                                        //tvAppend(textView, "\n\nSENDING PACKET\n" + "\nPacket: " + string + "\nPacketLen: " + (smp.length + packetHandler.getRIDBytes().length + packetHandler.getSIDBytes().length + cipherbase64.length() + hash.getBytes().length) + "\nCipher: " + new String(cipherText, StandardCharsets.UTF_8) + "\nCipherLen: " + cipherText.length + "\nHash: " + hash);
+                                        smp[0] += 1;
+                                    }
+                                    // Start Transmission
+                                    resendTimer.start();
+                                    resendCanceller.start();
+                                }
+                            }
+                        });
+                        //checkIfReadyToTransmit.start();
 
 
                     } else {
@@ -222,65 +275,6 @@ public class FragmentTextMessage extends Fragment {
             packetNumber = 0;
         }
     }
-
-    @RequiresApi(api = Build.VERSION_CODES.KITKAT)
-    CountDownTimer checkIfReadyToTransmit = new CountDownTimer(5000,1000) {
-        @Override
-        public void onTick(long l) {
-            if(MainActivity.isReadyToTransmitTextMessage){
-                //Assign Stuff
-                for (byte i = 0; i < totalpackets; i++) {
-
-                    Log.d("DHKeys","Parameter Public : " + MainActivity.DHPublicKey);
-                    Log.d("DHKeys","Parameter Private : " + MainActivity.DHPrivateKey);
-                    encryptionProcessor.sendingEncryptionProcessor(messageArray[i], MainActivity.DHPublicKey, MainActivity.DHPrivateKey);
-                    cipherText = encryptionProcessor.getCipherText();
-                    String cipherbase64 = Base64.encodeToString(cipherText, Base64.NO_WRAP | Base64.NO_PADDING | Base64.URL_SAFE | Base64.NO_CLOSE);
-                    //tvAppend(textView, "\nBase64Cipher: " + cipherbase64 +
-                    //         "\nBase64CipherLen: " + cipherbase64.length());
-
-                    if (totalpackets == 1 || (i == totalpackets-1))
-                        smp[0] = 0x7F;
-
-                    System.arraycopy(smp, 0, sendTextBytes[i], 0, 1);
-                    System.arraycopy(packetHandler.getRIDBytes(), 0, sendTextBytes[i], 1, 4);
-                    System.arraycopy("0000".getBytes(), 0, sendTextBytes[i], 5, 4);
-                    System.arraycopy(cipherbase64.getBytes(), 0, sendTextBytes[i], 9, 43);
-
-                    String string = new String(sendTextBytes[i], StandardCharsets.UTF_8);
-                    hash = hashProcessor.getHash(string);
-                    string += hash;
-
-                    System.arraycopy(hash.getBytes(), 0, sendTextBytes[i], 52, 8);
-
-                    //MainActivity.serialPort.write(sendTextBytes[0]);
-                    packetNumber=0;
-                    //tvAppend(textView, "\n\nSENDING PACKET\n" + "\nPacket: " + string + "\nPacketLen: " + (smp.length + packetHandler.getRIDBytes().length + packetHandler.getSIDBytes().length + cipherbase64.length() + hash.getBytes().length) + "\nCipher: " + new String(cipherText, StandardCharsets.UTF_8) + "\nCipherLen: " + cipherText.length + "\nHash: " + hash);
-                    smp[0]+=1;
-                }
-                // Start Transmission
-                resendTimer.start();
-                resendCanceller.start();
-            }
-
-        }
-
-        @Override
-        public void onFinish() {
-            if(MainActivity.isReadyToTransmitTextMessage){
-                Toast.makeText(context, "Successfully Received Handshake", Toast.LENGTH_SHORT).show();
-                MainActivity.isReadyToTransmitTextMessage = false;
-                isDisabled = false;
-                checkIfReadyToTransmit.cancel();
-            }else{
-                Toast.makeText(context, "Failed to Receive Handshake, Please Send Again", Toast.LENGTH_SHORT).show();
-                MainActivity.isReadyToTransmitTextMessage = false;
-                isDisabled = false;
-                checkIfReadyToTransmit.cancel();
-            }
-
-        }
-    };
 
     CountDownTimer resendCanceller = new CountDownTimer(3000, 500) {
         @Override
@@ -318,6 +312,7 @@ public class FragmentTextMessage extends Fragment {
                 isReceivedConfirmationByte = false;
                 countDownRepeater();
                 isDisabled = false;
+                MainActivity.isReadyToTransmitTextMessage.postValue(false); //Initilize with a value
             }
         }
 
@@ -338,6 +333,7 @@ public class FragmentTextMessage extends Fragment {
                     isDisabled = false;
                     resendTimer.cancel();
                     resendCanceller.cancel();
+                    MainActivity.isReadyToTransmitTextMessage.postValue(false); //Initilize with a value
                 }
                 if (packetNumber == totalpackets) {
                     countDownRepeater();
@@ -349,6 +345,7 @@ public class FragmentTextMessage extends Fragment {
                 packetNumber = 0;
                 resendTimer.cancel();
                 resendCanceller.cancel();
+                MainActivity.isReadyToTransmitTextMessage.postValue(false); //Initilize with a value
             }
 
 
