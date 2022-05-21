@@ -9,6 +9,8 @@ import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
+import androidx.lifecycle.MutableLiveData;
+import androidx.lifecycle.Observer;
 
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
@@ -65,6 +67,7 @@ public class MainActivity extends AppCompatActivity{
     static UsbSerialDevice serialPort;
     public UsbDeviceConnection connection;
     ImageButton  beacon, toTextMode, toContactList, toReceiverMode;
+    static MutableLiveData<Boolean> isReadyToTransmitTextMessage = new MutableLiveData<>(false);
 
 
     DataBaseHelper dataBaseHelper;
@@ -77,7 +80,6 @@ public class MainActivity extends AppCompatActivity{
     boolean isReceiverMode;
     boolean isContactList;
     boolean isTextMessageMode;
-    static boolean isReadyToTransmitTextMessage = false;
 
     // Serial Receiver Variables
     private String data;
@@ -256,8 +258,7 @@ public class MainActivity extends AppCompatActivity{
                                 DHPublicKey = getABfromPacket();
 
                                 Log.d("DHKeys", "Received B : " + DHPublicKey);
-
-                                isReadyToTransmitTextMessage = true;
+                                isReadyToTransmitTextMessage.postValue(true); //Initilize with a value
                             }
                         }
                     } else if (arg0[0] >= 0x06) { // This is for Text Message Mode
@@ -893,4 +894,5 @@ public class MainActivity extends AppCompatActivity{
     public void onBackPressed() {
         //doing nothing on pressing Back key
     }
+
 }
